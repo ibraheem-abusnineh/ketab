@@ -1,0 +1,138 @@
+.tracing-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 28px 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #fff8d6, #ffe9a0);
+  border: 3px solid #84333c;
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.tracing-heading {
+  font-size: 1.9rem;
+  color: #84333c;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+.tracing-instruction {
+  font-size: 1.05rem;
+  color: #5a2428;
+  max-width: 520px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tracing-board {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: min(92vw, 540px);
+}
+
+.tracing-image-wrapper {
+  position: relative;
+  width: 100%;
+  border: 3px dashed #84333c;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(135deg, #fffdf1, #fff3c1);
+}
+
+.tracing-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+.tracing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: crosshair;
+}
+
+.tracing-controls {
+  display: flex;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.tracing-controls button {
+  min-width: 130px;
+  padding: 11px 22px;
+  font-size: 1rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-weight: 600;
+  letter-spacing: 0.35px;
+}
+
+.tracing-controls .outline-btn {
+  background: #fff8e6;
+  border: 2px solid #84333c;
+  color: #84333c;
+  box-shadow: 0 4px 14px rgba(132, 51, 60, 0.18);
+}
+
+.tracing-controls .primary-btn {
+  background: linear-gradient(135deg, #f9b233 0%, #ef8526 50%, #c75b65 100%);
+  color: #ffffff;
+  box-shadow: 0 5px 16px rgba(199, 91, 101, 0.28);
+}
+
+.tracing-controls button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.tracing-controls button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(249, 178, 51, 0.45);
+}
+
+.tracing-controls button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 640px) {
+  .tracing-container {
+    padding: 12px;
+  }
+
+  .tracing-heading {
+    font-size: 1.5rem;
+  }
+
+  .tracing-instruction {
+    font-size: 0.95rem;
+  }
+
+  .tracing-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .tracing-controls button {
+    width: 100%;
+  }
+}
+

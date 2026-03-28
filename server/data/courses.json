@@ -1,0 +1,14 @@
+{
+  "arabic": {
+    "locked": false,
+    "label": "Arabic Language"
+  },
+  "english": {
+    "locked": false,
+    "label": "English Language"
+  },
+  "numbers": {
+    "locked": true,
+    "label": "Mathematics"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "ketab-server",
+  "version": "1.0.0",
+  "description": "Backend server for visitor tracking",
+  "main": "index.js",
+  "scripts": {
+    "start": "set PORT=5000 && node index.js",
+    "setup": "node setup.js",
+    "migrate": "node migrate-users.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "react-scripts": "^5.0.1"
+  }
+}

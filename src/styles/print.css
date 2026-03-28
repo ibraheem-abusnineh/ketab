@@ -1,0 +1,192 @@
+/* Print Styles for Worksheets */
+
+@media print {
+  /* Hide navigation and interactive elements */
+  .letter-selector,
+  .book-navigation,
+  .logo-top-left,
+  .video-placeholder,
+  iframe,
+  video,
+  .print-button,
+  .tracing-controls,
+  .tracing-canvas {
+    display: none !important;
+  }
+  
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+  
+  /* Worksheet container */
+  .worksheet-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: white !important;
+  }
+  
+  /* Book pages */
+  .book-page {
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    break-before: always !important;
+    display: block !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .book-page:first-child {
+    break-before: auto !important;
+  }
+  
+  /* Header */
+  .header {
+    break-inside: avoid;
+    page-break-after: avoid;
+    background: white !important;
+    border: 2px solid #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Footer */
+  .footer {
+    page-break-before: avoid !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    break-before: avoid !important;
+  }
+  
+  /* Letter showcase */
+  .letter-showcase {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: white !important;
+    border: 2px solid #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Writing lines */
+  .writing-line,
+  .writing-line-english,
+  .writing-line-purple,
+  .writing-line-blue {
+    background-color: white !important;
+    border: 1px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Sections */
+  .vocabulary-section,
+  .writing-section,
+  .letter-organization-section,
+  .syllable-writing-section,
+  .vowel-writing-section,
+  .matching-section,
+  .hand-gestures {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: white !important;
+    border: 2px solid #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Images */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Grids and layouts */
+  .vocab-grid,
+  .letter-squares-grid,
+  .matching-grid {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Tracing exercise */
+  .tracing-container {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: white !important;
+    border: 2px solid #000 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .tracing-image-wrapper {
+    border: 2px solid #000 !important;
+    background: white !important;
+  }
+  
+  /* Decorative elements */
+  .corner-decoration {
+    display: none !important;
+  }
+  
+  /* Ensure text is black for better printing */
+  * {
+    color: #000 !important;
+    background: white !important;
+  }
+  
+  /* Preserve important colored elements */
+  .header,
+  .letter-showcase,
+  .vocabulary-section,
+  .writing-section,
+  .letter-organization-section,
+  .syllable-writing-section,
+  .vowel-writing-section,
+  .matching-section {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Force page breaks for better layout */
+  .book-page.active {
+    break-before: page;
+  }
+  
+  /* Avoid breaking inside important elements */
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  .vocab-item,
+  .letter-square,
+  .word-item,
+  .gesture-box,
+  .gesture-box-small {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+

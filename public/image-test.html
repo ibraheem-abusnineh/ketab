@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Test</title>
+</head>
+<body>
+    <h1>Image Loading Test</h1>
+    
+    <h2>Cover Image:</h2>
+    <img src="/cover.png" alt="Cover" style="width: 200px; height: 200px; border: 1px solid red;">
+    
+    <h2>Letter Images:</h2>
+    <img src="/letters/أ/1.jpg" alt="أ" style="width: 100px; height: 100px; border: 1px solid blue;">
+    <img src="/letters/ب/1.JPG" alt="ب" style="width: 100px; height: 100px; border: 1px solid blue;">
+    <img src="/letters/ء/1.JPG" alt="ء" style="width: 100px; height: 100px; border: 1px solid blue;">
+    
+    <h2>Word Images:</h2>
+    <img src="/images/أَسَد.png" alt="أسد" style="width: 100px; height: 100px; border: 1px solid green;">
+    <img src="/images/بَاب.png" alt="باب" style="width: 100px; height: 100px; border: 1px solid green;">
+    
+    <script>
+        // Test image loading
+        const images = document.querySelectorAll('img');
+        images.forEach((img, index) => {
+            img.onload = () => console.log(`Image ${index + 1} loaded successfully: ${img.src}`);
+            img.onerror = () => console.error(`Image ${index + 1} failed to load: ${img.src}`);
+        });
+    </script>
+</body>
+</html>
