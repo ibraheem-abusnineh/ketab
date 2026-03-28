@@ -15,9 +15,6 @@ const VowelWritingPage: React.FC<VowelWritingPageProps> = ({
 }) => {
   return (
     <div className="book-page active">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <PrintButton isEnglish={isEnglish} />
-      </div>
       <div className="vowel-writing-section">
         <h3>{isEnglish ? 'Write the letter with vowels:' : 'أَكْتُبُ الْحَرْفَ مَعَ الْحَرَكَات:'}</h3>
         {vowels.map((vowel, index) => (
@@ -42,4 +39,3 @@ const VowelWritingPage: React.FC<VowelWritingPageProps> = ({
 };
 
 export default VowelWritingPage;
-

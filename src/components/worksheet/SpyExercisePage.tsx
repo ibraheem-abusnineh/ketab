@@ -1,188 +1,188 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import './TracingExercisePage.css';
-import PrintButton from '../PrintButton';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LetterData } from '../../types';
 
-export interface SpyExercisePageProps {
-  letter: string;
+interface SpyExercisePageProps {
+  letterData: LetterData;
+  selectedLetter: string;
   onComplete?: () => void;
+  isEnglish?: boolean;
 }
 
-type Pointer = {
+interface FoundObject {
   id: number;
   x: number;
   y: number;
-};
+  name: string;
+  found: boolean;
+}
 
-const SpyExercisePage: React.FC<SpyExercisePageProps> = ({ letter, onComplete }) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const pointersRef = useRef<Map<number, Pointer>>(new Map());
-
-  const spyImageSrc = useMemo(() => {
-    const normalizedLetter = letter.trim().toLowerCase() || 'a';
-    return `/letters/${normalizedLetter}-spy.jpg`;
-  }, [letter]);
-
-  const instructionText = useMemo(
-    () =>
-      `Trace or circle the hidden objects inside the letter ${letter.toUpperCase()} spy picture.`,
-    [letter]
+const SpyExercisePage: React.FC<SpyExercisePageProps> = ({
+  letterData,
+  selectedLetter,
+  onComplete,
+  isEnglish = false
+}) => {
+  const [foundObjects, setFoundObjects] = useState<FoundObject[]>(
+    (letterData.spyObjects || []).map((obj, index) => ({
+      id: index,
+      ...obj,
+      found: false
+    }))
   );
 
-  const resizeCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+  const [lastFound, setLastFound] = useState<string | null>(null);
 
-    const { clientWidth, clientHeight } = container;
+  const handleObjectClick = (id: number) => {
+    setFoundObjects(prev =>
+      prev.map(obj => {
+        if (obj.id === id && !obj.found) {
+          setLastFound(obj.name);
+          setTimeout(() => setLastFound(null), 2000);
+          return { ...obj, found: true };
+        }
+        return obj;
+      })
+    );
+  };
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = clientWidth * dpr;
-    canvas.height = clientHeight * dpr;
-    canvas.style.width = `${clientWidth}px`;
-    canvas.style.height = `${clientHeight}px`;
+  const handleReset = () => {
+    setFoundObjects(prev => prev.map(obj => ({ ...obj, found: false })));
+    setLastFound(null);
+  };
 
-    const context = canvas.getContext('2d');
-    if (context) {
-      context.scale(dpr, dpr);
-      context.lineCap = 'round';
-      context.lineJoin = 'round';
-      context.lineWidth = 30;
-      context.strokeStyle = '#FF7F32';
-    }
-  }, []);
-
-  useEffect(() => {
-    resizeCanvas();
-    const resizeObserver = new ResizeObserver(() => resizeCanvas());
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-    window.addEventListener('orientationchange', resizeCanvas);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('orientationchange', resizeCanvas);
-    };
-  }, [resizeCanvas]);
-
-  const getCanvasCoordinates = useCallback((event: PointerEvent | React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top
-    };
-  }, []);
-
-  const drawLine = useCallback(
-    (pointer: Pointer) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const context = canvas.getContext('2d');
-      if (!context) return;
-
-      const previousPointer = pointersRef.current.get(pointer.id);
-      if (!previousPointer) {
-        context.beginPath();
-        context.moveTo(pointer.x, pointer.y);
-      } else {
-        context.beginPath();
-        context.moveTo(previousPointer.x, previousPointer.y);
-        context.lineTo(pointer.x, pointer.y);
-        context.stroke();
-      }
-      pointersRef.current.set(pointer.id, pointer);
-    },
-    []
-  );
-
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLCanvasElement>) => {
-      event.preventDefault();
-      const coordinates = getCanvasCoordinates(event);
-      setIsDrawing(true);
-      const pointer: Pointer = { id: event.pointerId, ...coordinates };
-      pointersRef.current.set(pointer.id, pointer);
-      drawLine(pointer);
-      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-    },
-    [drawLine, getCanvasCoordinates]
-  );
-
-  const handlePointerMove = useCallback(
-    (event: React.PointerEvent<HTMLCanvasElement>) => {
-      if (!isDrawing) return;
-      event.preventDefault();
-      const coordinates = getCanvasCoordinates(event);
-      const pointer: Pointer = { id: event.pointerId, ...coordinates };
-      drawLine(pointer);
-    },
-    [drawLine, getCanvasCoordinates, isDrawing]
-  );
-
-  const stopDrawing = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
-    event.preventDefault();
-    setIsDrawing(false);
-    pointersRef.current.delete(event.pointerId);
-    try {
-      (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
-    } catch {
-      // ignore if capture was not set
-    }
-  }, []);
-
-  const handleReset = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    pointersRef.current.clear();
-  }, []);
+  const allFound = foundObjects.length > 0 && foundObjects.every(obj => obj.found);
 
   return (
     <motion.div
-      className="tracing-container"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      className="book-page active"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
     >
-      <h2 className="tracing-heading">Letter Spy Hunt</h2>
-      <p className="tracing-instruction">{instructionText}</p>
+      <div className="spy-section">
+        <h3>
+          {isEnglish
+            ? 'Find the objects that start with this letter:'
+            : `أَبْحَثُ عَنِ الْأَشْيَاءِ الَّتِي تَبْدَأُ بِحَرْفِ (${letterData.name}):`}
+        </h3>
 
-      <div className="tracing-board">
-        <div className="tracing-image-wrapper" ref={containerRef}>
-          <img
-            src={spyImageSrc}
-            alt={`Spy picture for letter ${letter}`}
-            className="tracing-image"
-            onLoad={() => resizeCanvas()}
-          />
-          <canvas
-            ref={canvasRef}
-            className="tracing-canvas"
-            role="img"
-            aria-label={`Spy canvas for letter ${letter}`}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={stopDrawing}
-            onPointerLeave={(event) => {
-              if (isDrawing) {
-                stopDrawing(event);
-              }
-            }}
-            onPointerCancel={stopDrawing}
-          />
+        <div className="spy-container" style={{ position: 'relative', marginTop: '20px' }}>
+          <div className="spy-image-wrapper" style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
+            <img
+              src={`${process.env.PUBLIC_URL}/letters/${selectedLetter.toLowerCase()}-spy.jpg`}
+              alt="Spy game"
+              style={{ width: '100%', display: 'block' }}
+            />
+            
+            {foundObjects.map(obj => (
+              <div
+                key={obj.id}
+                onClick={() => handleObjectClick(obj.id)}
+                style={{
+                  position: 'absolute',
+                  left: `${obj.x}%`,
+                  top: `${obj.y}%`,
+                  width: '60px',
+                  height: '60px',
+                  transform: 'translate(-50%, -50%)',
+                  cursor: obj.found ? 'default' : 'pointer',
+                  borderRadius: '50%',
+                  border: obj.found ? '4px solid #28a745' : '2px dashed transparent',
+                  backgroundColor: obj.found ? 'rgba(40, 167, 69, 0.2)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 10
+                }}
+              >
+                {obj.found && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    style={{ fontSize: '24px' }}
+                  >
+                    ✅
+                  </motion.span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <AnimatePresence>
+            {lastFound && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                style={{
+                  position: 'absolute',
+                  bottom: '20px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  padding: '10px 20px',
+                  borderRadius: '20px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  zIndex: 20
+                }}
+              >
+                {isEnglish ? `Found: ${lastFound}!` : `وجدت: ${lastFound}!`}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="spy-status" style={{ marginTop: '20px', textAlign: 'center' }}>
+          <div className="objects-to-find" style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
+            {foundObjects.map(obj => (
+              <div
+                key={obj.id}
+                style={{
+                  padding: '8px 15px',
+                  borderRadius: '15px',
+                  backgroundColor: obj.found ? '#28a745' : '#eee',
+                  color: obj.found ? 'white' : '#666',
+                  textDecoration: obj.found ? 'line-through' : 'none',
+                  transition: 'all 0.3s ease',
+                  fontSize: '0.9em'
+                }}
+              >
+                {obj.name}
+              </div>
+            ))}
+          </div>
+          
+          {allFound && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{ marginTop: '20px', color: '#28a745', fontWeight: 'bold', fontSize: '1.2em' }}
+            >
+              {isEnglish ? '🌟 Excellent! You found all objects! 🌟' : '🌟 رائع! لقد وجدت جميع الأشياء! 🌟'}
+            </motion.div>
+          )}
         </div>
       </div>
 
-      <div className="tracing-controls">
-        <button type="button" className="outline-btn" onClick={handleReset}>
-          Reset
+      <div className="tracing-controls" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '30px' }}>
+        <button 
+          type="button" 
+          className="outline-btn" 
+          onClick={handleReset}
+          style={{
+            padding: '10px 30px',
+            borderRadius: '8px',
+            border: '2px solid #84333c',
+            background: 'white',
+            color: '#84333c',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          {isEnglish ? 'Reset' : 'إعادة تعيين'}
         </button>
         <button
           type="button"
@@ -192,8 +192,17 @@ const SpyExercisePage: React.FC<SpyExercisePageProps> = ({ letter, onComplete })
               onComplete();
             }
           }}
+          style={{
+            padding: '10px 40px',
+            borderRadius: '8px',
+            border: 'none',
+            background: '#84333c',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
         >
-          Next
+          {isEnglish ? 'Next' : 'التالي'}
         </button>
       </div>
     </motion.div>
@@ -201,16 +210,3 @@ const SpyExercisePage: React.FC<SpyExercisePageProps> = ({ letter, onComplete })
 };
 
 export default SpyExercisePage;
-
-
-        >
-          Next
-        </button>
-      </div>
-    </motion.div>
-  );
-};
-
-export default SpyExercisePage;
-
-

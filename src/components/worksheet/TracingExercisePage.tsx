@@ -1,4 +1,4 @@
-  import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import './TracingExercisePage.css';
 
@@ -198,13 +198,3 @@ const TracingExercisePage: React.FC<TracingExercisePageProps> = ({ letter, onCom
 };
 
 export default TracingExercisePage;
-
-Next
-        </button>
-      </div>
-    </motion.div>
-  );
-};
-
-export default TracingExercisePage;
-

@@ -5,6 +5,12 @@ export interface VocabularyItem {
   video?: string;
 }
 
+export interface SpyObject {
+  name: string;
+  x: number;
+  y: number;
+}
+
 export interface LetterInfo {
   name: string;
   pronunciation: string;
@@ -16,6 +22,7 @@ export interface LetterData {
   pronunciation: string;
   vocab: VocabularyItem[];
   shapes?: string[];
+  spyObjects?: SpyObject[];
 }
 
 export interface LetterSquare {

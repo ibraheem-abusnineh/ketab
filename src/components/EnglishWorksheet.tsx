@@ -347,8 +347,10 @@ const EnglishWorksheet: React.FC = () => {
         {/* Page 7: Spy Exercise */}
         {currentPage === 7 && (
           <SpyExercisePage
-            letter={selectedLetter}
+            letterData={letterData}
+            selectedLetter={selectedLetter}
             onComplete={() => handlePageChange(1)}
+            isEnglish={true}
           />
         )}
 

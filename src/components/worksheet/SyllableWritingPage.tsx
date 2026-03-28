@@ -1,7 +1,6 @@
 import React from 'react';
 import LetterImage from '../LetterImage';
 import { SyllablePair } from '../../types';
-import PrintButton from '../PrintButton';
 
 interface SyllableWritingPageProps {
   selectedLetter: string;
@@ -47,14 +46,3 @@ const SyllableWritingPage: React.FC<SyllableWritingPageProps> = ({
 };
 
 export default SyllableWritingPage;
-
- </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default SyllableWritingPage;
-

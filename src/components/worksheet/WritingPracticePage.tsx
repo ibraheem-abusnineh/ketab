@@ -1,6 +1,5 @@
 import React from 'react';
 import { LetterData } from '../../types';
-import PrintButton from '../PrintButton';
 
 interface WritingPracticePageProps {
   letterData: LetterData;
@@ -56,14 +55,3 @@ const WritingPracticePage: React.FC<WritingPracticePageProps> = ({
 };
 
 export default WritingPracticePage;
-
-     );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default WritingPracticePage;
-
