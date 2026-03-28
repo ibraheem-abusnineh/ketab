@@ -47,7 +47,6 @@ const IntroductionPage: React.FC<IntroductionPageProps> = ({
             className="main-letter-image"
           />
         </div>
-      </div>
 
       <div className="hand-gestures">
         <h3>

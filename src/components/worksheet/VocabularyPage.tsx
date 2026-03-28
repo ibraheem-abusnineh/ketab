@@ -56,9 +56,6 @@ const VocabularyPage: React.FC<VocabularyPageProps> = ({
 
   return (
     <div className="book-page active">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <PrintButton isEnglish={isEnglish} />
-      </div>
       <div className="vocabulary-section">
         <h3>
           {isEnglish
