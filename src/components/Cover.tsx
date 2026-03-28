@@ -147,9 +147,12 @@ const Cover: React.FC = () => {
           <div className="bg-white border-[3px] border-[#84333c] rounded-xl w-[90vw] max-w-[700px] p-[24px_24px_18px_24px] text-center relative shadow-[0_12px_28px_rgba(0,0,0,0.2)]" onClick={(e) => e.stopPropagation()}>
             <button className="absolute top-2 right-2.5 bg-transparent border-none text-[28px] text-[#84333c] cursor-pointer" onClick={() => setShowNotice(false)}>&times;</button>
             <div className="text-[1.6em] text-[#84333c] font-[800] mb-2.5">تنبيه</div>
-            <div className="text-[1.1em] text-[#5a2428] my-2">
-              <p>
-                هذا الموقع مجاني بالكامل، وأي عملية بيع أو تقاضي المال مقابل محتواه غير قانونية.
+            <div className="text-[1.1em] text-[#5a2428] my-2 leading-relaxed">
+              <p className="mb-4">
+                جميع الحقوق محفوظة © لجمعية جائزة الملكة رانيا العبدالله للتميز التربوي . أي استخدام غير قانوني ، يخضع للمساءلة القانونية.
+              </p>
+              <p className="font-bold">
+                المنصة مجانية بالكامل و لجميع المستخدمين .
               </p>
             </div>
             <button className="mt-[14px] bg-[#84333c] text-white border-none rounded-lg py-[10px] px-[24px] text-[1em] cursor-pointer hover:bg-[#a45a64]" onClick={() => setShowNotice(false)}>حسناً</button>
