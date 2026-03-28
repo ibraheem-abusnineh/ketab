@@ -151,9 +151,6 @@ const SpyExercisePage: React.FC<SpyExercisePageProps> = ({ letter, onComplete })
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', width: '100%' }}>
-        <PrintButton isEnglish={true} />
-      </div>
       <h2 className="tracing-heading">Letter Spy Hunt</h2>
       <p className="tracing-instruction">{instructionText}</p>
 
@@ -195,6 +192,17 @@ const SpyExercisePage: React.FC<SpyExercisePageProps> = ({ letter, onComplete })
               onComplete();
             }
           }}
+        >
+          Next
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+export default SpyExercisePage;
+
+
         >
           Next
         </button>

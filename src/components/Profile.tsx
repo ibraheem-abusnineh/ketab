@@ -50,7 +50,23 @@ const Profile: React.FC = () => {
       return;
     }
 
-    fetchProfileData(auth.user.nationalNumber);
+    if (auth.user.nationalNumber === 'GUEST') {
+      setProfileData({
+        nationalNumber: 'GUEST',
+        name: 'ضيف',
+        role: 'guest',
+        school: 'زيارة عامة',
+        phone: '',
+        directorate: '',
+        totalLogins: 1,
+        firstLogin: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        recentLogins: []
+      });
+      setLoading(false);
+    } else {
+      fetchProfileData(auth.user.nationalNumber);
+    }
   }, [navigate]);
 
   const fetchProfileData = async (nationalNumber: string) => {
@@ -219,172 +235,181 @@ const Profile: React.FC = () => {
           </div>
         </div>
 
-        <div className="profile-grid">
-          {/* Personal Information Card */}
-          <div className="profile-card personal-info">
-            <div className="card-header">
-              <h2 className="card-title">المعلومات الشخصية</h2>
-              {!isEditing ? (
-                  <button onClick={handleEdit} className="edit-btn">
-                  ✏️ تعديل
+        {profileData.nationalNumber === 'GUEST' ? (
+          <div className="bg-white rounded-xl shadow-lg border-[3px] border-[#84333c] p-10 text-center my-10">
+            <h2 className="text-2xl text-[#84333c] font-bold mb-4">أنت مسجل كضيف</h2>
+            <p className="text-lg text-[#5a2428]">مرحباً بك في منصة كتاب. يمكنك تصفح المحتوى التعليمي واستخدام الحروف.</p>
+          </div>
+        ) : (
+          <div className="profile-grid">
+            {/* Personal Information Card */}
+            <div className="profile-card personal-info">
+              <div className="card-header">
+                <h2 className="card-title">المعلومات الشخصية</h2>
+                {!isEditing ? (
+                    <button onClick={handleEdit} className="edit-btn">
+                    ✏️ تعديل
+                  </button>
+                ) : (
+                  <div className="edit-actions">
+                    <button onClick={handleSave} className="save-btn" disabled={saveLoading}>
+                      {saveLoading ? 'جاري الإرسال...' : '📤 إرسال الطلب'}
+                    </button>
+                    <button onClick={handleCancelEdit} className="cancel-btn" disabled={saveLoading}>
+                      ❌ إلغاء
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="info-grid">
+                <div className="info-item">
+                  <label>الاسم</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedData?.name || ''}
+                      onChange={(e) => setEditedData(prev => ({ ...prev!, name: e.target.value }))}
+                      className="edit-input"
+                    />
+                  ) : (
+                    <span>{profileData.name}</span>
+                  )}
+                </div>
+                <div className="info-item">
+                  <label>الرقم الوطني</label>
+                  <span>{profileData.nationalNumber}</span>
+                </div>
+                <div className="info-item">
+                  <label>الدور</label>
+                  <span className={`role-badge role-${profileData.role}`}>
+                    {profileData.role}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <label>المدرسة</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedData?.school || ''}
+                      onChange={(e) => setEditedData(prev => ({ ...prev!, school: e.target.value }))}
+                      className="edit-input"
+                    />
+                  ) : (
+                    <span>{profileData.school || 'غير متوفر'}</span>
+                  )}
+                </div>
+                <div className="info-item">
+                  <label>الهاتف</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedData?.phone || ''}
+                      onChange={(e) => setEditedData(prev => ({ ...prev!, phone: e.target.value }))}
+                      className="edit-input"
+                    />
+                  ) : (
+                    <span>{profileData.phone || 'غير متوفر'}</span>
+                  )}
+                </div>
+                <div className="info-item">
+                  <label>المديرية</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedData?.directorate || ''}
+                      onChange={(e) => setEditedData(prev => ({ ...prev!, directorate: e.target.value }))}
+                      className="edit-input"
+                    />
+                  ) : (
+                    <span>{profileData.directorate || 'غير متوفر'}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Login Statistics Card */}
+            <div className="profile-card login-stats">
+              <h2 className="card-title">إحصائيات الدخول</h2>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <div className="stat-number">{profileData.totalLogins}</div>
+                  <div className="stat-label">إجمالي الدخول</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-date">{formatDate(profileData.firstLogin)}</div>
+                  <div className="stat-label">أول دخول</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-date">{formatDate(profileData.lastLogin)}</div>
+                  <div className="stat-label">آخر دخول</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Course Selection Card */}
+            <div className="profile-card course-selection">
+              <h2 className="card-title">اختيار الدورة</h2>
+              <div className="course-buttons">
+                <button 
+                  className={`course-button ${course === 'arabic' ? 'active' : ''}`}
+                  onClick={() => {
+                    setCourse('arabic');
+                    navigate('/letters');
+                  }}
+                >
+                  اللغة العربية
                 </button>
+                <button 
+                  className={`course-button ${course === 'english' ? 'active' : ''} ${availability.english.locked ? 'locked' : ''}`}
+                  onClick={() => {
+                    if (availability.english.locked) {
+                      setLockedCourse('english');
+                      return;
+                    }
+                    setCourse('english');
+                    navigate('/letters');
+                  }}
+                >
+                  {availability.english.locked ? '🔒 اللغة الإنجليزية' : 'اللغة الإنجليزية'}
+                </button>
+                <button 
+                  className={`course-button ${course === 'numbers' ? 'active' : ''} ${availability.numbers.locked ? 'locked' : ''}`}
+                  onClick={() => {
+                    if (availability.numbers.locked) {
+                      setLockedCourse('numbers');
+                      return;
+                    }
+                    setCourse('numbers');
+                    navigate('/letters');
+                  }}
+                >
+                  {availability.numbers.locked ? '🔒 الرياضيات' : 'الرياضيات'}
+                </button>
+              </div>
+            </div>
+
+            {/* Recent Activity Card */}
+            <div className="profile-card recent-activity">
+              <h2 className="card-title">النشاط الأخير</h2>
+              {profileData.recentLogins.length > 0 ? (
+                <div className="activity-list">
+                  {profileData.recentLogins.map((login, index) => (
+                    <div key={index} className="activity-item">
+                      <div className="activity-time">
+                        {login.date} الساعة {login.time}
+                      </div>
+                      <div className="activity-status">دخول</div>
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <div className="edit-actions">
-                  <button onClick={handleSave} className="save-btn" disabled={saveLoading}>
-                    {saveLoading ? 'جاري الإرسال...' : '📤 إرسال الطلب'}
-                  </button>
-                  <button onClick={handleCancelEdit} className="cancel-btn" disabled={saveLoading}>
-                    ❌ إلغاء
-                  </button>
+                <div className="no-activity">
+                  <p>لا يوجد نشاط حديث</p>
                 </div>
               )}
             </div>
-            <div className="info-grid">
-              <div className="info-item">
-                <label>الاسم</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedData?.name || ''}
-                    onChange={(e) => setEditedData(prev => ({ ...prev!, name: e.target.value }))}
-                    className="edit-input"
-                  />
-                ) : (
-                  <span>{profileData.name}</span>
-                )}
-              </div>
-              <div className="info-item">
-                <label>الرقم الوطني</label>
-                <span>{profileData.nationalNumber}</span>
-              </div>
-              <div className="info-item">
-                <label>الدور</label>
-                <span className={`role-badge role-${profileData.role}`}>
-                  {profileData.role}
-                </span>
-              </div>
-              <div className="info-item">
-                <label>المدرسة</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedData?.school || ''}
-                    onChange={(e) => setEditedData(prev => ({ ...prev!, school: e.target.value }))}
-                    className="edit-input"
-                  />
-                ) : (
-                  <span>{profileData.school || 'غير متوفر'}</span>
-                )}
-              </div>
-              <div className="info-item">
-                <label>الهاتف</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedData?.phone || ''}
-                    onChange={(e) => setEditedData(prev => ({ ...prev!, phone: e.target.value }))}
-                    className="edit-input"
-                  />
-                ) : (
-                  <span>{profileData.phone || 'غير متوفر'}</span>
-                )}
-              </div>
-              <div className="info-item">
-                <label>المديرية</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedData?.directorate || ''}
-                    onChange={(e) => setEditedData(prev => ({ ...prev!, directorate: e.target.value }))}
-                    className="edit-input"
-                  />
-                ) : (
-                  <span>{profileData.directorate || 'غير متوفر'}</span>
-                )}
-              </div>
-            </div>
-          </div>        {/* Login Statistics Card */}
-        <div className="profile-card login-stats">
-          <h2 className="card-title">إحصائيات الدخول</h2>
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-number">{profileData.totalLogins}</div>
-              <div className="stat-label">إجمالي الدخول</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-date">{formatDate(profileData.firstLogin)}</div>
-              <div className="stat-label">أول دخول</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-date">{formatDate(profileData.lastLogin)}</div>
-              <div className="stat-label">آخر دخول</div>
-            </div>
           </div>
-        </div>
-
-        {/* Course Selection Card */}
-        <div className="profile-card course-selection">
-          <h2 className="card-title">اختيار الدورة</h2>
-          <div className="course-buttons">
-            <button 
-              className={`course-button ${course === 'arabic' ? 'active' : ''}`}
-              onClick={() => {
-                setCourse('arabic');
-                navigate('/letters');
-              }}
-            >
-              اللغة العربية
-            </button>
-            <button 
-              className={`course-button ${course === 'english' ? 'active' : ''} ${availability.english.locked ? 'locked' : ''}`}
-              onClick={() => {
-                if (availability.english.locked) {
-                  setLockedCourse('english');
-                  return;
-                }
-                setCourse('english');
-                navigate('/letters');
-              }}
-            >
-              {availability.english.locked ? '🔒 اللغة الإنجليزية' : 'اللغة الإنجليزية'}
-            </button>
-            <button 
-              className={`course-button ${course === 'numbers' ? 'active' : ''} ${availability.numbers.locked ? 'locked' : ''}`}
-              onClick={() => {
-                if (availability.numbers.locked) {
-                  setLockedCourse('numbers');
-                  return;
-                }
-                setCourse('numbers');
-                navigate('/letters');
-              }}
-            >
-              {availability.numbers.locked ? '🔒 الرياضيات' : 'الرياضيات'}
-            </button>
-          </div>
-        </div>
-
-        {/* Recent Activity Card */}
-        <div className="profile-card recent-activity">
-          <h2 className="card-title">النشاط الأخير</h2>
-          {profileData.recentLogins.length > 0 ? (
-            <div className="activity-list">
-              {profileData.recentLogins.map((login, index) => (
-                <div key={index} className="activity-item">
-                  <div className="activity-time">
-                    {login.date} الساعة {login.time}
-                  </div>
-                  <div className="activity-status">دخول</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="no-activity">
-              <p>لا يوجد نشاط حديث</p>
-            </div>
-          )}
-        </div>
-      </div>
+        )}
 
       <div className="profile-footer">
         <div className="footer-info">

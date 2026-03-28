@@ -1,6 +1,5 @@
 import React from 'react';
 import { LetterSquare, LetterData } from '../../types';
-import PrintButton from '../PrintButton';
 
 interface LetterRecognitionPageProps {
   letterSquares: LetterSquare[];
@@ -31,9 +30,6 @@ const LetterRecognitionPage: React.FC<LetterRecognitionPageProps> = ({
 
   return (
     <div className="book-page active">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <PrintButton isEnglish={isEnglish} />
-      </div>
       <div className="letter-organization-section">
         <h3>
           {isEnglish

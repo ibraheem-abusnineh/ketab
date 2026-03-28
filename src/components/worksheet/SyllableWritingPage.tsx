@@ -16,9 +16,6 @@ const SyllableWritingPage: React.FC<SyllableWritingPageProps> = ({
 }) => {
   return (
     <div className="book-page active">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <PrintButton isEnglish={isEnglish} />
-      </div>
       <div className="syllable-writing-section">
         <h3>{isEnglish ? 'Write the following syllables:' : 'أَكْتُبُ الْمَقَاطِعَ الآتيةَ:'}</h3>
         <div className="syllable-matching-grid">
@@ -42,6 +39,16 @@ const SyllableWritingPage: React.FC<SyllableWritingPageProps> = ({
               </div>
               <div className="writing-line-purple writing-line" />
             </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SyllableWritingPage;
+
+ </div>
           ))}
         </div>
       </div>

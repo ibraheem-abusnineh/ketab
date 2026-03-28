@@ -1,7 +1,6 @@
 import React from 'react';
 import LetterImage from '../LetterImage';
 import { Vowel } from '../../types';
-import PrintButton from '../PrintButton';
 
 interface VowelWritingPageProps {
   selectedLetter: string;

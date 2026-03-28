@@ -28,9 +28,6 @@ const WritingPracticePage: React.FC<WritingPracticePageProps> = ({
 
   return (
     <div className="book-page active">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <PrintButton isEnglish={isEnglish} />
-      </div>
       <div className="writing-section">
         <h3>
           {isEnglish
@@ -51,6 +48,16 @@ const WritingPracticePage: React.FC<WritingPracticePageProps> = ({
                 </span>
               </div>
             );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WritingPracticePage;
+
+     );
           })}
         </div>
       </div>

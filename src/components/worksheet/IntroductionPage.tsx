@@ -2,7 +2,6 @@ import React from 'react';
 import LetterImage from '../LetterImage';
 import { LetterData, LetterInfo } from '../../types';
 import { convertToEmbedUrl } from '../../utils/videoUtils';
-import PrintButton from '../PrintButton';
 
 interface IntroductionPageProps {
   selectedLetter: string;
@@ -25,18 +24,14 @@ const IntroductionPage: React.FC<IntroductionPageProps> = ({
 
   return (
     <div className="book-page active">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <PrintButton isEnglish={isEnglish} />
-      </div>
       <div className="header">
         <h1>
           {isEnglish ? 'Worksheet' : 'وَرَقَةُ عَمَلٍ'}<br />
           {isEnglish ? `Letter ${displayLetterName}` : `حَرْفُ ${rawLetterName}`}
         </h1>
       </div>
-      
+
       <div className="letter-showcase">
-        <div className="letter-text-section">
           <div className="main-letter">{selectedLetter}</div>
           <div className="letter-name">
             {isEnglish ? `Letter ${displayLetterName}` : `حَرْفُ ${rawLetterName}`}

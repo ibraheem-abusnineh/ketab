@@ -1,7 +1,6 @@
 import React from 'react';
 import LetterImage from '../LetterImage';
 import { MatchingWord, GestureBox } from '../../types';
-import PrintButton from '../PrintButton';
 
 interface MatchingExercisePageProps {
   matchingWords: MatchingWord[];
@@ -28,9 +27,6 @@ const MatchingExercisePage: React.FC<MatchingExercisePageProps> = ({
 
   return (
     <div className="book-page active">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <PrintButton isEnglish={isEnglish} />
-      </div>
       <div className="matching-section">
         <h3>
           {isEnglish
@@ -85,4 +81,3 @@ const MatchingExercisePage: React.FC<MatchingExercisePageProps> = ({
 };
 
 export default MatchingExercisePage;
-

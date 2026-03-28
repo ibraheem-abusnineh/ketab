@@ -411,41 +411,10 @@ const Reports: React.FC = () => {
         newWindow.document.write(htmlContent);
         newWindow.document.close();
         
-        // Add print button to the HTML page
-        const printButton = newWindow.document.createElement('button');
-        printButton.innerHTML = '🖨️ طباعة | Print';
-        printButton.className = 'no-print';
-        printButton.style.cssText = `
-          position: fixed;
-          top: 20px;
-          left: 20px;
-          padding: 12px 24px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          z-index: 1000;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-          font-family: 'Cairo', Arial, sans-serif;
-          transition: all 0.3s ease;
-        `;
-        printButton.onclick = () => {
-          newWindow.print();
-        };
-        printButton.onmouseover = () => {
-          printButton.style.transform = 'translateY(-2px)';
-          printButton.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
-        };
-        printButton.onmouseout = () => {
-          printButton.style.transform = 'translateY(0)';
-          printButton.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-        };
-        
-        newWindow.document.body.appendChild(printButton);
         newWindow.focus();
+        setTimeout(() => {
+          newWindow.print();
+        }, 500);
       } else {
         alert('Please allow popups for this site to view the HTML report.');
       }

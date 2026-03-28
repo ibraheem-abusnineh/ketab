@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { LetterData } from '../../types';
 import { getLocalVideoPath, getWordImagePath } from '../../utils/videoUtils';
 import { VocabularyItem } from '../../types';
-import PrintButton from '../PrintButton';
 
 // Separate component for vocabulary items to handle image error state
 const VocabItem: React.FC<{

@@ -1,7 +1,6 @@
   import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import './TracingExercisePage.css';
-import PrintButton from '../PrintButton';
 
 export interface TracingExercisePageProps {
   letter: string;
@@ -149,9 +148,6 @@ const TracingExercisePage: React.FC<TracingExercisePageProps> = ({ letter, onCom
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', width: '100%' }}>
-        <PrintButton />
-      </div>
       <h2 className="tracing-heading">Letter Tracing</h2>
       <p className="tracing-instruction">{instructionText}</p>
 
@@ -195,6 +191,15 @@ const TracingExercisePage: React.FC<TracingExercisePageProps> = ({ letter, onCom
           }}
         >
           Next
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+export default TracingExercisePage;
+
+Next
         </button>
       </div>
     </motion.div>
