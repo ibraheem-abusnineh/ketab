@@ -275,8 +275,6 @@ const ArabicWorksheet: React.FC = () => {
         <div className="logo-top-left">
           <LogoWithImage 
             logoPath="qra-logo.svg"
-            imagePath="logo2.svg"
-            imageAlt="Logo2"
           />
         </div>
         {/* Decorative corner elements to match original styling */}

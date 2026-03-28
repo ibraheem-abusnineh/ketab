@@ -179,8 +179,6 @@ const LettersIndex: React.FC = () => {
         <div className="hidden lg:flex absolute top-[25px] left-[25px] z-[100] bg-white rounded-md border-2 border-[#84333c] w-[150px] h-[150px] lg:w-[200px] lg:h-[200px] p-[10px] items-center justify-center">
           <LogoWithImage 
             logoPath="qra-logo.svg"
-            imagePath="/logo2.svg"
-            imageAlt="Logo2"
             className="w-full h-auto block"
           />
         </div>
