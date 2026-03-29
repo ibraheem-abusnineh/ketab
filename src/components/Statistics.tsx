@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Statistics.css';
+import { apiFetch } from '../utils/api';
 
 interface SchoolStats {
   school: string;
@@ -88,27 +89,22 @@ const Statistics: React.FC = () => {
       
       // Fetch all statistics in parallel
       const [visitResponse, schoolResponse, userResponse] = await Promise.all([
-        fetch('/api/visit-count'),
-        fetch('/api/stats/by-school'),
-        fetch('/api/stats/user-history')
+        apiFetch('/api/visit-count'),
+        apiFetch('/api/stats/by-school'),
+        apiFetch('/api/stats/user-history')
       ]);
 
       let fetchedTotalVisitCount = 0;
-      if (visitResponse.ok) {
-        const visitData = await visitResponse.json();
-        fetchedTotalVisitCount = visitData.totalVisits || 0;
-        setTotalVisitCount(fetchedTotalVisitCount);
-      }
+      
+      const visitData = await visitResponse.json();
+      fetchedTotalVisitCount = visitData.totalVisits || 0;
+      setTotalVisitCount(fetchedTotalVisitCount);
 
-      if (schoolResponse.ok) {
-        const schoolData = await schoolResponse.json();
-        setSchoolStats(schoolData.data);
-      }
+      const schoolData = await schoolResponse.json();
+      setSchoolStats(schoolData.data || []);
 
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        setUserHistory(userData.data);
-      }
+      const userData = await userResponse.json();
+      setUserHistory(userData.data || []);
 
       // Fetch filtered visits based on period
       const dateRange = getDateRange();
@@ -117,26 +113,22 @@ const Statistics: React.FC = () => {
           startDate: dateRange.startDate,
           endDate: dateRange.endDate
         });
-        const visitsResponse = await fetch(`/api/stats/visits?${params}`);
-        if (visitsResponse.ok) {
-          const visitsData = await visitsResponse.json();
-          setFilteredVisitCount(visitsData.count || 0);
-          setFilteredVisits(visitsData.visits || []);
-        }
+        const visitsResponse = await apiFetch(`/api/stats/visits?${params}`);
+        const visitsData = await visitsResponse.json();
+        setFilteredVisitCount(visitsData.count || 0);
+        setFilteredVisits(visitsData.visits || []);
       } else {
         // All time - use fetched total visit count and fetch all visits (limit to recent ones for display)
         setFilteredVisitCount(fetchedTotalVisitCount);
-        const visitsResponse = await fetch('/api/stats/visits');
-        if (visitsResponse.ok) {
-          const visitsData = await visitsResponse.json();
-          setFilteredVisits((visitsData.visits || []).slice(-100)); // Show last 100 for "all time"
-        }
+        const visitsResponse = await apiFetch('/api/stats/visits');
+        const visitsData = await visitsResponse.json();
+        setFilteredVisits((visitsData.visits || []).slice(-100)); // Show last 100 for "all time"
       }
 
       setLastUpdated(new Date());
       setError('');
-    } catch (error) {
-      setError('Network error. Please check if the server is running.');
+    } catch (error: any) {
+      setError(error.message || 'Network error. Please check if the server is running.');
     } finally {
       setLoading(false);
     }
@@ -185,7 +177,7 @@ const Statistics: React.FC = () => {
       setResetting(true);
       setResetMessage(null);
       
-      const response = await fetch('/api/admin/reset-visits', {
+      const response = await apiFetch('/api/admin/reset-visits', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,20 +185,15 @@ const Statistics: React.FC = () => {
         body: JSON.stringify({ confirmed: true }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setResetMessage({ type: 'success', text: data.message || 'Visit counter and login history reset successfully!' });
-        setShowResetConfirm(false);
-        // Refresh all statistics
-        await fetchAllStats();
-        // Clear message after 5 seconds
-        setTimeout(() => setResetMessage(null), 5000);
-      } else {
-        const errorData = await response.json();
-        setResetMessage({ type: 'error', text: errorData.error || 'Failed to reset visit counter' });
-      }
-    } catch (error) {
-      setResetMessage({ type: 'error', text: 'Network error. Please check if the server is running.' });
+      const data = await response.json();
+      setResetMessage({ type: 'success', text: data.message || 'Visit counter and login history reset successfully!' });
+      setShowResetConfirm(false);
+      // Refresh all statistics
+      await fetchAllStats();
+      // Clear message after 5 seconds
+      setTimeout(() => setResetMessage(null), 5000);
+    } catch (error: any) {
+      setResetMessage({ type: 'error', text: error.message || 'Network error. Please check if the server is running.' });
     } finally {
       setResetting(false);
     }

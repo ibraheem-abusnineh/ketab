@@ -66,32 +66,15 @@ const UserManagement: React.FC = (): React.ReactElement => {
     fetchUsers();
   }, []);
 
-  // Helper to safely parse JSON responses and return {ok, json, text}
-  const parseResponse = async (response: Response) => {
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      const json = await response.json();
-      return { ok: response.ok, json };
-    }
-    const text = await response.text();
-    return { ok: response.ok, text };
-  };
-
   const fetchUsers = async () => {
     try {
-  const response = await apiFetch('/api/users');
-      const parsed = await parseResponse(response);
-      if (parsed.ok && parsed.json) {
-        setUsers(parsed.json.users || []);
-      } else if (!parsed.ok && parsed.json) {
-        setError(parsed.json.error || 'Failed to fetch users');
-      } else if (parsed.text) {
-        setError('Unexpected non-JSON response: ' + parsed.text.slice(0,200));
-      } else {
-        setError('Failed to fetch users');
-      }
-    } catch (error) {
-      setError('Network error. Please check if the server is running.');
+      setLoading(true);
+      const response = await apiFetch('/api/users');
+      const data = await response.json();
+      setUsers(data.users || []);
+      setError('');
+    } catch (error: any) {
+      setError(error.message || 'Network error. Please check if the server is running.');
     } finally {
       setLoading(false);
     }
@@ -102,15 +85,15 @@ const UserManagement: React.FC = (): React.ReactElement => {
     setLoading(true);
     
     try {
-  const response = await apiFetch('/api/users/add', {
+      const response = await apiFetch('/api/users/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser)
       });
-      const parsed = await parseResponse(response);
+      const data = await response.json();
 
-      if (parsed.ok && parsed.json) {
-        setUsers([...users, parsed.json.user]);
+      if (data.success) {
+        setUsers([...users, data.user]);
         setNewUser({
           nationalNumber: '',
           name: '',
@@ -121,13 +104,11 @@ const UserManagement: React.FC = (): React.ReactElement => {
         });
         setShowAddForm(false);
         setError('');
-      } else if (parsed.json) {
-        setError(parsed.json.error || 'Failed to add user');
-      } else if (parsed.text) {
-        setError('Failed to add user: ' + parsed.text.slice(0,200));
+      } else {
+        setError(data.error || 'Failed to add user');
       }
-    } catch (error) {
-      setError('Network error');
+    } catch (error: any) {
+      setError(error.message || 'Network error');
     } finally {
       setLoading(false);
     }
@@ -155,7 +136,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
         throw new Error('Name and role are required fields');
       }
 
-  const response = await apiFetch(`/api/users/${user.nationalNumber.trim()}`, {
+      const response = await apiFetch(`/api/users/${user.nationalNumber.trim()}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -170,26 +151,18 @@ const UserManagement: React.FC = (): React.ReactElement => {
         })
       });
 
-      const parsed = await parseResponse(response);
-      if (!parsed.ok && parsed.json) {
-        throw new Error(parsed.json.error || 'Failed to update user');
-      }
-      if (!parsed.ok && parsed.text) {
-        throw new Error('Failed to update user: ' + parsed.text.slice(0,200));
-      }
-      if (parsed.json) {
-        const data = parsed.json;
-        if (!data.success || !data.user) {
-          throw new Error('Invalid server response');
-        }
+      const data = await response.json();
+      if (data.success && data.user) {
         setUsers(users.map(u => 
           u.nationalNumber === user.nationalNumber ? { ...data.user } : u
         ));
+        setEditingUser(null);
+        setError('');
+      } else {
+        throw new Error(data.error || 'Failed to update user');
       }
-      setEditingUser(null);
-      setError('');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Network error while updating user');
+    } catch (error: any) {
+      setError(error.message || 'Network error while updating user');
     } finally {
       setLoading(false);
     }
@@ -210,18 +183,16 @@ const UserManagement: React.FC = (): React.ReactElement => {
       const response = await apiFetch(`/api/users/${user.nationalNumber}`, {
         method: 'DELETE'
       });
-      const parsed = await parseResponse(response);
-      if (parsed.ok) {
+      const data = await response.json();
+      if (data.success) {
         setUsers(users.filter(u => u.nationalNumber !== user.nationalNumber));
         setUserToDelete(null);
         setError('');
-      } else if (parsed.json) {
-        setError(parsed.json.error || 'Failed to delete user');
-      } else if (parsed.text) {
-        setError('Failed to delete user: ' + parsed.text.slice(0,200));
+      } else {
+        setError(data.error || 'Failed to delete user');
       }
-    } catch (error) {
-      setError('Network error');
+    } catch (error: any) {
+      setError(error.message || 'Network error');
     } finally {
       setLoading(false);
     }
@@ -237,7 +208,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
     
     const formData = new FormData();
     formData.append('csvFile', csvFile);
-  formData.append('role', importRole as string);
+    formData.append('role', importRole as string);
     formData.append('strategy', importStrategy);
     
     try {
@@ -245,22 +216,20 @@ const UserManagement: React.FC = (): React.ReactElement => {
         method: 'POST',
         body: formData
       });
-      const parsed = await parseResponse(response);
+      const data = await response.json();
 
-      if (parsed.ok && parsed.json) {
-        setImportResult(parsed.json.result);
+      if (data.success) {
+        setImportResult(data.result);
         setCsvFile(null);
         setShowImportForm(false);
         fetchUsers(); // Refresh users list
         setError('');
-      } else if (parsed.json) {
-        setImportError(parsed.json);
+      } else {
+        setImportError(data);
         setError('');
-      } else if (parsed.text) {
-        setError('Import failed: ' + parsed.text.slice(0,200));
       }
-    } catch (error) {
-      setError('Network error');
+    } catch (error: any) {
+      setError(error.message || 'Network error');
     } finally {
       setLoading(false);
     }

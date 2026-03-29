@@ -14,7 +14,7 @@ import { CourseAvailabilityProvider } from './context/CourseAvailabilityContext'
 function App() {
   const [isAuthed, setIsAuthed] = React.useState(getAuthState().isAuthenticated);
   const [adminSession, setAdminSession] = useState<string | null>(
-    localStorage.getItem('admin_session')
+    localStorage.getItem('adminToken')
   );
 
   React.useEffect(() => {
@@ -28,7 +28,7 @@ function App() {
   }, []);
 
   const handleAdminLogin = (sessionToken: string) => {
-    localStorage.setItem('admin_session', sessionToken);
+    localStorage.setItem('adminToken', sessionToken);
     setAdminSession(sessionToken);
   };
 

@@ -77,18 +77,15 @@ export const CourseAvailabilityProvider: React.FC<{ children: React.ReactNode }>
     setLoading(true);
     try {
       const response = await apiFetch('/api/courses/status');
-      if (!response.ok) {
-        throw new Error('Failed to load course availability');
-      }
       const data = await response.json();
       const normalized = normalizeCourses(data.courses);
       setCourses(normalized);
       setError(undefined);
       ensureUnlockedCourse(normalized);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching course availability:', err);
       setCourses(DEFAULT_COURSES);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err.message || 'Unknown error');
       ensureUnlockedCourse(DEFAULT_COURSES);
     } finally {
       setLoading(false);
@@ -107,11 +104,6 @@ export const CourseAvailabilityProvider: React.FC<{ children: React.ReactNode }>
       },
       body: JSON.stringify({ locked })
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to update course status');
-    }
 
     const data = await response.json();
     const normalized = normalizeCourses(data.courses);

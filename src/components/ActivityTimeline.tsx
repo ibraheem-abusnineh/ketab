@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ActivityTimeline.css';
+import { apiFetch } from '../utils/api';
 
 interface TimeStats {
   hourly: Array<{ hour: number; count: number }>;
@@ -15,17 +16,12 @@ const ActivityTimeline: React.FC<{ collapsible?: boolean }> = ({ collapsible = f
   const fetchTimeStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/stats/by-time');
-      
-      if (response.ok) {
-        const timeData = await response.json();
-        setTimeStats(timeData.data);
-        setError('');
-      } else {
-        setError('Failed to fetch activity timeline');
-      }
-    } catch (error) {
-      setError('Network error. Please check if the server is running.');
+      const response = await apiFetch('/api/stats/by-time');
+      const timeData = await response.json();
+      setTimeStats(timeData.data);
+      setError('');
+    } catch (error: any) {
+      setError(error.message || 'Network error. Please check if the server is running.');
     } finally {
       setLoading(false);
     }

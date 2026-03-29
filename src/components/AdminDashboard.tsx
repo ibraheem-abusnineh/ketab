@@ -42,17 +42,13 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
 
   const fetchVisitCount = async () => {
     try {
-  const response = await apiFetch('/api/visit-count');
-      if (response.ok) {
-        const data = await response.json();
-        setVisitCount(data.totalVisits);
-        setLastUpdated(new Date());
-        setError('');
-      } else {
-        setError('Failed to fetch visit count');
-      }
-    } catch (error) {
-      setError('Network error. Please check if the server is running.');
+      const response = await apiFetch('/api/visit-count');
+      const data = await response.json();
+      setVisitCount(data.totalVisits);
+      setLastUpdated(new Date());
+      setError('');
+    } catch (error: any) {
+      setError(error.message || 'Failed to fetch visit count');
     } finally {
       setLoading(false);
     }
@@ -60,15 +56,13 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
 
   const fetchNotifications = async () => {
     try {
-  const response = await apiFetch('/api/admin/notifications');
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications);
-        // Count unread and pending requests
-        setUnreadCount(data.notifications.filter((n: Notification) => 
-          !n.read || (n.type === 'profile_edit_request' && n.status === 'pending')
-        ).length);
-      }
+      const response = await apiFetch('/api/admin/notifications');
+      const data = await response.json();
+      setNotifications(data.notifications || []);
+      // Count unread and pending requests
+      setUnreadCount((data.notifications || []).filter((n: Notification) => 
+        !n.read || (n.type === 'profile_edit_request' && n.status === 'pending')
+      ).length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -101,18 +95,13 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       return;
     }
     try {
-      const response = await apiFetch(`/api/admin/notifications/${notificationId}`, {
+      await apiFetch(`/api/admin/notifications/${notificationId}`, {
         method: 'DELETE'
       });
-      if (response.ok) {
-        await fetchNotifications();
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Failed to delete notification');
-      }
-    } catch (error) {
+      await fetchNotifications();
+    } catch (error: any) {
       console.error('Error deleting notification:', error);
-      alert('Failed to delete notification');
+      alert(error.message || 'Failed to delete notification');
     }
   };
 
@@ -135,18 +124,14 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       const response = await apiFetch('/api/admin/notifications', {
         method: 'DELETE'
       });
-      if (response.ok) {
-        const data = await response.json();
-        await fetchNotifications();
-        if (data.remainingRequests > 0) {
-          alert(`Cleared ${data.clearedCount} notification(s). ${data.remainingRequests} profile edit request(s) preserved.`);
-        }
-      } else {
-        alert('Failed to clear notifications');
+      const data = await response.json();
+      await fetchNotifications();
+      if (data.remainingRequests > 0) {
+        alert(`Cleared ${data.clearedCount} notification(s). ${data.remainingRequests} profile edit request(s) preserved.`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error clearing notifications:', error);
-      alert('Failed to clear notifications');
+      alert(error.message || 'Failed to clear notifications');
     }
   };
 
@@ -166,7 +151,7 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
 
   const handleLogout = () => {
     // Clear any admin session data
-    localStorage.removeItem('admin_session');
+    localStorage.removeItem('adminToken');
     navigate('/admin');
   };
 
@@ -176,19 +161,14 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
 
   const handleApproveRequest = async (requestId: string) => {
     try {
-      const response = await apiFetch(`/api/admin/profile-requests/${requestId}/approve`, {
+      await apiFetch(`/api/admin/profile-requests/${requestId}/approve`, {
         method: 'POST'
       });
-      if (response.ok) {
-        await fetchNotifications();
-        await fetchVisitCount(); // Refresh data
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Failed to approve request');
-      }
-    } catch (error) {
+      await fetchNotifications();
+      await fetchVisitCount(); // Refresh data
+    } catch (error: any) {
       console.error('Error approving request:', error);
-      alert('Failed to approve request');
+      alert(error.message || 'Failed to approve request');
     }
   };
 
@@ -197,18 +177,13 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       return;
     }
     try {
-      const response = await apiFetch(`/api/admin/profile-requests/${requestId}/reject`, {
+      await apiFetch(`/api/admin/profile-requests/${requestId}/reject`, {
         method: 'POST'
       });
-      if (response.ok) {
-        await fetchNotifications();
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Failed to reject request');
-      }
-    } catch (error) {
+      await fetchNotifications();
+    } catch (error: any) {
       console.error('Error rejecting request:', error);
-      alert('Failed to reject request');
+      alert(error.message || 'Failed to reject request');
     }
   };
 

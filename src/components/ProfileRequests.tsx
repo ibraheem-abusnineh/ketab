@@ -44,20 +44,16 @@ const ProfileRequests: React.FC = () => {
   const fetchRequests = async () => {
     try {
       const response = await apiFetch('/api/admin/notifications');
-      if (response.ok) {
-        const data = await response.json();
-        // Filter only profile edit requests
-        const profileRequests = data.notifications.filter(
-          (n: any) => n.type === 'profile_edit_request'
-        ) as ProfileEditRequest[];
-        setRequests(profileRequests);
-        setError('');
-      } else {
-        setError('Failed to fetch profile requests');
-      }
-    } catch (error) {
+      const data = await response.json();
+      // Filter only profile edit requests
+      const profileRequests = data.notifications.filter(
+        (n: any) => n.type === 'profile_edit_request'
+      ) as ProfileEditRequest[];
+      setRequests(profileRequests);
+      setError('');
+    } catch (error: any) {
       console.error('Error fetching profile requests:', error);
-      setError('Network error. Please check if the server is running.');
+      setError(error.message || 'Network error. Please check if the server is running.');
     } finally {
       setLoading(false);
     }
@@ -67,11 +63,9 @@ const ProfileRequests: React.FC = () => {
     setLoadingUserDetails(true);
     try {
       const response = await apiFetch('/api/users');
-      if (response.ok) {
-        const data = await response.json();
-        const user = data.users.find((u: User) => u.nationalNumber === nationalNumber);
-        setUserDetails(user || null);
-      }
+      const data = await response.json();
+      const user = data.users.find((u: User) => u.nationalNumber === nationalNumber);
+      setUserDetails(user || null);
     } catch (error) {
       console.error('Error fetching user details:', error);
     } finally {
@@ -91,19 +85,14 @@ const ProfileRequests: React.FC = () => {
 
   const handleApprove = async (requestId: string) => {
     try {
-      const response = await apiFetch(`/api/admin/profile-requests/${requestId}/approve`, {
+      await apiFetch(`/api/admin/profile-requests/${requestId}/approve`, {
         method: 'POST'
       });
-      if (response.ok) {
-        await fetchRequests();
-        handleCloseDetails();
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Failed to approve request');
-      }
-    } catch (error) {
+      await fetchRequests();
+      handleCloseDetails();
+    } catch (error: any) {
       console.error('Error approving request:', error);
-      alert('Failed to approve request');
+      alert(error.message || 'Failed to approve request');
     }
   };
 
@@ -112,19 +101,14 @@ const ProfileRequests: React.FC = () => {
       return;
     }
     try {
-      const response = await apiFetch(`/api/admin/profile-requests/${requestId}/reject`, {
+      await apiFetch(`/api/admin/profile-requests/${requestId}/reject`, {
         method: 'POST'
       });
-      if (response.ok) {
-        await fetchRequests();
-        handleCloseDetails();
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Failed to reject request');
-      }
-    } catch (error) {
+      await fetchRequests();
+      handleCloseDetails();
+    } catch (error: any) {
       console.error('Error rejecting request:', error);
-      alert('Failed to reject request');
+      alert(error.message || 'Failed to reject request');
     }
   };
 
@@ -421,4 +405,3 @@ const ProfileRequests: React.FC = () => {
 };
 
 export default ProfileRequests;
-

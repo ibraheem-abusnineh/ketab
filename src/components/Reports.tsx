@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Reports.css';
+import { apiFetch } from '../utils/api';
 
 interface SchoolReport {
   school: string;
@@ -62,27 +63,19 @@ const Reports: React.FC = () => {
       });
       
       const [schoolResponse, userResponse] = await Promise.all([
-        fetch(`/api/reports/by-school?${params}`),
-        fetch(`/api/reports/by-user?${params}`)
+        apiFetch(`/api/reports/by-school?${params}`),
+        apiFetch(`/api/reports/by-user?${params}`)
       ]);
 
-      if (schoolResponse.ok) {
-        const schoolData = await schoolResponse.json();
-        setSchoolReports(schoolData.data || []);
-      } else {
-        setError('Failed to fetch school reports');
-      }
+      const schoolData = await schoolResponse.json();
+      setSchoolReports(schoolData.data || []);
 
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        setUserReports(userData.data || []);
-      } else {
-        setError('Failed to fetch user reports');
-      }
+      const userData = await userResponse.json();
+      setUserReports(userData.data || []);
 
       setError('');
-    } catch (error) {
-      setError('Network error. Please check if the server is running.');
+    } catch (error: any) {
+      setError(error.message || 'Network error. Please check if the server is running.');
     } finally {
       setLoading(false);
     }
@@ -601,4 +594,3 @@ const Reports: React.FC = () => {
 };
 
 export default Reports;
-

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ActivityTimeline from './ActivityTimeline';
 import './UserLoginHistory.css';
+import { apiFetch } from '../utils/api';
 
 interface UserHistory {
   nationalNumber: string;
@@ -30,17 +31,12 @@ const UserLoginHistory: React.FC = () => {
   const fetchUserHistory = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/stats/user-history');
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUserHistory(data.data);
-        setError('');
-      } else {
-        setError('Failed to fetch user history');
-      }
-    } catch (error) {
-      setError('Network error. Please check if the server is running.');
+      const response = await apiFetch('/api/stats/user-history');
+      const data = await response.json();
+      setUserHistory(data.data || []);
+      setError('');
+    } catch (error: any) {
+      setError(error.message || 'Network error. Please check if the server is running.');
     } finally {
       setLoading(false);
     }
