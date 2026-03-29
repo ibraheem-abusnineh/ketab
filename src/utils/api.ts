@@ -1,9 +1,13 @@
 export const API_BASE = ((): string => {
+  // Use environment variable if provided (standard for Amplify/App Runner)
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
   // In development, backend runs on port 5000
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     return 'http://localhost:5000';
   }
-  // In production, use same origin
+  // In production, default to same origin
   return '';
 })();
 

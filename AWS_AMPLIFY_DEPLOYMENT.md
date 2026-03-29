@@ -24,6 +24,16 @@ Amplify Hosting is perfect for the React frontend.
 
 4.  **Deploy**: Click **Save and deploy**. Amplify will provide a `.amplifyapp.com` URL.
 
+5.  **Configure Rewrites and Redirects (CRITICAL)**:
+    React is a Single Page Application (SPA). For routing to work correctly when refreshing a page or navigating directly to a URL (e.g., `/letters`), you MUST add a redirect rule:
+    *   In the Amplify console, go to **App settings** > **Rewrites and redirects**.
+    *   Click **Edit**.
+    *   Add the following rule:
+        *   **Source address**: `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>`
+        *   **Target address**: `/index.html`
+        *   **Type**: `200 (Rewrite)`
+    *   Click **Save**.
+
 ---
 
 ## 2. Backend Deployment (AWS App Runner or EC2)
@@ -65,3 +75,22 @@ Since the backend uses local JSON files (`server/data/*.json`):
 ## 5. Summary of URLs
 *   **Frontend**: `https://main.your-app-id.amplifyapp.com`
 *   **Backend Health Check**: `https://your-backend-url.awsapprunner.com/api/health`
+
+---
+
+## 6. Troubleshooting Common Issues
+
+### 404 Error on CSS/JS Files
+If you see 404 errors for files in `static/css/` or `static/js/` after deployment:
+1.  **Check `package.json`**: Ensure `"homepage": "/"` is set correctly. If it's still pointing to a GitHub Pages URL, the paths in `index.html` will be incorrect for Amplify.
+2.  **Clear Build Cache**: In the Amplify console, you can choose to "Redeploy" with a clean build.
+
+### Pages 404 on Refresh
+If navigating to a page like `/letters` works but refreshing the page gives an Amplify 404:
+1.  **Rewrites and Redirects**: Ensure you have added the SPA rewrite rule mentioned in Step 1.5.
+
+### API Connection Errors
+If the frontend cannot talk to the backend:
+1.  **Environment Variable**: Ensure `REACT_APP_API_URL` is set in the Amplify console (not just in your local `.env`).
+2.  **Trailing Slash**: Make sure your `REACT_APP_API_URL` does NOT have a trailing slash (e.g., use `https://xyz.awsapprunner.com`, not `https://xyz.awsapprunner.com/`).
+3.  **CORS**: Ensure your backend allows requests from your Amplify domain.

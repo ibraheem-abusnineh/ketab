@@ -1,5 +1,5 @@
 {
-  "homepage": "https://ibraheem-abusnineh.github.io/ketab",
+  "homepage": "/",
   "predeploy": "npm run build",
   "deploy": "gh-pages -d build",
   "name": "new_development",
