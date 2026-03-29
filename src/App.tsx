@@ -32,9 +32,12 @@ function App() {
     setAdminSession(sessionToken);
   };
 
+  // Only use basename in production/GitHub Pages
+  const routerBasename = process.env.NODE_ENV === 'production' ? process.env.PUBLIC_URL : '';
+
   return (
     <CourseAvailabilityProvider>
-    <Router basename={process.env.PUBLIC_URL}>
+    <Router basename={routerBasename}>
       <div className="App">
         <Routes>
           <Route path="/" element={<Cover />} />
