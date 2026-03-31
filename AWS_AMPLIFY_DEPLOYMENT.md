@@ -54,7 +54,10 @@ App Runner is the simplest way to run the Express server.
     *   **Port**: `5000`
 6.  **Environment Variables**:
     *   Add `PORT`: `5000`
-7.  **Review & Deploy**: Once deployed, App Runner will give you a service URL (e.g., `https://random-id.aws-region.awsapprunner.com`).
+7.  **Health Check (IMPORTANT)**:
+    *   **Protocol**: `HTTP`
+    *   **Path**: `/api/health`
+8.  **Review & Deploy**: Once deployed, App Runner will give you a service URL (e.g., `https://random-id.aws-region.awsapprunner.com`).
 
 ---
 
