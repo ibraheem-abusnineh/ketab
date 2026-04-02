@@ -10,6 +10,20 @@ const { v4: uuidv4 } = require('uuid');
 const { parseCSV, validateUser } = require('./utils/csvParser');
 const { readJSON, writeJSON } = require('./utils/fileStorage');
 
+// Global error handlers for debugging App Runner crashes
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION:', reason);
+  process.exit(1);
+});
+
+console.log('Starting server initialization...');
+
 const app = express();
 
 // Ensure required directories exist
