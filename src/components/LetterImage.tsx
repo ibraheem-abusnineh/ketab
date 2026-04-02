@@ -24,6 +24,7 @@ const LetterImage: React.FC<LetterImageProps> = ({
   const encodedLetter = encodeURIComponent(letter);
   const PUBLIC_URL = process.env.PUBLIC_URL || '';
 
+  // Fallback list for Encoding (Extension is now always lowercase)
   const imagePaths = [
     `${PUBLIC_URL}/letters/${encodedLetter}/1.jpg`,
     `${PUBLIC_URL}/letters/${letter}/1.jpg`,
