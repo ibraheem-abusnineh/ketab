@@ -8,10 +8,3 @@ run:
   command: cd server && node index.js
   network:
     port: 5000
-  healthcheck:
-    protocol: HTTP
-    path: /api/health
-    interval: 10
-    timeout: 5
-    healthy: 3
-    unhealthy: 3
