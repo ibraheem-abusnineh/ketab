@@ -12,6 +12,12 @@ const { readJSON, writeJSON } = require('./utils/fileStorage');
 
 const app = express();
 
+// Ensure required directories exist
+const dataDir = path.join(__dirname, 'data');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
 // Auth Middleware
 const adminAuth = (req, res, next) => {
   const token = req.headers['authorization'];
