@@ -50,7 +50,7 @@ function App() {
           } />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <FeedbackButton toEmail={process.env.REACT_APP_FEEDBACK_EMAIL || 'porpoise90947@aminating.com'} />
+        <FeedbackButton toEmail={process.env.REACT_APP_FEEDBACK_EMAIL || 'visiblevoices@qra.jo'} />
       </div>
     </Router>
     </CourseAvailabilityProvider>

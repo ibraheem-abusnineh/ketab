@@ -331,7 +331,7 @@ npm run install:all  # Install all dependencies
 Create a `.env` file in the root directory for environment-specific configuration:
 
 ```env
-REACT_APP_FEEDBACK_EMAIL=your-email@example.com
+REACT_APP_FEEDBACK_EMAIL=visiblevoices@qra.jo
 PORT=3000  # Frontend port (default)
 ```
 
