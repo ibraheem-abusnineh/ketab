@@ -23,6 +23,7 @@ export const convertToEmbedUrl = (videoUrl: string): string => {
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 
 export const getLocalVideoPath = (letter: string, word: string): string => {
+  // We'll return the encoded one, but the component using it should have a fallback
   return `${PUBLIC_URL}/letters/${encodeURIComponent(letter)}/${encodeURIComponent(word)}.mp4`;
 };
 
@@ -30,8 +31,9 @@ export const getLetterImagePath = (letter: string): string => {
   return `${PUBLIC_URL}/letters/${encodeURIComponent(letter)}/1.jpg`;
 };
 
-export const getLetterImagePathWithFallback = (letter: string): string => {
-  return `${PUBLIC_URL}/letters/${encodeURIComponent(letter)}/1.jpg`;
+// This one is specifically for use in places where we can't easily do multiple fallbacks
+export const getSafeImagePath = (path: string): string => {
+  return `${PUBLIC_URL}${path}`;
 };
 
 export const getWordImagePath = (word: string): string => {

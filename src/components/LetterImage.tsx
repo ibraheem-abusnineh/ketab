@@ -26,9 +26,9 @@ const LetterImage: React.FC<LetterImageProps> = ({
 
   const imagePaths = [
     `${PUBLIC_URL}/letters/${encodedLetter}/1.jpg`,
-    `${PUBLIC_URL}/letters/${encodedLetter}/1.JPG`,
+    `${PUBLIC_URL}/letters/${letter}/1.jpg`,
     `${PUBLIC_URL}/letters/${encodedLetter}/1.png`,
-    `${PUBLIC_URL}/letters/${encodedLetter}/1.PNG`
+    `${PUBLIC_URL}/letters/${letter}/1.png`
   ];
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {

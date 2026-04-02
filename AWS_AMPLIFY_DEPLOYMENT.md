@@ -26,20 +26,39 @@ Amplify Hosting is perfect for the React frontend.
 
 5.  **Configure Rewrites and Redirects (CRITICAL)**:
     React is a Single Page Application (SPA). For routing to work correctly when refreshing a page, you MUST add a redirect rule that handles international characters (like Arabic) and excludes your static folders.
+
     *   In the Amplify console, go to **App settings** > **Rewrites and redirects**.
-    *   Click **Edit**.
-    *   Add the following rule:
-        *   **Source address**: `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>`
-        *   **Target address**: `/index.html`
-        *   **Type**: `200 (Rewrite)`
-    *   **Alternative (Simpler/Robust)**: If the above still causes issues with Arabic images, use this more inclusive rule:
-        *   **Source address**: `/(static|letters|images|auth|logo|favicon).*`
-        *   **Target address**: `/<$1>`
-        *   **Type**: `200 (Rewrite)`
-        *   *Then add a second rule at the bottom:*
-        *   **Source address**: `/<*>`
-        *   **Target address**: `/index.html`
-        *   **Type**: `404 (Redirect)` (or 200 Rewrite for SPA)
+    *   Click **Edit** > **Open JSON editor**.
+    *   **Delete** all existing rules and paste this exact block:
+
+```json
+[
+    {
+        "source": "/static/<*>",
+        "target": "/static/<*>",
+        "status": "200",
+        "condition": null
+    },
+    {
+        "source": "/letters/<*>",
+        "target": "/letters/<*>",
+        "status": "200",
+        "condition": null
+    },
+    {
+        "source": "/images/<*>",
+        "target": "/images/<*>",
+        "status": "200",
+        "condition": null
+    },
+    {
+        "source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp|mp4|webm|wav|mp3|ogg)$)([^.]+$)/>",
+        "target": "/index.html",
+        "status": "200",
+        "condition": null
+    }
+]
+```
     *   Click **Save**.
 
 ---
