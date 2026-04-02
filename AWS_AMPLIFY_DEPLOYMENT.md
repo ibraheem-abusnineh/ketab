@@ -25,13 +25,21 @@ Amplify Hosting is perfect for the React frontend.
 4.  **Deploy**: Click **Save and deploy**. Amplify will provide a `.amplifyapp.com` URL.
 
 5.  **Configure Rewrites and Redirects (CRITICAL)**:
-    React is a Single Page Application (SPA). For routing to work correctly when refreshing a page or navigating directly to a URL (e.g., `/letters`), you MUST add a redirect rule:
+    React is a Single Page Application (SPA). For routing to work correctly when refreshing a page, you MUST add a redirect rule that handles international characters (like Arabic) and excludes your static folders.
     *   In the Amplify console, go to **App settings** > **Rewrites and redirects**.
     *   Click **Edit**.
     *   Add the following rule:
         *   **Source address**: `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>`
         *   **Target address**: `/index.html`
         *   **Type**: `200 (Rewrite)`
+    *   **Alternative (Simpler/Robust)**: If the above still causes issues with Arabic images, use this more inclusive rule:
+        *   **Source address**: `/(static|letters|images|auth|logo|favicon).*`
+        *   **Target address**: `/<$1>`
+        *   **Type**: `200 (Rewrite)`
+        *   *Then add a second rule at the bottom:*
+        *   **Source address**: `/<*>`
+        *   **Target address**: `/index.html`
+        *   **Type**: `404 (Redirect)` (or 200 Rewrite for SPA)
     *   Click **Save**.
 
 ---
