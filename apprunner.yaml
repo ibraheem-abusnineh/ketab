@@ -3,8 +3,8 @@ runtime: nodejs22
 build:
   commands:
     build:
-      - cd server && npm install
+      - npm --prefix server install
 run:
-  command: cd server && node index.js
+  command: node server/index.js
   network:
     port: 5000
