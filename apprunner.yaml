@@ -1,0 +1,16 @@
+version: 1.0
+runtime: nodejs22
+build:
+  commands:
+    build:
+      - cd server && npm install
+run:
+  command: cd server && node index.js
+  network:
+    port: 5000
+  healthcheck:
+    path: /api/health
+    interval: 10
+    timeout: 5
+    healthyThreshold: 3
+    unhealthyThreshold: 3
