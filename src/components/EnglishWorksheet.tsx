@@ -43,6 +43,23 @@ const EnglishWorksheet: React.FC = () => {
     }
   }, [letter]);
 
+  useEffect(() => {
+    let titleBeforePrint = document.title;
+    const onBeforePrint = () => {
+      titleBeforePrint = document.title;
+      document.title = 'Ketab';
+    };
+    const onAfterPrint = () => {
+      document.title = titleBeforePrint;
+    };
+    window.addEventListener('beforeprint', onBeforePrint);
+    window.addEventListener('afterprint', onAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', onBeforePrint);
+      window.removeEventListener('afterprint', onAfterPrint);
+    };
+  }, []);
+
   const updateLetterRecognitionExercise = useCallback(() => {
     if (!letterData) return;
 
@@ -370,6 +387,13 @@ const EnglishWorksheet: React.FC = () => {
           <button onClick={() => handlePageChange(1)}>
             Next Page
           </button>
+          <button
+            type="button"
+            className="print-button"
+            onClick={() => window.print()}
+          >
+            Print this page
+          </button>
           <button 
             className="back-to-index" 
             onClick={() => navigate('/letters')}
@@ -378,6 +402,14 @@ const EnglishWorksheet: React.FC = () => {
             Back to Index
           </button>
         </div>
+
+        <footer className="worksheet-print-footer" aria-hidden="true">
+          <img
+            src={`${process.env.PUBLIC_URL}/qra-logo.svg`}
+            alt=""
+            className="worksheet-print-footer-img"
+          />
+        </footer>
       </div>
 
       <VideoPopup

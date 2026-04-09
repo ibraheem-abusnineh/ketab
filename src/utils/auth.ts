@@ -12,6 +12,7 @@ export interface AuthState {
     name: string;
     role: string;
     school: string;
+    phone?: string;
   };
   loginTime?: number;
 }
@@ -109,17 +110,35 @@ export async function loginWithNationalNumber(nationalNumber: string): Promise<b
   }
 }
 
-export async function loginAsGuest(): Promise<boolean> {
+export async function loginAsGuest(fullName: string, phoneNumber: string): Promise<boolean> {
   try {
-    // Optional: You could track this visit too
+    const trimmedName = fullName.trim();
+    const trimmedPhone = phoneNumber.trim();
+    if (!trimmedName || !trimmedPhone) {
+      return false;
+    }
+
+    const response = await apiFetch('/api/login/guest', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fullName: trimmedName, phoneNumber: trimmedPhone }),
+    });
+    const data = await response.json();
+    if (!data.success || !data.user) {
+      return false;
+    }
+
     setAuthState({ 
       isAuthenticated: true, 
-      username: 'ضيف', // "Guest" in Arabic
+      username: data.user.name || trimmedName,
       user: {
-        nationalNumber: 'GUEST',
-        name: 'ضيف',
-        role: 'guest',
-        school: 'زيارة عامة' // "General Visit"
+        nationalNumber: data.user.nationalNumber,
+        name: data.user.name,
+        role: data.user.role,
+        school: data.user.school,
+        phone: data.user.phone || trimmedPhone
       },
       loginTime: Date.now() 
     });

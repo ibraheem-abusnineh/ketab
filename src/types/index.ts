@@ -23,6 +23,7 @@ export interface LetterData {
   vocab: VocabularyItem[];
   shapes?: string[];
   spyObjects?: SpyObject[];
+  folderName?: string;
 }
 
 export interface LetterSquare {

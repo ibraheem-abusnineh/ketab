@@ -22,7 +22,7 @@ interface ProfileEditRequest {
 interface User {
   nationalNumber: string;
   name: string;
-  role: 'parent' | 'teacher';
+  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'guest';
   school: string;
   phone: string;
   directorate?: string;

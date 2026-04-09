@@ -10,6 +10,8 @@ interface Props {
 
 const LoginModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
   const [nationalNumber, setNationalNumber] = useState('');
+  const [guestFullName, setGuestFullName] = useState('');
+  const [guestPhoneNumber, setGuestPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,8 +35,15 @@ const LoginModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
   };
 
   const handleGuestLogin = () => {
+    const trimmedName = guestFullName.trim();
+    const trimmedPhone = guestPhoneNumber.trim();
+    if (!trimmedName || !trimmedPhone) {
+      setError('الاسم الكامل ورقم الهاتف مطلوبان لدخول الضيف');
+      return;
+    }
+
     setLoading(true);
-    loginAsGuest()
+    loginAsGuest(trimmedName, trimmedPhone)
       .then((ok) => {
         if (ok) {
           setError('');
@@ -56,13 +65,21 @@ const LoginModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
             الرقم الوطني
             <input value={nationalNumber} onChange={(e) => setNationalNumber(e.target.value)} placeholder="9781048130" type="text" required />
           </label>
+          <label>
+            الاسم الكامل (للضيف)
+            <input value={guestFullName} onChange={(e) => setGuestFullName(e.target.value)} placeholder="الاسم الكامل" type="text" />
+          </label>
+          <label>
+            رقم الهاتف (للضيف)
+            <input value={guestPhoneNumber} onChange={(e) => setGuestPhoneNumber(e.target.value)} placeholder="07XXXXXXXX" type="tel" />
+          </label>
           <p>للدعم الفني والاستفسار: التواصل مع هاتف :  0792022316</p>
           {error && <div className="login-error">{error}</div>}
           <div className="login-buttons">
             <button type="submit" className="login-ok" disabled={loading}>
               {loading ? '...' : 'دخول'}
             </button>
-            <button type="button" className="login-guest" onClick={handleGuestLogin} disabled={loading}>
+            <button type="button" className="login-guest" onClick={handleGuestLogin} disabled={loading || !guestFullName.trim() || !guestPhoneNumber.trim()}>
               {loading ? '...' : 'دخول كضيف'}
             </button>
           </div>

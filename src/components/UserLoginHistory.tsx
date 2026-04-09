@@ -140,6 +140,9 @@ const UserLoginHistory: React.FC = () => {
           <option value="all">All Roles</option>
           <option value="parent">Parents</option>
           <option value="teacher">Teachers</option>
+          <option value="supervisor">Supervisors</option>
+          <option value="student">Students</option>
+          <option value="guest">Guests</option>
         </select>
         <select
           value={sortBy}

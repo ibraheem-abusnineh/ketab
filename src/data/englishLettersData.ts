@@ -155,7 +155,7 @@ export const englishLettersData: { [key: string]: LetterData } = {
     name: 'Letter P',
     pronunciation: 'pee',
     vocab: [
-      { word: 'Pat', emoji: '🤝' },
+      { word: 'Pat', emoji: '🤝', image: '/images/pat.png' },
       { word: 'Pencil', emoji: '✏️' },
       { word: 'Pink', emoji: '💗' },
       { word: 'Pants', emoji: '👖' }
@@ -195,7 +195,7 @@ export const englishLettersData: { [key: string]: LetterData } = {
     name: 'Letter T',
     pronunciation: 'tee',
     vocab: [
-      { word: 'At', emoji: '📍' },
+      { word: 'At', emoji: '📍', image: '/images/at.jpg' },
       { word: 'Table', emoji: '🍽️' },
       { word: 'Toy', emoji: '🤖' },
       { word: 'Tea', emoji: '☕' }
@@ -247,7 +247,7 @@ export const englishLettersData: { [key: string]: LetterData } = {
     vocab: [
       { word: 'Yo-yo', emoji: '🪀' },
       { word: 'Yellow', emoji: '🟡' },
-      { word: 'Yogurt', emoji: '🥣' },
+      { word: 'Yogurt', emoji: '🥣', image: '/images/yogurt.jpg' },
       { word: 'Yarn', emoji: '🧶' }
     ]
   },
@@ -256,7 +256,7 @@ export const englishLettersData: { [key: string]: LetterData } = {
     pronunciation: 'zee',
     vocab: [
       { word: 'Zero', emoji: '0️⃣' },
-      { word: 'Zain', emoji: '👦' },
+      { word: 'Zaid', emoji: '👦' },
       { word: 'Zebra', emoji: '🦓' },
       { word: 'Zipper', emoji: '🤐' }
     ]

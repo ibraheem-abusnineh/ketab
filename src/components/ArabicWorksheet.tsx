@@ -43,6 +43,23 @@ const ArabicWorksheet: React.FC = () => {
     }
   }, [letter]);
 
+  useEffect(() => {
+    let titleBeforePrint = document.title;
+    const onBeforePrint = () => {
+      titleBeforePrint = document.title;
+      document.title = 'Ketab';
+    };
+    const onAfterPrint = () => {
+      document.title = titleBeforePrint;
+    };
+    window.addEventListener('beforeprint', onBeforePrint);
+    window.addEventListener('afterprint', onAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', onBeforePrint);
+      window.removeEventListener('afterprint', onAfterPrint);
+    };
+  }, []);
+
   const updateLetterRecognitionExercise = useCallback(() => {
     if (!letterData) return;
 
@@ -271,7 +288,7 @@ const ArabicWorksheet: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="worksheet-container">
+      <div className="worksheet-container" dir="rtl">
         <div className="logo-top-left">
           <LogoWithImage 
             logoPath="qra-logo.svg"
@@ -385,6 +402,13 @@ const ArabicWorksheet: React.FC = () => {
           <button onClick={() => handlePageChange(1)}>
             الصفحة التالية
           </button>
+          <button
+            type="button"
+            className="print-button"
+            onClick={() => window.print()}
+          >
+            طباعة هذه الصفحة
+          </button>
           <button 
             className="back-to-index" 
             onClick={() => navigate('/letters')}
@@ -393,6 +417,14 @@ const ArabicWorksheet: React.FC = () => {
             عودة إلى فهرس الحروف
           </button>
         </div>
+
+        <footer className="worksheet-print-footer" aria-hidden="true">
+          <img
+            src={`${process.env.PUBLIC_URL}/qra-logo.svg`}
+            alt=""
+            className="worksheet-print-footer-img"
+          />
+        </footer>
       </div>
 
       <VideoPopup

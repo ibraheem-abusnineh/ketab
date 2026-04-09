@@ -17,7 +17,7 @@ const FeedbackButton: React.FC<Props> = ({ toEmail }) => {
   return (
     <>
       <button
-        className="fab-feedback"
+        className="fab-feedback no-print"
         title="إرسال ملاحظة"
         onClick={() => setOpen(true)}
       >
@@ -25,7 +25,7 @@ const FeedbackButton: React.FC<Props> = ({ toEmail }) => {
       </button>
 
       {open && (
-        <div className="fb-overlay" onClick={() => !sending && setOpen(false)}>
+        <div className="fb-overlay no-print" onClick={() => !sending && setOpen(false)}>
           <div className="fb-modal" onClick={(e) => e.stopPropagation()}>
             <button className="fb-close" onClick={() => !sending && setOpen(false)}>&times;</button>
             <div className="fb-title">إرسال ملاحظة</div>

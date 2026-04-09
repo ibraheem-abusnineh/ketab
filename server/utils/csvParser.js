@@ -141,6 +141,7 @@ async function parseCSV(filePath, role) {
  */
 function validateUser(user) {
   const errors = [];
+  const allowedRoles = ['parent', 'teacher', 'supervisor', 'student'];
   
   if (!user.nationalNumber || user.nationalNumber.trim() === '') {
     errors.push('National number is required');
@@ -150,8 +151,8 @@ function validateUser(user) {
     errors.push('Name is required');
   }
   
-  if (!user.role || !['parent', 'teacher'].includes(user.role)) {
-    errors.push('Role must be parent or teacher');
+  if (!user.role || !allowedRoles.includes(user.role)) {
+    errors.push('Role must be parent, teacher, supervisor, or student');
   }
   
   return {

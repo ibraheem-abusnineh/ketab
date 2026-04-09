@@ -27,7 +27,7 @@ const VowelWritingPage: React.FC<VowelWritingPageProps> = ({
               />
             </div>
             <div className="writing-line-blue writing-line">
-              <span style={{ color: 'gray', opacity: 0.5, marginRight: '0', marginLeft: 'auto', fontSize: '1.2em' }}>
+              <span className="writing-line-sample">
                 {isEnglish ? `${selectedLetter}${vowel.symbol}` : `${selectedLetter}${vowel.symbol}`}
               </span>
             </div>

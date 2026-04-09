@@ -177,6 +177,77 @@ app.post('/api/track-visit', (req, res) => {
 });
 
 // User login with national number
+app.post('/api/login/guest', (req, res) => {
+  try {
+    const fullName = (req.body?.fullName || '').trim();
+    const phoneNumber = (req.body?.phoneNumber || '').trim();
+
+    if (!fullName || !phoneNumber) {
+      return res.status(400).json({ success: false, error: 'Full name and phone number are required' });
+    }
+
+    const users = readUsersData();
+
+    // Reuse an existing guest by phone number when available.
+    let guestUser = users.find(u => u.role === 'guest' && (u.phone || '').trim() === phoneNumber);
+
+    if (!guestUser) {
+      const guestId = `GUEST_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+      guestUser = {
+        nationalNumber: guestId,
+        name: fullName,
+        role: 'guest',
+        school: 'زيارة عامة',
+        phone: phoneNumber,
+        directorate: ''
+      };
+      users.push(guestUser);
+    } else if (guestUser.name !== fullName) {
+      guestUser.name = fullName;
+    }
+
+    if (!writeUsersData(users)) {
+      return res.status(500).json({ success: false, error: 'Failed to save guest user' });
+    }
+
+    // Track guest login in visit counters/history so admin analytics include guests.
+    const visitsData = readVisitsData();
+    visitsData.totalVisits += 1;
+
+    const loginEvent = {
+      nationalNumber: guestUser.nationalNumber,
+      name: guestUser.name,
+      school: guestUser.school || '',
+      role: guestUser.role,
+      timestamp: new Date().toISOString()
+    };
+
+    if (!visitsData.loginHistory) {
+      visitsData.loginHistory = [];
+    }
+    visitsData.loginHistory.push(loginEvent);
+    if (visitsData.loginHistory.length > 10000) {
+      visitsData.loginHistory = visitsData.loginHistory.slice(-10000);
+    }
+    writeVisitsData(visitsData);
+
+    return res.json({
+      success: true,
+      user: {
+        nationalNumber: guestUser.nationalNumber,
+        name: guestUser.name,
+        role: guestUser.role,
+        school: guestUser.school,
+        phone: guestUser.phone
+      }
+    });
+  } catch (error) {
+    console.error('Error during guest login:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// User login with national number
 app.post('/api/login', (req, res) => {
   try {
     const { nationalNumber } = req.body;
@@ -483,7 +554,7 @@ app.post('/api/users/import-csv', adminAuth, upload.single('csvFile'), async (re
     }
     
     if (!['parent', 'teacher'].includes(role)) {
-      return res.status(400).json({ success: false, error: 'Invalid role. Must be parent or teacher' });
+      return res.status(400).json({ success: false, error: 'Invalid CSV import role. Must be parent or teacher' });
     }
     
     if (!['add', 'upsert', 'replace'].includes(strategy)) {

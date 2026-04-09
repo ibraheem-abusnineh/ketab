@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LetterData } from '../../types';
-import { getLocalVideoPath, getWordImagePath } from '../../utils/videoUtils';
+import { getLocalVideoPath, getSafeImagePath, getWordImagePath } from '../../utils/videoUtils';
 import { VocabularyItem } from '../../types';
 
 // Separate component for vocabulary items to handle image error state
@@ -23,7 +23,7 @@ const VocabItem: React.FC<{
       <div className="vocab-image">
         {!imageError ? (
           <img 
-            src={getWordImagePath(item.word)} 
+            src={item.image ? getSafeImagePath(item.image) : getWordImagePath(item.word)} 
             alt={item.word}
             onError={() => setImageError(true)}
           />

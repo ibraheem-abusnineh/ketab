@@ -27,10 +27,10 @@ const WritingPracticePage: React.FC<WritingPracticePageProps> = ({
 
   return (
     <div className="book-page active">
-      <div className="writing-section">
+      <div className="writing-section" dir={isEnglish ? 'ltr' : 'rtl'}>
         <h3>
           {isEnglish
-            ? `Write the uppercase and lowercase letter ${letterData.name.replace(/^Letter\s+/i, '').trim() || letterData.name}`
+            ? `Write the uppercase and lowercase letter ${letterData.name.replace(/^Letter\s+/i, '').trim() || letterData.name}.`
             : `أَرْسُمُ بِخَطٍّ وَاضِحٍ حَرْفَ ${letterData.name}`}
         </h3>
         <div className="writing-lines">
@@ -42,9 +42,7 @@ const WritingPracticePage: React.FC<WritingPracticePageProps> = ({
                 key={index}
                 className={isEnglish ? 'writing-line-english' : 'writing-line'}
               >
-                <span style={{ color: 'gray', opacity: 0.5, marginLeft: '20px', fontSize: '1.2em' }}>
-                  {shape}
-                </span>
+                <span className="writing-line-sample">{shape}</span>
               </div>
             );
           })}

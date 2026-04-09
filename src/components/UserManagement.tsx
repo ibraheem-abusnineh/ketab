@@ -5,7 +5,7 @@ import { apiFetch } from '../utils/api';
 interface User {
   nationalNumber: string;
   name: string;
-  role: 'parent' | 'teacher';
+  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'guest';
   school: string;
   phone: string;
   directorate?: string;
@@ -330,6 +330,9 @@ const UserManagement: React.FC = (): React.ReactElement => {
           <option value="all">All Roles</option>
           <option value="parent">Parents</option>
           <option value="teacher">Teachers</option>
+          <option value="supervisor">Supervisors</option>
+          <option value="student">Students</option>
+          <option value="guest">Guests</option>
         </select>
       </div>
 
@@ -365,11 +368,14 @@ const UserManagement: React.FC = (): React.ReactElement => {
                   {editingUser === user.nationalNumber ? (
                     <select
                       value={user.role}
-                      onChange={(e) => handleFieldChange(user.nationalNumber, 'role', e.target.value as 'parent' | 'teacher')}
+                      onChange={(e) => handleFieldChange(user.nationalNumber, 'role', e.target.value as User['role'])}
                       className="edit-select"
                     >
                       <option value="parent">Parent</option>
                       <option value="teacher">Teacher</option>
+                      <option value="supervisor">Supervisor</option>
+                      <option value="student">Student</option>
+                      <option value="guest">Guest</option>
                     </select>
                   ) : (
                     <span className={`role-badge role-${user.role}`}>
@@ -476,11 +482,14 @@ const UserManagement: React.FC = (): React.ReactElement => {
                 <label>Role *</label>
                 <select
                   value={newUser.role}
-                  onChange={(e) => setNewUser({...newUser, role: e.target.value as 'parent' | 'teacher'})}
+                  onChange={(e) => setNewUser({...newUser, role: e.target.value as User['role']})}
                   required
                 >
                   <option value="parent">Parent</option>
                   <option value="teacher">Teacher</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="student">Student</option>
+                  <option value="guest">Guest</option>
                 </select>
               </div>
               <div className="form-group">

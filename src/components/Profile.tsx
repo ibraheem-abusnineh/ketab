@@ -53,10 +53,10 @@ const Profile: React.FC = () => {
     if (auth.user.nationalNumber === 'GUEST') {
       setProfileData({
         nationalNumber: 'GUEST',
-        name: 'ضيف',
+        name: auth.user.name || 'ضيف',
         role: 'guest',
         school: 'زيارة عامة',
-        phone: '',
+        phone: auth.user.phone || '',
         directorate: '',
         totalLogins: 1,
         firstLogin: new Date().toISOString(),
@@ -192,7 +192,7 @@ const Profile: React.FC = () => {
       <div className="profile-container">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Loading profile...</p>
+          <p>جاري تحميل الملف الشخصي...</p>
         </div>
       </div>
     );
@@ -204,7 +204,7 @@ const Profile: React.FC = () => {
         <div className="error-message">
           <p>❌ {error}</p>
           <button onClick={() => window.location.reload()} className="retry-btn">
-            Retry
+            إعادة المحاولة
           </button>
         </div>
       </div>
@@ -215,7 +215,7 @@ const Profile: React.FC = () => {
     return (
       <div className="profile-container">
         <div className="error-message">
-          <p>❌ No profile data available</p>
+          <p>❌ لا توجد بيانات ملف شخصي متاحة</p>
         </div>
       </div>
     );
@@ -425,8 +425,8 @@ const Profile: React.FC = () => {
             <div className="coming-soon-content">
               <p>
                 {lockedCourse === 'english'
-                  ? 'دورة اللغة الإنجليزية مقفلة حالياً من قبل المشرف.'
-                  : 'دورة الرياضيات مقفلة حالياً من قبل المشرف.'}
+                  ? 'دورة اللغة الإنجليزية مقفلة حالياً.'
+                  : 'دورة الرياضيات مقفلة حالياً.'}
               </p>
             </div>
             <button className="coming-soon-ok" onClick={() => setLockedCourse(null)}>حسناً</button>

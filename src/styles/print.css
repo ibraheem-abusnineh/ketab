@@ -1,16 +1,19 @@
 /* Print Styles for Worksheets */
 
 @media print {
-  /* Hide navigation and interactive elements */
+  /* Hide navigation, chrome, and interactive elements (logo is in .worksheet-print-footer when printing) */
   .letter-selector,
   .book-navigation,
-  .logo-top-left,
   .video-placeholder,
   iframe,
   video,
   .print-button,
   .tracing-controls,
-  .tracing-canvas {
+  .tracing-canvas,
+  .no-print,
+  .fab-feedback,
+  .fb-overlay,
+  .video-popup {
     display: none !important;
   }
   
@@ -20,7 +23,7 @@
     margin: 1.5cm;
   }
   
-  /* Worksheet container */
+  /* Worksheet container — allow breaks across pages so content is not forced onto a second sheet alone */
   .worksheet-container {
     width: 100% !important;
     max-width: 100% !important;
@@ -29,9 +32,10 @@
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    background: white !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    background: #fff !important;
+    color: #111 !important;
   }
   
   /* Book pages */
@@ -63,14 +67,83 @@
     print-color-adjust: exact;
   }
   
-  /* Footer */
-  .footer {
-    page-break-before: avoid !important;
-    page-break-inside: avoid !important;
-    page-break-after: avoid !important;
-    break-inside: avoid !important;
-    break-after: avoid !important;
-    break-before: avoid !important;
+  /* Worksheet tagline bar — hidden on print */
+  .worksheet-container > .footer {
+    display: none !important;
+  }
+
+  .logo-top-left {
+    display: none !important;
+  }
+
+  .worksheet-print-footer {
+    display: flex !important;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    padding: 10px 0 0;
+    border-top: 1px solid #999;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    page-break-before: avoid;
+    break-before: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .worksheet-print-footer-img {
+    max-height: 140px;
+    width: min(100%, 480px);
+    max-width: min(100%, 480px);
+    min-width: min(100%, 400px);
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* Matching exercise: two columns on paper (not stacked like narrow screen) */
+  .matching-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, auto) minmax(0, 2fr) !important;
+    width: 100% !important;
+    gap: 28px !important;
+    column-gap: 28px !important;
+  }
+
+  .matching-section .word-column {
+    justify-self: end !important;
+  }
+
+  .gesture-row-matching {
+    width: 100% !important;
+    max-width: none !important;
+    flex-wrap: nowrap !important;
+    box-sizing: border-box;
+  }
+
+  .vowel-row {
+    flex-direction: row !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+
+  .vowel-row .writing-line-blue.writing-line {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 12px 20px !important;
+    min-height: 64px !important;
+    font-size: 2.3em !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+  }
+
+  .vowel-row .writing-line-blue.writing-line span {
+    font-size: 1.08em !important;
+    opacity: 1 !important;
+    color: rgba(128, 128, 128, 0.55) !important;
   }
   
   /* Letter showcase */
@@ -95,6 +168,141 @@
     print-color-adjust: exact;
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+
+  /* After generic line rules — layout + colors for syllable / writing practice / vowel */
+  .syllable-matching-grid {
+    width: 100% !important;
+  }
+
+  .syllable-row {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+
+  .syllable-sign-row {
+    flex-shrink: 0 !important;
+  }
+
+  .syllable-row .writing-line-purple.writing-line {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 64px !important;
+    height: auto !important;
+    padding: 12px 20px !important;
+    font-size: 2.3em !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    background-color: #f0e6fa !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(216, 166, 166, 0.35) 50%,
+      rgba(230, 173, 173, 0.22) 55%,
+      transparent 55%,
+      transparent 83%,
+      rgba(0, 0, 0, 0.35) 83%,
+      rgba(0, 0, 0, 0.35) 88%,
+      transparent 88%
+    ) !important;
+    background-size: 100% 56px !important;
+    border: 1px dashed #666 !important;
+    border-bottom: 2px solid #666 !important;
+    border-top: 1px dotted #add8e6 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .writing-lines {
+    width: 100% !important;
+  }
+
+  .writing-section[dir="rtl"] .writing-line {
+    width: 100% !important;
+    min-height: 56px !important;
+    height: auto !important;
+    padding: 12px 24px !important;
+    box-sizing: border-box !important;
+    direction: rtl !important;
+    justify-content: flex-start !important;
+    font-size: 2em !important;
+    background-color: #fff !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(216, 166, 166, 0.18) 50%,
+      rgba(230, 173, 173, 0.14) 55%,
+      transparent 55%,
+      transparent 83%,
+      rgba(0, 0, 0, 0.18) 83%,
+      rgba(0, 0, 0, 0.18) 88%,
+      transparent 88%
+    ) !important;
+    background-size: 100% 56px !important;
+  }
+
+  .writing-section[dir="ltr"] .writing-line-english {
+    width: 100% !important;
+    min-height: 56px !important;
+    height: auto !important;
+    padding: 12px 24px !important;
+    box-sizing: border-box !important;
+    justify-content: flex-start !important;
+    font-size: 2em !important;
+    background-color: #fff !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 23%,
+      rgba(216, 166, 166, 0.22) 23%,
+      rgba(216, 166, 166, 0.22) 25%,
+      transparent 25%,
+      transparent 48%,
+      rgba(230, 173, 173, 0.22) 48%,
+      rgba(230, 173, 173, 0.22) 50%,
+      transparent 50%,
+      transparent 73%,
+      rgba(216, 166, 166, 0.22) 73%,
+      rgba(216, 166, 166, 0.22) 75%,
+      transparent 75%,
+      transparent 98%,
+      rgba(132, 51, 60, 0.28) 98%,
+      rgba(132, 51, 60, 0.28) 100%
+    ) !important;
+    background-size: 100% 56px !important;
+  }
+
+  .writing-section .writing-line-sample {
+    font-size: 1em !important;
+    opacity: 1 !important;
+    color: rgba(128, 128, 128, 0.55) !important;
+  }
+
+  .vowel-row .writing-line-blue.writing-line {
+    font-size: 2.3em !important;
+    background-color: #d9edf7 !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(216, 166, 166, 0.35) 50%,
+      rgba(230, 173, 173, 0.22) 55%,
+      transparent 55%,
+      transparent 83%,
+      rgba(0, 0, 0, 0.35) 83%,
+      rgba(0, 0, 0, 0.35) 88%,
+      transparent 88%
+    ) !important;
+    background-size: 100% 56px !important;
+    border: 1px dashed #77b2d4 !important;
+    border-bottom: 2px solid #77b2d4 !important;
+    border-top: 1px dotted #add8e6 !important;
+    justify-content: flex-start !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   /* Sections */
@@ -149,11 +357,16 @@
   .corner-decoration {
     display: none !important;
   }
-  
-  /* Ensure text is black for better printing */
-  * {
-    color: #000 !important;
-    background: white !important;
+
+  body {
+    background: #fff !important;
+  }
+
+  .worksheet-container img,
+  .worksheet-container svg {
+    background: transparent !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   
   /* Preserve important colored elements */

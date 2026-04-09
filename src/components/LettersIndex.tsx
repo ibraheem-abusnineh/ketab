@@ -159,12 +159,12 @@ const LettersIndex: React.FC = () => {
       if (target === 'english') {
         return isEnglish
           ? 'The English course is currently locked by the administrator.'
-          : 'دورة اللغة الإنجليزية مقفلة حالياً من قبل المشرف.';
+          : 'دورة اللغة الإنجليزية مقفلة حالياً.';
       }
       if (target === 'numbers') {
         return isEnglish
           ? 'The Mathematics course is currently locked by the administrator.'
-          : 'دورة الرياضيات مقفلة حالياً من قبل المشرف.';
+          : 'دورة الرياضيات مقفلة حالياً.';
       }
       return isEnglish
         ? 'This course is currently locked.'

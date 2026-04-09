@@ -7,6 +7,8 @@ const Cover: React.FC = () => {
   const [showNotice, setShowNotice] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [nationalNumber, setNationalNumber] = useState('');
+  const [guestFullName, setGuestFullName] = useState('');
+  const [guestPhoneNumber, setGuestPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -51,8 +53,15 @@ const Cover: React.FC = () => {
   };
 
   const handleGuestLogin = () => {
+    const trimmedName = guestFullName.trim();
+    const trimmedPhone = guestPhoneNumber.trim();
+    if (!trimmedName || !trimmedPhone) {
+      setError('الاسم الكامل ورقم الهاتف مطلوبان لدخول الضيف');
+      return;
+    }
+
     setLoading(true);
-    loginAsGuest()
+    loginAsGuest(trimmedName, trimmedPhone)
       .then((ok) => {
         if (ok) {
           setError('');
@@ -117,6 +126,26 @@ const Cover: React.FC = () => {
                     autoFocus
                   />
                 </label>
+                <label className="flex flex-col text-[#5a2428] font-[600] gap-1.5 text-right">
+                  الاسم الكامل (للضيف)
+                  <input
+                    className="border-2 border-[#84333c] rounded-lg py-[10px] px-[12px] text-[1em] w-full box-border"
+                    value={guestFullName}
+                    onChange={(e) => setGuestFullName(e.target.value)}
+                    placeholder="الاسم الكامل"
+                    type="text"
+                  />
+                </label>
+                <label className="flex flex-col text-[#5a2428] font-[600] gap-1.5 text-right">
+                  رقم الهاتف (للضيف)
+                  <input
+                    className="border-2 border-[#84333c] rounded-lg py-[10px] px-[12px] text-[1em] w-full box-border"
+                    value={guestPhoneNumber}
+                    onChange={(e) => setGuestPhoneNumber(e.target.value)}
+                    placeholder="07XXXXXXXX"
+                    type="tel"
+                  />
+                </label>
                 <p className="text-[0.9em] text-[#5a2428] my-2 text-center">للدعم الفني والاستفسار: التواصل مع هاتف :  0792022316</p>
                 {error && <div className="text-[#b00020] font-[700] text-center">{error}</div>}
                 <div className="flex gap-3 mt-1.5">
@@ -131,7 +160,7 @@ const Cover: React.FC = () => {
                     type="button" 
                     className="bg-[#fdf2f3] text-[#84333c] border-2 border-[#84333c] rounded-lg py-[8px] px-[24px] text-[1em] cursor-pointer transition-all duration-200 flex-1 font-[600] hover:bg-[#f8e1e3] disabled:opacity-60 disabled:cursor-not-allowed" 
                     onClick={handleGuestLogin} 
-                    disabled={loading}
+                    disabled={loading || !guestFullName.trim() || !guestPhoneNumber.trim()}
                   >
                     {loading ? '...' : 'دخول كضيف'}
                   </button>

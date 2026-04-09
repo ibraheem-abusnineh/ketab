@@ -245,6 +245,22 @@
   gap: 20px;
 }
 
+/* In RTL flex, main-start is on the right — sample letter belongs at flex-start */
+.writing-section[dir="rtl"] .writing-line {
+  direction: rtl;
+  justify-content: flex-start;
+}
+
+.writing-section[dir="ltr"] .writing-line-english {
+  justify-content: flex-start;
+}
+
+/* Sample letter — same light gray treatment as vowel / other guides */
+.writing-line-sample {
+  font-size: 1.2em;
+  color: rgba(128, 128, 128, 0.55);
+}
+
 .writing-line {
   background-color: rgb(255, 255, 255);
   border: 1px solid #ccc;
@@ -528,31 +544,62 @@
 .writing-line-purple {
   background-color: #f0e6fa;
   border: 1px dashed #c0a0d0;
+  border-bottom: 2px solid #c0a0d0;
   height: 70px;
   margin-bottom: 15px;
   display: flex;
   align-items: center;
-  padding: 0 250px;
+  padding: 10px 20px;
   font-size: 2em;
   color: #84333c;
   line-height: 1;
   flex: 1;
+  box-sizing: border-box;
+  /* Same ruled “notebook” lines as writing practice */
+  background-image: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(216, 166, 166, 0.35) 50%,
+    rgba(230, 173, 173, 0.22) 55%,
+    transparent 55%,
+    transparent 83%,
+    rgba(132, 51, 60, 0.45) 83%,
+    rgba(132, 51, 60, 0.45) 88%,
+    transparent 88%
+  );
+  background-size: 100% 50px;
+  border-top: 1px dotted #add8e6;
 }
 
 .writing-line-blue {
   background-color: #d9edf7;
   border: 1px dashed #77b2d4;
+  border-bottom: 2px solid #77b2d4;
   height: 70px;
   margin-bottom: 15px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 0 0 550px;
+  padding: 10px 20px;
   font-size: 2em;
   color: #84333c;
   line-height: 1;
-  text-align: right;
+  text-align: start;
   flex: 1;
+  box-sizing: border-box;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(216, 166, 166, 0.35) 50%,
+    rgba(230, 173, 173, 0.22) 55%,
+    transparent 55%,
+    transparent 83%,
+    rgba(132, 51, 60, 0.45) 83%,
+    rgba(132, 51, 60, 0.45) 88%,
+    transparent 88%
+  );
+  background-size: 100% 50px;
+  border-top: 1px dotted #add8e6;
 }
 
 .vowel-row {
@@ -827,20 +874,197 @@
   border: 2px solid #84333c;
 }
 
+.book-navigation button.print-button {
+  background: #fff;
+  color: #84333c;
+  border: 2px solid #84333c;
+}
+
+/* Logo in HTML footer — only visible when printing */
+.worksheet-print-footer {
+  display: none;
+}
+
 /* Print styles */
 @media print {
   .letter-selector,
   .book-navigation,
-  .logo-top-left,
   .video-placeholder,
   iframe,
-  video {
+  video,
+  .print-button,
+  .video-popup,
+  .no-print,
+  .fab-feedback,
+  .fb-overlay {
     display: none !important;
+  }
+
+  .worksheet-container > .footer {
+    display: none !important;
+  }
+
+  .logo-top-left {
+    display: none !important;
+  }
+
+  .worksheet-print-footer {
+    display: flex !important;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    padding: 10px 0 0;
+    border-top: 1px solid #999;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    page-break-before: avoid;
+    break-before: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .worksheet-print-footer-img {
+    max-height: 140px;
+    width: min(100%, 480px);
+    max-width: min(100%, 480px);
+    min-width: min(100%, 400px);
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* Matching exercise: keep words column beside gestures (not stacked like narrow screen) */
+  .matching-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, auto) minmax(0, 2fr) !important;
+    width: 100% !important;
+    gap: 28px !important;
+    column-gap: 28px !important;
+    align-items: start;
+  }
+
+  .matching-section .word-column {
+    align-items: flex-end !important;
+    justify-self: end !important;
+    width: 100%;
+  }
+
+  .gestures-column {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .gesture-row-matching {
+    width: 100% !important;
+    max-width: none !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    box-sizing: border-box;
+  }
+
+  /* Vowel writing: full-width line, readable example text */
+  .vowel-row {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+
+  .vowel-row .gesture-box {
+    flex-shrink: 0 !important;
+  }
+
+  .vowel-row .writing-line-blue.writing-line {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 12px 20px !important;
+    height: auto !important;
+    min-height: 64px !important;
+    font-size: 2.3em !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    background-color: #d9edf7 !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(216, 166, 166, 0.35) 50%,
+      rgba(230, 173, 173, 0.22) 55%,
+      transparent 55%,
+      transparent 83%,
+      rgba(0, 0, 0, 0.35) 83%,
+      rgba(0, 0, 0, 0.35) 88%,
+      transparent 88%
+    ) !important;
+    background-size: 100% 56px !important;
+    border: 1px dashed #77b2d4 !important;
+    border-bottom: 2px solid #77b2d4 !important;
+    border-top: 1px dotted #add8e6 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .vowel-row .writing-line-blue.writing-line span {
+    font-size: 1.08em !important;
+    opacity: 1 !important;
+    color: rgba(128, 128, 128, 0.55) !important;
+  }
+
+  /* Syllable writing (أَكْتُبُ الْمَقَاطِعَ…): row layout + full-width purple line */
+  .syllable-matching-grid {
+    width: 100% !important;
+  }
+
+  .syllable-row {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+
+  .syllable-sign-row {
+    flex-shrink: 0 !important;
+  }
+
+  .syllable-row .writing-line-purple.writing-line {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 12px 20px !important;
+    height: auto !important;
+    min-height: 64px !important;
+    margin-bottom: 0 !important;
+    font-size: 2.3em !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    background-color: #f0e6fa !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(216, 166, 166, 0.35) 50%,
+      rgba(230, 173, 173, 0.22) 55%,
+      transparent 55%,
+      transparent 83%,
+      rgba(0, 0, 0, 0.35) 83%,
+      rgba(0, 0, 0, 0.35) 88%,
+      transparent 88%
+    ) !important;
+    background-size: 100% 56px !important;
+    border: 1px dashed #c0a0d0 !important;
+    border-bottom: 2px solid #c0a0d0 !important;
+    border-top: 1px dotted #add8e6 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   .worksheet-container {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
   
   .header {
@@ -856,16 +1080,8 @@
     break-before: always !important;
   }
   
-  .footer {
-    page-break-before: avoid !important;
-    page-break-inside: avoid !important;
-    page-break-after: avoid !important;
-    break-inside: avoid !important;
-    break-after: avoid !important;
-    break-before: avoid !important;
-  }
-  
-  .writing-line {
+  /* Notebook-style lines — not vowel/syllable colored rows (writing-section overrides font + softer lines) */
+  .writing-line:not(.writing-line-blue):not(.writing-line-purple) {
     background-color: rgb(255, 255, 255);
     border: 1px solid #ccc;
     border-bottom: 2px solid #84333c;
@@ -881,10 +1097,75 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  /* Writing practice (أَرْسُمُ بِخَطٍّ…): lines span printable width */
+  .writing-lines {
+    width: 100% !important;
+  }
+
+  .writing-section[dir="rtl"] .writing-line:not(.writing-line-blue):not(.writing-line-purple) {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 56px !important;
+    height: auto !important;
+    padding: 12px 24px !important;
+    box-sizing: border-box !important;
+    direction: rtl !important;
+    justify-content: flex-start !important;
+    font-size: 2em !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(216, 166, 166, 0.18) 50%,
+      rgba(230, 173, 173, 0.14) 55%,
+      transparent 55%,
+      transparent 83%,
+      rgba(0, 0, 0, 0.18) 83%,
+      rgba(0, 0, 0, 0.18) 88%,
+      transparent 88%
+    ) !important;
+    background-size: 100% 56px !important;
+  }
+
+  .writing-section[dir="ltr"] .writing-line-english {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 56px !important;
+    height: auto !important;
+    padding: 12px 24px !important;
+    box-sizing: border-box !important;
+    justify-content: flex-start !important;
+    font-size: 2em !important;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 23%,
+      rgba(216, 166, 166, 0.22) 23%,
+      rgba(216, 166, 166, 0.22) 25%,
+      transparent 25%,
+      transparent 48%,
+      rgba(230, 173, 173, 0.22) 48%,
+      rgba(230, 173, 173, 0.22) 50%,
+      transparent 50%,
+      transparent 73%,
+      rgba(216, 166, 166, 0.22) 73%,
+      rgba(216, 166, 166, 0.22) 75%,
+      transparent 75%,
+      transparent 98%,
+      rgba(132, 51, 60, 0.28) 98%,
+      rgba(132, 51, 60, 0.28) 100%
+    ) !important;
+    background-size: 100% 56px !important;
+  }
+
+  .writing-section .writing-line-sample {
+    font-size: 1em !important;
+    opacity: 1 !important;
+    color: rgba(128, 128, 128, 0.55) !important;
+  }
 }
 
-/* Responsive design */
-@media (max-width: 850px) {
+/* Responsive design (screen only — print uses full width layout) */
+@media screen and (max-width: 850px) {
   .worksheet-container {
     width: 95%;
     margin: 10px auto;
