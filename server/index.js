@@ -54,6 +54,8 @@ const adminPath = path.join(__dirname, 'data', 'admin.json');
 const usersPath = path.join(__dirname, 'data', 'users.json');
 const coursesPath = path.join(__dirname, 'data', 'courses.json');
 const notificationsPath = path.join(__dirname, 'data', 'notifications.json');
+const DEFAULT_VISITS_DATA = { totalVisits: 0, loginHistory: [] };
+const DEFAULT_NOTIFICATIONS = [];
 
 function readUsersData() {
   return readJSON(usersPath, []);
@@ -69,6 +71,18 @@ function readNotifications() {
 
 function writeNotifications(notifications) {
   return writeJSON(notificationsPath, notifications);
+}
+
+function ensureRuntimeDataFile(filePath, defaultValue) {
+  if (fs.existsSync(filePath)) {
+    return;
+  }
+  writeJSON(filePath, defaultValue);
+}
+
+function ensureRuntimeDataFiles() {
+  ensureRuntimeDataFile(visitsPath, DEFAULT_VISITS_DATA);
+  ensureRuntimeDataFile(notificationsPath, DEFAULT_NOTIFICATIONS);
 }
 
 function createNotification(userId, userName, changes) {
@@ -128,6 +142,7 @@ function ensureCourseSettings() {
 }
 
 ensureCourseSettings();
+ensureRuntimeDataFiles();
 
 function readCourseSettings() {
   ensureCourseSettings();
@@ -143,7 +158,14 @@ const upload = multer({ dest: 'uploads/' });
 
 // Helper function to read visits data
 function readVisitsData() {
-  return readJSON(visitsPath, { totalVisits: 0 });
+  const visitsData = readJSON(visitsPath, DEFAULT_VISITS_DATA);
+  if (typeof visitsData.totalVisits !== 'number') {
+    visitsData.totalVisits = 0;
+  }
+  if (!Array.isArray(visitsData.loginHistory)) {
+    visitsData.loginHistory = [];
+  }
+  return visitsData;
 }
 
 // Helper function to write visits data

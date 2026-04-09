@@ -28,4 +28,6 @@ backup_*
 /server/node_modules
 /server/uploads/*
 !/server/uploads/.gitkeep
+/server/data/visits.json
+/server/data/notifications.json
 
