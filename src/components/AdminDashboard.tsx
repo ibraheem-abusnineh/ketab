@@ -38,6 +38,13 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
   const [activeTab, setActiveTab] = useState<'statistics' | 'users' | 'history' | 'notifications' | 'requests' | 'reports' | 'courses'>('statistics');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const navigate = useNavigate();
 
   const fetchVisitCount = async () => {
@@ -187,6 +194,58 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
     }
   };
 
+  const resetPasswordForm = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError('');
+    setPasswordMessage('');
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordMessage('');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('All password fields are required.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New password and confirmation do not match.');
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      const response = await apiFetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      });
+      const data = await response.json();
+      setPasswordMessage(data.message || 'Password changed successfully.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      setPasswordError(error.message || 'Failed to change password.');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   const renderNotifications = () => (
     <div className="notifications-container">
       <div className="notifications-header">
@@ -296,6 +355,15 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       <div className="dashboard-header">
         <h1>Admin Dashboard</h1>
         <div className="header-actions">
+          <button
+            onClick={() => {
+              setShowPasswordForm(prev => !prev);
+              resetPasswordForm();
+            }}
+            className="admin-password-btn"
+          >
+            Change Password
+          </button>
           <button onClick={() => navigate('/')} className="admin-home-btn">
             View Site
           </button>
@@ -351,6 +419,64 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       </div>
 
       <div className="dashboard-content">
+        {showPasswordForm && (
+          <div className="password-card">
+            <h2>Change Admin Password</h2>
+            <form className="password-form" onSubmit={handleChangePassword}>
+              <label>
+                Current Password
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+              </label>
+              <label>
+                New Password
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </label>
+              <label>
+                Confirm New Password
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </label>
+              <div className="password-actions">
+                <button type="submit" className="save-password-btn" disabled={passwordLoading}>
+                  {passwordLoading ? 'Saving...' : 'Save Password'}
+                </button>
+                <button
+                  type="button"
+                  className="cancel-password-btn"
+                  onClick={() => {
+                    setShowPasswordForm(false);
+                    resetPasswordForm();
+                  }}
+                  disabled={passwordLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+            {passwordError && <p className="password-error">{passwordError}</p>}
+            {passwordMessage && <p className="password-success">{passwordMessage}</p>}
+          </div>
+        )}
+
         {error && (
           <div className="error-message">
             <p>{error}</p>

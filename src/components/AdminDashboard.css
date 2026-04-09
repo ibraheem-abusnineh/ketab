@@ -28,7 +28,8 @@
 }
 
 .admin-logout-btn,
-.admin-home-btn {
+.admin-home-btn,
+.admin-password-btn {
   padding: var(--spacing-sm, 10px) var(--spacing-md, 20px);
   border: none;
   border-radius: var(--border-radius-md, 8px);
@@ -55,6 +56,16 @@
 
 .admin-home-btn:hover {
   background: #2980b9;
+  transform: translateY(-2px);
+}
+
+.admin-password-btn {
+  background: #2d8a63;
+  color: #fff;
+}
+
+.admin-password-btn:hover {
+  background: #247251;
   transform: translateY(-2px);
 }
 
@@ -108,6 +119,89 @@
   padding: var(--spacing-xl, 30px);
   box-shadow: var(--shadow-md, 0 4px 15px rgba(0, 0, 0, 0.08));
   min-height: 400px;
+}
+
+.password-card {
+  border: 1px solid #dfe4ea;
+  border-radius: var(--border-radius-lg, 12px);
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #f8fafc;
+}
+
+.password-card h2 {
+  margin: 0 0 15px;
+  font-size: 20px;
+  color: #2d3748;
+}
+
+.password-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.password-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.password-form input {
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.password-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.save-password-btn,
+.cancel-password-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-password-btn {
+  background: #2d8a63;
+  color: #fff;
+}
+
+.cancel-password-btn {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.save-password-btn:disabled,
+.cancel-password-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.password-error,
+.password-success {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.password-error {
+  color: #c53030;
+}
+
+.password-success {
+  color: #2f855a;
 }
 
 .notifications-container {

@@ -156,6 +156,10 @@ function readAdminData() {
   return readJSON(adminPath, null);
 }
 
+function writeAdminData(data) {
+  return writeJSON(adminPath, data);
+}
+
 // API Routes
 
 // Track a visit (increment counter)
@@ -401,6 +405,51 @@ app.post('/api/admin/login', (req, res) => {
   } catch (error) {
     console.error('Error during admin login:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// Change admin password
+app.post('/api/admin/change-password', adminAuth, (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Current password and new password are required' });
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.trim().length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters' });
+    }
+
+    const adminData = readAdminData();
+    if (!adminData || !adminData.passwordHash) {
+      return res.status(500).json({ success: false, error: 'Admin data not found' });
+    }
+
+    const isValidCurrentPassword = bcrypt.compareSync(currentPassword, adminData.passwordHash);
+    if (!isValidCurrentPassword) {
+      return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+    }
+
+    const isSamePassword = bcrypt.compareSync(newPassword, adminData.passwordHash);
+    if (isSamePassword) {
+      return res.status(400).json({ success: false, error: 'New password must be different from current password' });
+    }
+
+    const newPasswordHash = bcrypt.hashSync(newPassword, 10);
+    const updatedAdminData = {
+      ...adminData,
+      passwordHash: newPasswordHash
+    };
+
+    if (!writeAdminData(updatedAdminData)) {
+      return res.status(500).json({ success: false, error: 'Failed to save new password' });
+    }
+
+    return res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing admin password:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
