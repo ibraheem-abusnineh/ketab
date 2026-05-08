@@ -359,7 +359,7 @@ const Profile: React.FC = () => {
                 >
                   اللغة العربية
                 </button>
-                <button 
+                <button
                   className={`course-button ${course === 'english' ? 'active' : ''} ${availability.english.locked ? 'locked' : ''}`}
                   onClick={() => {
                     if (availability.english.locked) {
@@ -371,19 +371,6 @@ const Profile: React.FC = () => {
                   }}
                 >
                   {availability.english.locked ? '🔒 اللغة الإنجليزية' : 'اللغة الإنجليزية'}
-                </button>
-                <button 
-                  className={`course-button ${course === 'numbers' ? 'active' : ''} ${availability.numbers.locked ? 'locked' : ''}`}
-                  onClick={() => {
-                    if (availability.numbers.locked) {
-                      setLockedCourse('numbers');
-                      return;
-                    }
-                    setCourse('numbers');
-                    navigate('/letters');
-                  }}
-                >
-                  {availability.numbers.locked ? '🔒 الرياضيات' : 'الرياضيات'}
                 </button>
               </div>
             </div>
@@ -424,9 +411,7 @@ const Profile: React.FC = () => {
             <div className="coming-soon-title">الدورة مقفلة</div>
             <div className="coming-soon-content">
               <p>
-                {lockedCourse === 'english'
-                  ? 'دورة اللغة الإنجليزية مقفلة حالياً.'
-                  : 'دورة الرياضيات مقفلة حالياً.'}
+                {'دورة اللغة الإنجليزية مقفلة حالياً.'}
               </p>
             </div>
             <button className="coming-soon-ok" onClick={() => setLockedCourse(null)}>حسناً</button>

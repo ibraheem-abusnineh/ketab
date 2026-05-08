@@ -70,7 +70,7 @@ const SpyExercisePage: React.FC<SpyExercisePageProps> = ({
         <div className="spy-container" style={{ position: 'relative', marginTop: '20px' }}>
           <div className="spy-image-wrapper" style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
             <img
-              src={`${process.env.PUBLIC_URL}/letters/${selectedLetter.toLowerCase()}-spy.jpg`}
+              src={`${process.env.PUBLIC_URL}/letters/${selectedLetter.toUpperCase()}/${selectedLetter.toUpperCase()}-spy.jpg`}
               alt="Spy game"
               style={{ width: '100%', display: 'block' }}
             />

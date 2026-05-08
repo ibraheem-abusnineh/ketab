@@ -20,8 +20,8 @@ const TracingExercisePage: React.FC<TracingExercisePageProps> = ({ letter, onCom
   const pointersRef = useRef<Map<number, Pointer>>(new Map());
 
   const tracingImageSrc = useMemo(() => {
-    const normalizedLetter = letter.trim().toLowerCase() || 'a';
-    return `/letters/${normalizedLetter}-tracing.jpg`;
+    const normalizedLetter = letter.trim().toUpperCase() || 'A';
+    return `/letters/${normalizedLetter}/${normalizedLetter}-tracing.jpg`;
   }, [letter]);
   const instructionText = useMemo(
     () => `Trace the letter ${letter.toUpperCase()} with your finger or mouse.`,

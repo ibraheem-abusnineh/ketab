@@ -3,6 +3,8 @@ import LetterImage from '../LetterImage';
 import { LetterData, LetterInfo } from '../../types';
 import { convertToEmbedUrl } from '../../utils/videoUtils';
 
+const PUBLIC_URL = process.env.PUBLIC_URL || '';
+
 interface IntroductionPageProps {
   selectedLetter: string;
   letterData: LetterData;
@@ -17,6 +19,7 @@ const IntroductionPage: React.FC<IntroductionPageProps> = ({
   isEnglish = false
 }) => {
   const embedUrl = letterInfoData?.link ? convertToEmbedUrl(letterInfoData.link) : '';
+  const localVideoUrl = `${PUBLIC_URL}/letters/${selectedLetter.toLowerCase()}.mp4`;
   const rawLetterName = letterInfoData?.name || letterData.name;
   const displayLetterName = isEnglish
     ? rawLetterName.replace(/^Letter\s+/i, '').trim() || rawLetterName
@@ -55,7 +58,20 @@ const IntroductionPage: React.FC<IntroductionPageProps> = ({
             : `إِشَارَاتُ الْيَّدِ لِحَرْفِ ${letterData.name}`}
         </h3>
         <div className="video-placeholder">
-          {embedUrl ? (
+          {isEnglish ? (
+            <video
+              width="100%"
+              height="400"
+              controls
+              style={{
+                borderRadius: '12px',
+                border: '2px dashed #84333c',
+                background: '#000'
+              }}
+            >
+              <source src={localVideoUrl} type="video/mp4" />
+            </video>
+          ) : embedUrl ? (
             <iframe
               width="100%"
               height="400"

@@ -19,8 +19,7 @@ interface CourseAvailabilityContextValue {
 
 const DEFAULT_COURSES: CourseMap = {
   arabic: { locked: false, label: 'Arabic Language' },
-  english: { locked: true, label: 'English Language' },
-  numbers: { locked: true, label: 'Mathematics' }
+  english: { locked: true, label: 'English Language' }
 };
 
 const CourseAvailabilityContext = createContext<CourseAvailabilityContextValue | undefined>(undefined);
@@ -29,7 +28,7 @@ const normalizeCourses = (courses?: Partial<Record<string, CourseStatus>>): Cour
   const normalized: CourseMap = { ...DEFAULT_COURSES };
   if (courses) {
     (Object.keys(courses) as string[]).forEach(key => {
-      if (key === 'arabic' || key === 'english' || key === 'numbers') {
+      if (key === 'arabic' || key === 'english') {
         const status = courses[key];
         if (status && typeof status.locked === 'boolean') {
           normalized[key] = {

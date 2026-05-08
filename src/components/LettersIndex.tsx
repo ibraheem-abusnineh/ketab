@@ -29,17 +29,6 @@ const LettersIndex: React.FC = () => {
           title: 'English Sign Language Alphabet Index'
         };
       case 'arabic':
-        return {
-          letters: lettersOrder,
-          data: lettersData,
-          title: 'فَهْرَسُ الْأبَجَدِيَّةِ الْإِشَارَّيَةِ الْعَرَبَيّةِ الْأُرْدُنِيةِ'
-        };
-      case 'numbers':
-        return {
-          letters: [],
-          data: {},
-          title: 'الرياضيات'
-        };
       default:
         return {
           letters: lettersOrder,
@@ -126,11 +115,9 @@ const LettersIndex: React.FC = () => {
   const isEnglish = course === 'english';
 
   const englishLocked = availability.english.locked;
-  const numbersLocked = availability.numbers.locked;
 
   const handleCourseSelection = (targetCourse: CourseType) => {
-    const status = availability[targetCourse];
-    if (status?.locked) {
+    if (availability[targetCourse]?.locked) {
       setLockedCourse(targetCourse);
       return;
     }
@@ -147,9 +134,6 @@ const LettersIndex: React.FC = () => {
     englishCourse: englishLocked
       ? isEnglish ? '🔒 English Language' : '🔒 اللغة الإنجليزية'
       : isEnglish ? 'English Language' : 'اللغة الإنجليزية',
-    numbersCourse: numbersLocked
-      ? isEnglish ? '🔒 Mathematics' : '🔒 الرياضيات'
-      : isEnglish ? 'Mathematics' : 'الرياضيات',
     previousPage: isEnglish ? 'Previous Page' : 'الصفحة السابقة',
     nextPage: isEnglish ? 'Next Page' : 'الصفحة التالية',
     goFirstLetter: isEnglish ? 'Go to First Letter' : 'انتقل إلى أول حرف',
@@ -160,11 +144,6 @@ const LettersIndex: React.FC = () => {
         return isEnglish
           ? 'The English course is currently locked by the administrator.'
           : 'دورة اللغة الإنجليزية مقفلة حالياً.';
-      }
-      if (target === 'numbers') {
-        return isEnglish
-          ? 'The Mathematics course is currently locked by the administrator.'
-          : 'دورة الرياضيات مقفلة حالياً.';
       }
       return isEnglish
         ? 'This course is currently locked.'
@@ -191,23 +170,17 @@ const LettersIndex: React.FC = () => {
       </div>
 
       <div className="flex justify-center gap-5 mb-[30px] flex-wrap">
-        <button 
+        <button
           className={`py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px ${course === 'arabic' ? 'bg-[#84333c] text-white' : 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white'}`}
           onClick={() => setCourse('arabic')}
         >
           {labels.arabicCourse}
         </button>
-        <button 
+        <button
           className={`py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px ${course === 'english' ? 'bg-[#84333c] text-white' : 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white'} ${englishLocked ? 'opacity-60 cursor-not-allowed relative hover:bg-gray-100 hover:text-[#666] hover:border-[#ccc] hover:transform-none' : ''}`}
           onClick={() => handleCourseSelection('english')}
         >
           {labels.englishCourse}
-        </button>
-        <button 
-          className={`py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px ${course === 'numbers' ? 'bg-[#84333c] text-white' : 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white'} ${numbersLocked ? 'opacity-60 cursor-not-allowed relative hover:bg-gray-100 hover:text-[#666] hover:border-[#ccc] hover:transform-none' : ''}`}
-          onClick={() => handleCourseSelection('numbers')}
-        >
-          {labels.numbersCourse}
         </button>
       </div>
       

@@ -127,8 +127,7 @@ app.use(bodyParser.json());
 
 const DEFAULT_COURSE_SETTINGS = {
   arabic: { locked: false, label: 'Arabic Language' },
-  english: { locked: true, label: 'English Language' },
-  numbers: { locked: true, label: 'Mathematics' }
+  english: { locked: true, label: 'English Language' }
 };
 
 function ensureCourseSettings() {
@@ -359,7 +358,7 @@ app.put('/api/admin/courses/:courseId', adminAuth, (req, res) => {
 
   const normalizedCourseId = (courseId || '').toLowerCase().trim();
 
-  if (!['arabic', 'english', 'numbers'].includes(normalizedCourseId)) {
+  if (!['arabic', 'english'].includes(normalizedCourseId)) {
     return res.status(404).json({ success: false, error: 'Course not found' });
   }
 

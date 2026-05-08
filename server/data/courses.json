@@ -4,11 +4,7 @@
     "label": "Arabic Language"
   },
   "english": {
-    "locked": true,
+    "locked": false,
     "label": "English Language"
-  },
-  "numbers": {
-    "locked": true,
-    "label": "Mathematics"
   }
 }
