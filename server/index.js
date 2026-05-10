@@ -81,13 +81,6 @@ function writeNotifications(notifications) {
   return ok;
 }
 
-async function ensureS3DataFile(key, defaultValue) {
-  if (!s3Storage.isConfigured()) return;
-  const existing = await s3Storage.readJSON(key);
-  if (existing !== null) return;
-  await s3Storage.writeJSON(key, defaultValue);
-}
-
 function ensureRuntimeDataFile(filePath, defaultValue) {
   if (fs.existsSync(filePath)) {
     return;
@@ -101,7 +94,7 @@ async function syncFromS3() {
   const visits = await s3Storage.readJSON('ketab/visits.json');
   if (visits) {
     writeJSON(visitsPath, visits);
-    console.log(`S3 sync: loaded visits (${visits.totalVisits} visits)`);
+    console.log(`Remote sync: loaded visits (${visits.totalVisits} visits)`);
   } else {
     await s3Storage.writeJSON('ketab/visits.json', DEFAULT_VISITS_DATA);
   }
@@ -109,7 +102,7 @@ async function syncFromS3() {
   const notifications = await s3Storage.readJSON('ketab/notifications.json');
   if (notifications) {
     writeJSON(notificationsPath, notifications);
-    console.log(`S3 sync: loaded notifications (${notifications.length} items)`);
+    console.log(`Remote sync: loaded notifications (${notifications.length} items)`);
   } else {
     await s3Storage.writeJSON('ketab/notifications.json', DEFAULT_NOTIFICATIONS);
   }
@@ -119,7 +112,7 @@ function ensureRuntimeDataFiles() {
   ensureRuntimeDataFile(visitsPath, DEFAULT_VISITS_DATA);
   ensureRuntimeDataFile(notificationsPath, DEFAULT_NOTIFICATIONS);
   if (s3Storage.isConfigured()) {
-    syncFromS3().catch(e => console.error('S3 startup sync failed:', e));
+    syncFromS3().catch(e => console.error('Remote startup sync failed:', e));
   }
 }
 
