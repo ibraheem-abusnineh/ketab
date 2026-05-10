@@ -59,6 +59,10 @@ const Cover: React.FC = () => {
       setError('الاسم الكامل ورقم الهاتف مطلوبان لدخول الضيف');
       return;
     }
+    if (!/^\d{10}$/.test(trimmedPhone)) {
+      setError('رقم الهاتف يجب أن يكون 10 أرقام بالضبط');
+      return;
+    }
 
     setLoading(true);
     loginAsGuest(trimmedName, trimmedPhone)
@@ -141,9 +145,12 @@ const Cover: React.FC = () => {
                   <input
                     className="border-2 border-[#84333c] rounded-lg py-[10px] px-[12px] text-[1em] w-full box-border"
                     value={guestPhoneNumber}
-                    onChange={(e) => setGuestPhoneNumber(e.target.value)}
+                    onChange={(e) => setGuestPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     placeholder="07XXXXXXXX"
                     type="tel"
+                    pattern="\d{10}"
+                    title="رقم الهاتف يجب أن يكون 10 أرقام"
+                    inputMode="numeric"
                   />
                 </label>
                 <p className="text-[0.9em] text-[#5a2428] my-2 text-center">للدعم الفني والاستفسار: التواصل مع هاتف :  0792022316</p>

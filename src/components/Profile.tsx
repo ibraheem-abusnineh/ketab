@@ -304,8 +304,11 @@ const Profile: React.FC = () => {
                     <input
                       type="text"
                       value={editedData?.phone || ''}
-                      onChange={(e) => setEditedData(prev => ({ ...prev!, phone: e.target.value }))}
+                      onChange={(e) => setEditedData(prev => ({ ...prev!, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                       className="edit-input"
+                      pattern="\d{10}"
+                      title="رقم الهاتف يجب أن يكون 10 أرقام"
+                      inputMode="numeric"
                     />
                   ) : (
                     <span>{profileData.phone || 'غير متوفر'}</span>

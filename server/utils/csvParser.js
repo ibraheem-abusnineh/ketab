@@ -155,6 +155,10 @@ function validateUser(user) {
     errors.push('Role must be parent, teacher, supervisor, student, developer, or guest');
   }
   
+  if (user.phone && !/^\d{10}$/.test(user.phone.trim())) {
+    errors.push('Phone must be exactly 10 digits');
+  }
+  
   return {
     valid: errors.length === 0,
     errors

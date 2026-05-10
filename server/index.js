@@ -212,6 +212,10 @@ app.post('/api/login/guest', (req, res) => {
       return res.status(400).json({ success: false, error: 'Full name and phone number are required' });
     }
 
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      return res.status(400).json({ success: false, error: 'Phone must be exactly 10 digits' });
+    }
+
     const users = readUsersData();
 
     // Reuse an existing guest by phone number when available.

@@ -402,7 +402,9 @@ const UserManagement: React.FC = (): React.ReactElement => {
                     <input
                       type="text"
                       value={user.phone || ''}
-                      onChange={(e) => handleFieldChange(user.nationalNumber, 'phone', e.target.value)}
+                      onChange={(e) => handleFieldChange(user.nationalNumber, 'phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      pattern="\d{10}"
+                      title="Phone must be exactly 10 digits"
                       className="edit-input"
                     />
                   ) : (
@@ -505,11 +507,14 @@ const UserManagement: React.FC = (): React.ReactElement => {
                 />
               </div>
               <div className="form-group">
-                <label>Phone</label>
+                <label>Phone (10 digits)</label>
                 <input
                   type="text"
                   value={newUser.phone}
-                  onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                  onChange={(e) => setNewUser({...newUser, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})}
+                  pattern="\d{10}"
+                  title="Phone must be exactly 10 digits"
+                  inputMode="numeric"
                 />
               </div>
               <div className="form-group">
