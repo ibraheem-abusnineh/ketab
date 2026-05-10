@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getAuthState } from '../utils/auth';
 import './FeedbackButton.css';
 
 interface Props {
@@ -13,6 +14,16 @@ const FeedbackButton: React.FC<Props> = ({ toEmail }) => {
   const [error, setError] = useState('');
 
   const ajaxUrl = `https://formsubmit.co/ajax/${encodeURIComponent(toEmail)}`;
+
+  const auth = getAuthState();
+  const user = auth.user;
+  const userInfo = user ? {
+    name: user.name || '',
+    role: user.role || '',
+    nationalNumber: user.nationalNumber || '',
+    school: user.school || '',
+    phone: user.phone || '',
+  } : null;
 
   return (
     <>
@@ -42,17 +53,26 @@ const FeedbackButton: React.FC<Props> = ({ toEmail }) => {
                   setSending(true);
                   setError('');
                   try {
+                    const payload: Record<string, any> = {
+                      _subject: 'Ketab Feedback',
+                      message,
+                      page: typeof window !== 'undefined' ? window.location.href : '',
+                    };
+                    if (userInfo) {
+                      payload._template = 'table';
+                      payload['الاسم'] = userInfo.name;
+                      payload['الدور'] = userInfo.role;
+                      payload['الرقم الوطني'] = userInfo.nationalNumber;
+                      payload['المدرسة'] = userInfo.school;
+                      payload['الهاتف'] = userInfo.phone;
+                    }
                     const res = await fetch(ajaxUrl, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                       },
-                      body: JSON.stringify({
-                        _subject: 'Ketab Feedback',
-                        message,
-                        page: typeof window !== 'undefined' ? window.location.href : ''
-                      })
+                      body: JSON.stringify(payload)
                     });
                     if (!res.ok) throw new Error('Request failed');
                     setSent(true);
