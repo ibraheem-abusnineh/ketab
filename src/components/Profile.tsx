@@ -351,7 +351,7 @@ const Profile: React.FC = () => {
 
             {/* Course Selection Card */}
             <div className="profile-card course-selection">
-              <h2 className="card-title">اختيار الدورة</h2>
+              <h2 className="card-title">اختيار المحتوى</h2>
               <div className="course-buttons">
                 <button 
                   className={`course-button ${course === 'arabic' ? 'active' : ''}`}
@@ -365,7 +365,8 @@ const Profile: React.FC = () => {
                 <button
                   className={`course-button ${course === 'english' ? 'active' : ''} ${availability.english.locked ? 'locked' : ''}`}
                   onClick={() => {
-                    if (availability.english.locked) {
+                    const isDev = getAuthState().user?.role === 'developer';
+                    if (!isDev && availability.english.locked) {
                       setLockedCourse('english');
                       return;
                     }
@@ -411,10 +412,10 @@ const Profile: React.FC = () => {
         <div className="coming-soon-overlay" onClick={() => setLockedCourse(null)}>
           <div className="coming-soon-modal" onClick={(e) => e.stopPropagation()}>
             <button className="coming-soon-close" onClick={() => setLockedCourse(null)}>&times;</button>
-            <div className="coming-soon-title">الدورة مقفلة</div>
+            <div className="coming-soon-title">المحتوى مقفل</div>
             <div className="coming-soon-content">
               <p>
-                {'دورة اللغة الإنجليزية مقفلة حالياً.'}
+                {'محتوى اللغة الإنجليزية مقفل حالياً.'}
               </p>
             </div>
             <button className="coming-soon-ok" onClick={() => setLockedCourse(null)}>حسناً</button>

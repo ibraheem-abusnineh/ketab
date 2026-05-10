@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../utils/api';
+import { getAuthState } from '../utils/auth';
 import { CourseType, getCourseState, setCourseState } from '../utils/courseState';
 
 type CourseStatus = {
@@ -50,6 +51,10 @@ export const CourseAvailabilityProvider: React.FC<{ children: React.ReactNode }>
 
   const ensureUnlockedCourse = useCallback((updatedCourses: CourseMap) => {
     if (isResettingRef.current) {
+      return;
+    }
+
+    if (getAuthState().user?.role === 'developer') {
       return;
     }
 

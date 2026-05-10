@@ -7,6 +7,7 @@ import { useCourseState, CourseType } from '../utils/courseState';
 import { LetterData } from '../types';
 import LogoWithImage from './LogoWithImage';
 import { useCourseAvailability } from '../context/CourseAvailabilityContext';
+import { getAuthState } from '../utils/auth';
 
 const LettersIndex: React.FC = () => {
   const navigate = useNavigate();
@@ -117,7 +118,8 @@ const LettersIndex: React.FC = () => {
   const englishLocked = availability.english.locked;
 
   const handleCourseSelection = (targetCourse: CourseType) => {
-    if (availability[targetCourse]?.locked) {
+    const isDev = getAuthState().user?.role === 'developer';
+    if (!isDev && availability[targetCourse]?.locked) {
       setLockedCourse(targetCourse);
       return;
     }
@@ -138,16 +140,16 @@ const LettersIndex: React.FC = () => {
     nextPage: isEnglish ? 'Next Page' : 'الصفحة التالية',
     goFirstLetter: isEnglish ? 'Go to First Letter' : 'انتقل إلى أول حرف',
     pageIndicator: isEnglish ? `Page ${currentPage} of 2` : `صفحة ${currentPage} من 2`,
-    lockedTitle: isEnglish ? 'Course Locked' : 'الدورة مقفلة',
+    lockedTitle: isEnglish ? 'Course Locked' : 'المحتوى مقفل',
     lockedBody: (target: CourseType) => {
       if (target === 'english') {
         return isEnglish
           ? 'The English course is currently locked by the administrator.'
-          : 'دورة اللغة الإنجليزية مقفلة حالياً.';
+          : 'محتوى اللغة الإنجليزية مقفل حالياً.';
       }
       return isEnglish
         ? 'This course is currently locked.'
-        : 'هذه الدورة مقفلة حالياً.';
+        : 'هذا المحتوى مقفل حالياً.';
     },
     lockedOk: isEnglish ? 'OK' : 'حسناً'
   };

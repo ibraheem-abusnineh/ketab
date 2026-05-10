@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const { parseCSV, validateUser } = require('./utils/csvParser');
 const { readJSON, writeJSON } = require('./utils/fileStorage');
+const s3Storage = require('./utils/s3Storage');
 
 // Global error handlers for debugging App Runner crashes
 process.on('uncaughtException', (err) => {
@@ -71,7 +72,20 @@ function readNotifications() {
 }
 
 function writeNotifications(notifications) {
-  return writeJSON(notificationsPath, notifications);
+  const ok = writeJSON(notificationsPath, notifications);
+  if (ok && s3Storage.isConfigured()) {
+    s3Storage.writeJSON('ketab/notifications.json', notifications).catch(e =>
+      console.error('S3 write error (notifications):', e)
+    );
+  }
+  return ok;
+}
+
+async function ensureS3DataFile(key, defaultValue) {
+  if (!s3Storage.isConfigured()) return;
+  const existing = await s3Storage.readJSON(key);
+  if (existing !== null) return;
+  await s3Storage.writeJSON(key, defaultValue);
 }
 
 function ensureRuntimeDataFile(filePath, defaultValue) {
@@ -81,9 +95,32 @@ function ensureRuntimeDataFile(filePath, defaultValue) {
   writeJSON(filePath, defaultValue);
 }
 
+async function syncFromS3() {
+  if (!s3Storage.isConfigured()) return;
+
+  const visits = await s3Storage.readJSON('ketab/visits.json');
+  if (visits) {
+    writeJSON(visitsPath, visits);
+    console.log(`S3 sync: loaded visits (${visits.totalVisits} visits)`);
+  } else {
+    await s3Storage.writeJSON('ketab/visits.json', DEFAULT_VISITS_DATA);
+  }
+
+  const notifications = await s3Storage.readJSON('ketab/notifications.json');
+  if (notifications) {
+    writeJSON(notificationsPath, notifications);
+    console.log(`S3 sync: loaded notifications (${notifications.length} items)`);
+  } else {
+    await s3Storage.writeJSON('ketab/notifications.json', DEFAULT_NOTIFICATIONS);
+  }
+}
+
 function ensureRuntimeDataFiles() {
   ensureRuntimeDataFile(visitsPath, DEFAULT_VISITS_DATA);
   ensureRuntimeDataFile(notificationsPath, DEFAULT_NOTIFICATIONS);
+  if (s3Storage.isConfigured()) {
+    syncFromS3().catch(e => console.error('S3 startup sync failed:', e));
+  }
 }
 
 function createNotification(userId, userName, changes) {
@@ -158,19 +195,17 @@ const upload = multer({ dest: 'uploads/' });
 
 // Helper function to read visits data
 function readVisitsData() {
-  const visitsData = readJSON(visitsPath, DEFAULT_VISITS_DATA);
-  if (typeof visitsData.totalVisits !== 'number') {
-    visitsData.totalVisits = 0;
-  }
-  if (!Array.isArray(visitsData.loginHistory)) {
-    visitsData.loginHistory = [];
-  }
-  return visitsData;
+  return readJSON(visitsPath, DEFAULT_VISITS_DATA);
 }
 
-// Helper function to write visits data
-function writeVisitsData(data) {
-  return writeJSON(visitsPath, data);
+function writeVisitsData(visitsData) {
+  const ok = writeJSON(visitsPath, visitsData);
+  if (ok && s3Storage.isConfigured()) {
+    s3Storage.writeJSON('ketab/visits.json', visitsData).catch(e =>
+      console.error('S3 write error (visits):', e)
+    );
+  }
+  return ok;
 }
 
 // Helper function to read admin data
