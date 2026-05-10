@@ -24,3 +24,6 @@ console.log('Admin credentials set up:');
 console.log('Username:', username);
 console.log('Password:', password);
 console.log('Admin data saved to:', adminPath);
+console.log('');
+console.log('Developer password (hardcoded): dev_ketab_2026');
+console.log('Login at POST /api/developer/login');

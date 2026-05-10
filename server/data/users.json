@@ -6404,5 +6404,21 @@
     "school": "الرجاء لتعليم المعاقين سمعيًا",
     "directorate": "الرصيفة",
     "role": "teacher"
+  },
+  {
+    "nationalNumber": "2000884590",
+    "name": "ibraheem majd abusnineh",
+    "role": "developer",
+    "school": "dev team",
+    "phone": "",
+    "directorate": ""
+  },
+  {
+    "nationalNumber": "GUEST_1778391616736_8247",
+    "name": "fdgdfg",
+    "role": "guest",
+    "school": "زيارة عامة",
+    "phone": "079170561",
+    "directorate": ""
   }
 ]

@@ -80,6 +80,34 @@ async function trackVisit(): Promise<void> {
   }
 }
 
+export async function loginAsDeveloper(password: string): Promise<{
+  success: boolean;
+  sessionToken?: string;
+  user?: { nationalNumber: string; name: string; role: string; school: string };
+}> {
+  try {
+    const response = await apiFetch('/api/developer/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    const data = await response.json();
+    if (data.success) {
+      setAuthState({
+        isAuthenticated: true,
+        username: data.user.name,
+        user: data.user,
+        loginTime: Date.now(),
+      });
+      return { success: true, sessionToken: data.sessionToken, user: data.user };
+    }
+    return { success: false };
+  } catch (error) {
+    console.error('Developer login error:', error);
+    return { success: false };
+  }
+}
+
 export async function loginWithNationalNumber(nationalNumber: string): Promise<boolean> {
   try {
     const response = await apiFetch('/api/login', {

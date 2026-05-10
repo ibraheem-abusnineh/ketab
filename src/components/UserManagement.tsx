@@ -5,7 +5,7 @@ import { apiFetch } from '../utils/api';
 interface User {
   nationalNumber: string;
   name: string;
-  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'guest';
+  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'developer' | 'guest';
   school: string;
   phone: string;
   directorate?: string;
@@ -332,6 +332,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
           <option value="teacher">Teachers</option>
           <option value="supervisor">Supervisors</option>
           <option value="student">Students</option>
+          <option value="developer">Developers</option>
           <option value="guest">Guests</option>
         </select>
       </div>
@@ -375,6 +376,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
                       <option value="teacher">Teacher</option>
                       <option value="supervisor">Supervisor</option>
                       <option value="student">Student</option>
+                      <option value="developer">Developer</option>
                       <option value="guest">Guest</option>
                     </select>
                   ) : (
@@ -489,6 +491,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
                   <option value="teacher">Teacher</option>
                   <option value="supervisor">Supervisor</option>
                   <option value="student">Student</option>
+                  <option value="developer">Developer</option>
                   <option value="guest">Guest</option>
                 </select>
               </div>

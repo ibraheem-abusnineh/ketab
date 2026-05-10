@@ -31,3 +31,8 @@ backup_*
 /server/data/visits.json
 /server/data/notifications.json
 
+# graphify output
+graphify-out/
+.graphify_*
+_*.py
+

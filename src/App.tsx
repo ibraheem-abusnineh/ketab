@@ -8,6 +8,7 @@ import Profile from './components/Profile';
 import FeedbackButton from './components/FeedbackButton';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
+import DevLogin from './components/DevLogin';
 import './App.css';
 import { CourseAvailabilityProvider } from './context/CourseAvailabilityContext';
 import { useCourseState } from './utils/courseState';
@@ -44,6 +45,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthed, adminSession, handleAdm
         <Route path="/admin/dashboard" element={
           adminSession ? <AdminDashboard sessionToken={adminSession} /> : <Navigate to="/admin" replace />
         } />
+        <Route path="/dev" element={<DevLogin onLoginSuccess={handleAdminLogin} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <FeedbackButton toEmail={process.env.REACT_APP_FEEDBACK_EMAIL || 'visiblevoices@qra.jo'} />

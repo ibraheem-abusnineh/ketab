@@ -1,3 +1,5 @@
+try { require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }); } catch (_) {}
+
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -39,13 +41,12 @@ const adminAuth = (req, res, next) => {
     return res.status(401).json({ success: false, error: 'Unauthorized: No token provided' });
   }
 
-  // In a simple setup, we check if the token starts with "admin_" and is a certain length
-  // In production, we'd verify against a session store or JWT
-  if (!token.startsWith('admin_') || token.length < 32) {
-    return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+  // Accept both admin_ and dev_ tokens
+  if ((token.startsWith('admin_') || token.startsWith('dev_')) && token.length >= 32) {
+    return next();
   }
 
-  next();
+  return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
 };
 
 // File paths
@@ -326,6 +327,39 @@ app.post('/api/login', (req, res) => {
     });
   } catch (error) {
     console.error('Error during login:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// Developer login — hardcoded credentials, no visit tracking
+app.post('/api/developer/login', (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ success: false, error: 'Password required' });
+    }
+
+    const devPassword = process.env.DEV_PASSWORD || 'dev_ketab_2026';
+    if (password !== devPassword) {
+      return res.status(401).json({ success: false, error: 'Invalid password' });
+    }
+
+    const secureToken = `dev_${crypto.randomBytes(24).toString('hex')}`;
+
+    res.json({
+      success: true,
+      message: 'Developer login successful',
+      sessionToken: secureToken,
+      user: {
+        nationalNumber: 'developer',
+        name: 'Developer',
+        role: 'developer',
+        school: ''
+      }
+    });
+  } catch (error) {
+    console.error('Error during developer login:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
