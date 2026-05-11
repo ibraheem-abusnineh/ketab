@@ -8,3 +8,6 @@ run:
   command: node server/index.js
   network:
     port: 5000
+  env:
+    - name: GH_TOKEN
+      value: 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
