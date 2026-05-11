@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { VideoPopupProps } from '../types';
 import './VideoPopup.css';
 
@@ -9,11 +9,7 @@ const VideoPopup: React.FC<VideoPopupProps> = ({
   word, 
   isLocal = false 
 }) => {
-  const [videoError, setVideoError] = useState(false);
-
   if (!isOpen) return null;
-
-  const showPlaceholder = isLocal && (!videoUrl || videoError);
 
   return (
     <div className="video-popup" onClick={onClose}>
@@ -28,42 +24,39 @@ const VideoPopup: React.FC<VideoPopupProps> = ({
           </div>
         )}
         
-        {!showPlaceholder && videoUrl ? (
-          isLocal ? (
-            <video 
-              width="560" 
-              height="315" 
-              controls 
-              onError={() => setVideoError(true)}
-              style={{
-                borderRadius: '12px',
-                border: '2px dashed #84333c',
-                background: '#eee',
-                maxWidth: '80vw',
-                maxHeight: '60vh'
-              }}
-            >
-              <source src={videoUrl} type="video/mp4" />
-              هذا المتصفح لا يدعم تشغيل الفيديو.
-            </video>
-          ) : (
-            <iframe
-              width="560"
-              height="315"
-              src={videoUrl}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              style={{
-                borderRadius: '12px',
-                border: '2px dashed #84333c',
-                background: '#eee',
-                maxWidth: '80vw',
-                maxHeight: '60vh'
-              }}
-            />
-          )
+        {isLocal && videoUrl ? (
+          <video 
+            width="560" 
+            height="315" 
+            controls 
+            style={{
+              borderRadius: '12px',
+              border: '2px dashed #84333c',
+              background: '#eee',
+              maxWidth: '80vw',
+              maxHeight: '60vh'
+            }}
+          >
+            <source src={videoUrl} type="video/mp4" />
+            هذا المتصفح لا يدعم تشغيل الفيديو.
+          </video>
+        ) : videoUrl ? (
+          <iframe
+            width="560"
+            height="315"
+            src={videoUrl}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            style={{
+              borderRadius: '12px',
+              border: '2px dashed #84333c',
+              background: '#eee',
+              maxWidth: '80vw',
+              maxHeight: '60vh'
+            }}
+          />
         ) : (
           <div style={{
             background: '#eee',
