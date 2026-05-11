@@ -10,4 +10,4 @@ run:
     port: 5000
   env:
     - name: GH_TOKEN
-      value: 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
+      value: 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
