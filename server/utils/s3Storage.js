@@ -16,6 +16,7 @@ try {
 const KEY_MAP = {
   'ketab/visits.json': 'server/data/visits.json',
   'ketab/notifications.json': 'server/data/notifications.json',
+  'ketab/users.json': 'server/data/users.json',
 };
 
 const shaCache = {};

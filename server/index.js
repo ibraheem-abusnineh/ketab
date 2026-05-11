@@ -64,7 +64,13 @@ function readUsersData() {
 }
 
 function writeUsersData(users) {
-  return writeJSON(usersPath, users);
+  const ok = writeJSON(usersPath, users);
+  if (ok && s3Storage.isConfigured()) {
+    s3Storage.writeJSON('ketab/users.json', users).catch(e =>
+      console.error('GitHub write error (users):', e)
+    );
+  }
+  return ok;
 }
 
 function readNotifications() {
@@ -105,6 +111,14 @@ async function syncFromS3() {
     console.log(`Remote sync: loaded notifications (${notifications.length} items)`);
   } else {
     await s3Storage.writeJSON('ketab/notifications.json', DEFAULT_NOTIFICATIONS);
+  }
+
+  const users = await s3Storage.readJSON('ketab/users.json');
+  if (users) {
+    writeJSON(usersPath, users);
+    console.log(`Remote sync: loaded ${users.length} users`);
+  } else {
+    await s3Storage.writeJSON('ketab/users.json', readJSON(usersPath, []));
   }
 }
 
