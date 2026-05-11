@@ -70,7 +70,8 @@ const UserLoginHistory: React.FC = () => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'Asia/Amman'
     });
   };
 
@@ -78,7 +79,8 @@ const UserLoginHistory: React.FC = () => {
     return new Date(dateString).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      timeZone: 'Asia/Amman'
     });
   };
 
@@ -140,6 +142,7 @@ const UserLoginHistory: React.FC = () => {
           <option value="all">All Roles</option>
           <option value="parent">Parents</option>
           <option value="teacher">Teachers</option>
+          <option value="qra-employ">QRA Employ</option>
           <option value="supervisor">Supervisors</option>
           <option value="student">Students</option>
           <option value="guest">Guests</option>
@@ -225,11 +228,8 @@ const UserLoginHistory: React.FC = () => {
                         <div className="login-timeline">
                           {user.recentLogins.map((login, index) => (
                             <div key={index} className="login-entry">
-                              <div className="login-timestamp">
-                                {login.date} at {login.time}
-                              </div>
                               <div className="login-relative">
-                                {new Date(login.timestamp).toLocaleString()}
+                                {new Date(login.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Amman' })}
                               </div>
                             </div>
                           ))}

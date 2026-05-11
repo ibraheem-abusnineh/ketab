@@ -26,6 +26,10 @@ React frontend (TypeScript) + Express backend (CommonJS). Frontend in `src/`, ba
 - Conventional prefixes: `fix:`, `feat:`
 - PRs: describe user-visible change, note affected areas, include screenshots for UI
 
+## Git Push Policy
+- NEVER push to GitHub without first asking for explicit permission
+- Even if the user says "push one last time", ask again on subsequent pushes
+
 ## Data & Config
 - `server/data/` and `public/auth/` contain sensitive local state; never commit real user data
 - `server/data/courses.json` controls which courses (arabic/english/numbers) are locked

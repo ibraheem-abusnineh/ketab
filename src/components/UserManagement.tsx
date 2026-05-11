@@ -5,7 +5,7 @@ import { apiFetch } from '../utils/api';
 interface User {
   nationalNumber: string;
   name: string;
-  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'developer' | 'guest';
+  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'developer' | 'guest' | 'qra-employ';
   school: string;
   phone: string;
   directorate?: string;
@@ -330,6 +330,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
           <option value="all">All Roles</option>
           <option value="parent">Parents</option>
           <option value="teacher">Teachers</option>
+          <option value="qra-employ">QRA Employ</option>
           <option value="supervisor">Supervisors</option>
           <option value="student">Students</option>
           <option value="developer">Developers</option>
@@ -374,6 +375,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
                     >
                       <option value="parent">Parent</option>
                       <option value="teacher">Teacher</option>
+                      <option value="qra-employ">QRA Employ</option>
                       <option value="supervisor">Supervisor</option>
                       <option value="student">Student</option>
                       <option value="developer">Developer</option>
@@ -491,6 +493,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
                 >
                   <option value="parent">Parent</option>
                   <option value="teacher">Teacher</option>
+                  <option value="qra-employ">QRA Employ</option>
                   <option value="supervisor">Supervisor</option>
                   <option value="student">Student</option>
                   <option value="developer">Developer</option>
@@ -562,6 +565,7 @@ const UserManagement: React.FC = (): React.ReactElement => {
                 >
                   <option value="parent">Parents</option>
                   <option value="teacher">Teachers</option>
+                  <option value="qra-employ">QRA Employ</option>
                 </select>
               </div>
               <div className="form-group">

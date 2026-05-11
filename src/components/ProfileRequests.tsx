@@ -22,7 +22,7 @@ interface ProfileEditRequest {
 interface User {
   nationalNumber: string;
   name: string;
-  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'guest';
+  role: 'parent' | 'teacher' | 'supervisor' | 'student' | 'guest' | 'qra-employ';
   school: string;
   phone: string;
   directorate?: string;
@@ -122,7 +122,7 @@ const ProfileRequests: React.FC = () => {
   }, []);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString('en-US', { timeZone: 'Asia/Amman' });
   };
 
   // Filter requests by status

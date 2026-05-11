@@ -184,6 +184,11 @@
   color: #7b1fa2;
 }
 
+.role-qra-employ {
+  background: #fff3e0;
+  color: #e65100;
+}
+
 .login-count {
   display: flex;
   flex-direction: column;

@@ -689,8 +689,8 @@ app.post('/api/users/import-csv', adminAuth, upload.single('csvFile'), async (re
       return res.status(400).json({ success: false, error: 'No CSV file uploaded' });
     }
     
-    if (!['parent', 'teacher'].includes(role)) {
-      return res.status(400).json({ success: false, error: 'Invalid CSV import role. Must be parent or teacher' });
+    if (!['parent', 'teacher', 'qra-employ'].includes(role)) {
+      return res.status(400).json({ success: false, error: 'Invalid CSV import role. Must be parent, teacher, or qra-employ' });
     }
     
     if (!['add', 'upsert', 'replace'].includes(strategy)) {
@@ -908,8 +908,8 @@ app.get('/api/stats/user-history', adminAuth, (req, res) => {
       userStats[key].loginCount++;
       userStats[key].logins.push({
         timestamp: login.timestamp,
-        date: new Date(login.timestamp).toLocaleDateString(),
-        time: new Date(login.timestamp).toLocaleTimeString()
+        date: new Date(login.timestamp).toLocaleDateString('en-US', { timeZone: 'Asia/Amman' }),
+        time: new Date(login.timestamp).toLocaleTimeString('en-US', { timeZone: 'Asia/Amman' })
       });
     });
     
@@ -992,8 +992,8 @@ app.get('/api/user/profile/:nationalNumber', (req, res) => {
       .reverse()
       .map(login => ({
         timestamp: login.timestamp,
-        date: new Date(login.timestamp).toLocaleDateString(),
-        time: new Date(login.timestamp).toLocaleTimeString()
+        date: new Date(login.timestamp).toLocaleDateString('en-US', { timeZone: 'Asia/Amman' }),
+        time: new Date(login.timestamp).toLocaleTimeString('en-US', { timeZone: 'Asia/Amman' })
       }));
     
     const profileData = {

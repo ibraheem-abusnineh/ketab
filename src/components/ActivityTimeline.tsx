@@ -110,7 +110,7 @@ const ActivityTimeline: React.FC<{ collapsible?: boolean }> = ({ collapsible = f
                     }}
                   ></div>
                   <div className="day-label">
-                    {new Date(day.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {new Date(day.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Amman' })}
                   </div>
                   <div className="day-count">{day.count}</div>
                 </div>

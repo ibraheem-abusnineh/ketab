@@ -107,6 +107,17 @@ async function parseCSV(filePath, role) {
               directorate: getValue(nrow, headers, ['المديرية'], 1),
               role: 'teacher'
             };
+          } else if (role === 'qra-employ') {
+            user = {
+              nationalNumber: arabicIndicToAscii(
+                getValue(nrow, headers, ['الرقم الوطني'], 4)
+              ).replace(/[^0-9]/g, ''),
+              name: getValue(nrow, headers, ['الاسم'], 2),
+              phone: arabicIndicToAscii(getValue(nrow, headers, ['الهاتف'], 5)),
+              school: getValue(nrow, headers, ['المدرسة'], 0),
+              directorate: getValue(nrow, headers, ['المديرية'], 1),
+              role: 'qra-employ'
+            };
           }
 
           // Only add if national number exists
@@ -141,7 +152,7 @@ async function parseCSV(filePath, role) {
  */
 function validateUser(user) {
   const errors = [];
-  const allowedRoles = ['parent', 'teacher', 'supervisor', 'student', 'developer', 'guest'];
+  const allowedRoles = ['parent', 'teacher', 'supervisor', 'student', 'developer', 'guest', 'qra-employ'];
   
   if (!user.nationalNumber || user.nationalNumber.trim() === '') {
     errors.push('National number is required');
@@ -152,7 +163,7 @@ function validateUser(user) {
   }
   
   if (!user.role || !allowedRoles.includes(user.role)) {
-    errors.push('Role must be parent, teacher, supervisor, student, developer, or guest');
+    errors.push('Role must be parent, teacher, supervisor, student, developer, guest, or qra-employ');
   }
   
   if (user.phone && !/^\d{10}$/.test(user.phone.trim())) {

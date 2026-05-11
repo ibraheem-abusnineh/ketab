@@ -246,6 +246,11 @@
   color: #7b1fa2;
 }
 
+.role-qra-employ {
+  background: #fff3e0;
+  color: #e65100;
+}
+
 /* Login Statistics Card */
 .login-stats .stats-grid {
   display: grid;

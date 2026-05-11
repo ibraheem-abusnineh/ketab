@@ -163,7 +163,7 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString('en-US', { timeZone: 'Asia/Amman' });
   };
 
   const handleApproveRequest = async (requestId: string) => {
