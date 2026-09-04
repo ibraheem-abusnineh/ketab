@@ -2,9 +2,9 @@
   "name": "ketab-server",
   "version": "1.0.0",
   "description": "Backend server for visitor tracking",
-  "main": "index.js",
+  "main": "composer.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node composer.js",
     "setup": "node setup.js",
     "migrate": "node migrate-users.js"
   },

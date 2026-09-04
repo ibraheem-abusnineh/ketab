@@ -1,5 +1,5 @@
 /**
- * Server composer (ticket #10).
+ * Server composer (ticket #10, deprecation in #16).
  *
  * Replaces the legacy 1429-line God Module with a thin composer that:
  *   1. Loads .env
@@ -7,6 +7,10 @@
  *   3. Calls store.bootstrap() at module load (ticket #9)
  *   4. Mounts the 9 domain routers under their original paths
  *   5. Starts the HTTP listener
+ *
+ * This file is the runtime entry point — invoked by `npm start` in
+ * server/package.json (`node composer.js`). The legacy server/index.js
+ * was removed in ticket #16; this file is byte-equivalent at runtime.
  *
  * ADR-0001: store is the seam; every router takes `store` and calls
  * `store.<entity>.{read, write}`.

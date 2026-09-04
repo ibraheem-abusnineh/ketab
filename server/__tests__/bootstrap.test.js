@@ -189,7 +189,7 @@ describe('composer wiring: store.bootstrap() called once at module load', () => 
         serverRef = srv;
         return srv;
       };
-      require('../index.js');
+      require('../composer.js');
       express.application.listen = origListen;
       bootstrapSeen = storeModule.createStore.bootstrapCalls || 0;
     } catch (_) {
