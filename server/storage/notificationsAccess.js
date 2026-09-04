@@ -5,14 +5,14 @@
  * `store.notifications.write(arr)` that preserve the legacy
  * `readNotifications()` / `writeNotifications(notifications)` contract
  * shape.
- *
  * - readNotifications() → array (defaults to [] when missing)
- * - writeNotifications(arr) → boolean (true = local success; remote is
+ * - writeNotifications(arr, opts?) → boolean (true = local success; remote is
  *                              best-effort and silent per ADR-0002)
- *
- * Default value semantics: the legacy `readJSON(path, [])` returns [] when
- * the file is missing. The store returns null in that case, so the wrapper
- * coerces null → []. This keeps the internal helpers
+ *     opts.strict (ticket #11): when true, the wrapper re-throws
+ *     StrictRemoteWriteError on remote failure so the strict-mode
+ *     middleware can convert it into HTTP 502. Default behavior
+ *     (no opts) is unchanged.
+
  * `createNotification` and `createProfileEditRequest` (which call
  * readNotifications / writeNotifications and push to the array) unchanged.
  *
@@ -55,8 +55,8 @@ function createNotificationsAccess({ store: providedStore, storeFactory = defaul
       return Array.isArray(data) ? data : [];
     },
 
-    async writeNotifications(notifications) {
-      const result = await getStore().notifications.write(notifications);
+    async writeNotifications(notifications, opts = {}) {
+      const result = await getStore().notifications.write(notifications, opts);
       if (!result || !result.ok) {
         if (result && result.error) {
           console.error('Notifications store write failed:', result.error);

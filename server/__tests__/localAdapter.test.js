@@ -91,4 +91,20 @@ describe('createLocalAdapter', () => {
     expect(fs.existsSync(path.join(tmpRoot, 'visits.json'))).toBe(true);
     expect(await adapter.read('visits')).toEqual({ totalVisits: 5, loginHistory: [] });
   });
+
+  test('write accepts {strict: true} without observable effect (local never fails)', async () => {
+    const adapter = createLocalAdapter({ baseDir: tmpRoot });
+    // strict: true must succeed and behave identically to strict: false.
+    const data = [{ nationalNumber: 'STRICT', role: 'parent' }];
+    const result = await adapter.write('users', data, { strict: true });
+    expect(result.ok).toBe(true);
+    expect(await adapter.read('users')).toEqual(data);
+  });
+
+  test('write forwards opts.strict as the third argument (smoke for store seam wiring)', async () => {
+    const adapter = createLocalAdapter({ baseDir: tmpRoot });
+    // Confirm opts is the third arg position by passing extra flags.
+    const result = await adapter.write('users', [{ x: 1 }], { strict: true, custom: 'flag' });
+    expect(result.ok).toBe(true);
+  });
 });

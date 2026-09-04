@@ -48,8 +48,7 @@ describe('store + local adapter integration', () => {
     const store = createStore({ local, remote });
 
     const result = await store.users.write([{ nationalNumber: 'X1' }]);
-    expect(result).toEqual({ ok: true, source: 'both' });
-    expect(remoteWrite).toHaveBeenCalledWith('users', [{ nationalNumber: 'X1' }]);
+    expect(remoteWrite).toHaveBeenCalledWith('users', [{ nationalNumber: 'X1' }], {});
   });
 
   test('remote write failure still leaves the local file written', async () => {

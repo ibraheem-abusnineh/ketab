@@ -6,16 +6,12 @@
  * `readVisitsData()` / `writeVisitsData(visitsData)` contract shape.
  *
  * - readVisitsData()  → visitsData object ({totalVisits, loginHistory})
- * - writeVisitsData(v) → boolean (true = local success; remote is
- *                        best-effort and silent per ADR-0002)
- *
- * Default value semantics: the legacy `readJSON(path, DEFAULT_VISITS_DATA)`
- * returns the default when the file is missing. The store returns null in
- * that case, so the wrapper coerces null → DEFAULT_VISITS_DATA. This keeps
- * route handlers (e.g. /api/track-visit, /api/login/guest) unchanged.
- *
- * loginHistory shape (per-login events array) is unchanged — that migration
- * lives in #14 (per-day aggregate). This wrapper is opaque over the array.
+ * - writeVisitsData(v, opts?) → boolean (true = local success; remote is
+ *                              best-effort and silent per ADR-0002)
+ *     opts.strict (ticket #11): when true, the wrapper re-throws
+ *     StrictRemoteWriteError on remote failure so the strict-mode
+ *     middleware can convert it into HTTP 502. Default behavior
+ *     (no opts) is unchanged.
  *
  * Factory style matches `server/storage/usersAccess.js`. Tests build
  * their own with a stub store; the legacy server file calls
@@ -56,11 +52,20 @@ function createVisitsAccess({ store: providedStore, storeFactory = defaultStore,
       if (data && typeof data === 'object' && !Array.isArray(data)) {
         return data;
       }
-      return { ...defaultValue };
+      // Copy the default's array too: spreading `defaultValue` only shallow-
+      // copies, so `loginHistory` would be shared across every caller that
+      // falls back to the default and any push() would leak into the other
+      // callers (observable in tests and before the visits file exists).
+      return {
+        ...defaultValue,
+        loginHistory: Array.isArray(defaultValue.loginHistory)
+          ? [...defaultValue.loginHistory]
+          : [],
+      };
     },
 
-    async writeVisitsData(visitsData) {
-      const result = await getStore().visits.write(visitsData);
+    async writeVisitsData(visitsData, opts = {}) {
+      const result = await getStore().visits.write(visitsData, opts);
       if (!result || !result.ok) {
         if (result && result.error) {
           console.error('Visits store write failed:', result.error);

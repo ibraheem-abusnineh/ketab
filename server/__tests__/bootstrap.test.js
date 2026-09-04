@@ -77,11 +77,11 @@ describe('store.bootstrap()', () => {
     // Filter to only the users-related calls so the assertion is robust
     // against visits/notifications seed-branch calls in the same bootstrap.
     const userWrites = local.write.mock.calls.filter(([name]) => name === 'users');
-    expect(userWrites).toEqual([['users', remoteUsers]]);
+    expect(userWrites).toEqual([['users', remoteUsers, {}]]);
     expect(remote.read).toHaveBeenCalledWith('users');
     // Visits/notifications seed-branch is also expected.
-    expect(local.write).toHaveBeenCalledWith('visits', DEFAULT_VISITS_DATA);
-    expect(local.write).toHaveBeenCalledWith('notifications', DEFAULT_NOTIFICATIONS);
+    expect(local.write).toHaveBeenCalledWith('visits', DEFAULT_VISITS_DATA, {});
+    expect(local.write).toHaveBeenCalledWith('notifications', DEFAULT_NOTIFICATIONS, {});
   });
 
   test('seeds remote with local default when remote returns null for visits', async () => {
@@ -93,8 +93,8 @@ describe('store.bootstrap()', () => {
     await store.bootstrap();
     // Bootstrap uses entity.write() (which dual-writes) so the local file
     // is also rewritten with the default — matching legacy syncFromS3.
-    expect(local.write).toHaveBeenCalledWith('visits', DEFAULT_VISITS_DATA);
-    expect(remote.write).toHaveBeenCalledWith('visits', DEFAULT_VISITS_DATA);
+    expect(local.write).toHaveBeenCalledWith('visits', DEFAULT_VISITS_DATA, {});
+    expect(remote.write).toHaveBeenCalledWith('visits', DEFAULT_VISITS_DATA, {});
   });
 
   test('seeds remote with [] for users when local users.json is absent and remote returns null', async () => {
@@ -105,8 +105,8 @@ describe('store.bootstrap()', () => {
     // local.read returns null by default → user seed should be [].
     const store = createStore({ local, remote });
     await store.bootstrap();
-    expect(local.write).toHaveBeenCalledWith('users', []);
-    expect(remote.write).toHaveBeenCalledWith('users', []);
+    expect(local.write).toHaveBeenCalledWith('users', [], {});
+    expect(remote.write).toHaveBeenCalledWith('users', [], {});
   });
 
   test('does not call remote adapter for courses or admin (only the three remote-synced entities)', async () => {

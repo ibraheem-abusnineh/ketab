@@ -21,9 +21,14 @@
  *   - local success + remote failure (best-effort) → true, error logged
  *   - local failure → false
  *
- * ADR-0001 (storage seam) and ADR-0002 (best-effort error policy).
+ * Strict mode (ticket #11):
+ *   - writeUsersData(users, {strict: true}) re-throws the underlying
+ *     StrictRemoteWriteError when the remote write fails. Routes catch
+ *     the error and forward it to the strict-mode middleware which
+ *     returns HTTP 502.
+ *   - Default (no opts / opts.strict === false) preserves the legacy
+ *     best-effort behavior above.
  */
-
 const path = require('path');
 const { createStore } = require('./store');
 const { createLocalAdapter } = require('./localAdapter');
@@ -53,8 +58,8 @@ function createUsersAccess({ store: providedStore, storeFactory = defaultStore }
       return Array.isArray(data) ? data : [];
     },
 
-    async writeUsersData(users) {
-      const result = await getStore().users.write(users);
+    async writeUsersData(users, opts = {}) {
+      const result = await getStore().users.write(users, opts);
       if (!result || !result.ok) {
         if (result && result.error) {
           console.error('Users store write failed:', result.error);

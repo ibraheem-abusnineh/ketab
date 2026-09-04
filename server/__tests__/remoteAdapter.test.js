@@ -178,4 +178,62 @@ describe('createRemoteAdapter', () => {
     expect(result).toEqual({ ok: true });
     expect(request.calls.length).toBe(0);
   });
+
+  test('strict write throws StrictRemoteWriteError when remote returns 5xx', async () => {
+    const request = makeRequestStub([{ status: 500, payload: 'boom' }]);
+    const { StrictRemoteWriteError } = require('../storage/remoteAdapter');
+    const adapter = createRemoteAdapter({
+      env: { GH_TOKEN: 'ghp_x', OWNER_REPO: 'o/r' },
+      request: request.fn,
+      detectOwnerRepo: () => 'o/r',
+    });
+    let thrown = null;
+    try {
+      await adapter.write('users', [{ x: 1 }], { strict: true });
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(StrictRemoteWriteError);
+    expect(thrown.code).toBe('STRICT_REMOTE_WRITE_FAILED');
+    expect(thrown.message).toBe('Remote write failed');
+    expect(thrown.cause).toBeInstanceOf(Error);
+    expect(thrown.cause.message).toContain('500');
+  });
+
+  test('strict write throws on network error', async () => {
+    const request = makeRequestStub([{ throw: new Error('ECONNRESET') }]);
+    const { StrictRemoteWriteError } = require('../storage/remoteAdapter');
+    const adapter = createRemoteAdapter({
+      env: { GH_TOKEN: 'ghp_x', OWNER_REPO: 'o/r' },
+      request: request.fn,
+      detectOwnerRepo: () => 'o/r',
+    });
+    await expect(adapter.write('users', [{ x: 1 }], { strict: true }))
+      .rejects.toBeInstanceOf(StrictRemoteWriteError);
+  });
+
+  test('non-strict write returns {ok: false, error} on the same 5xx (default behavior preserved)', async () => {
+    const request = makeRequestStub([{ status: 500, payload: 'boom' }]);
+    const adapter = createRemoteAdapter({
+      env: { GH_TOKEN: 'ghp_x', OWNER_REPO: 'o/r' },
+      request: request.fn,
+      detectOwnerRepo: () => 'o/r',
+    });
+    // Default behavior (no opts) — must NOT throw.
+    const result = await adapter.write('users', [{ x: 1 }]);
+    expect(result.ok).toBe(false);
+    expect(result.error).toBeInstanceOf(Error);
+  });
+
+  test('strict write to unknown entity name is a no-op success (does not throw)', async () => {
+    const request = makeRequestStub([]);
+    const adapter = createRemoteAdapter({
+      env: { GH_TOKEN: 'ghp_x', OWNER_REPO: 'o/r' },
+      request: request.fn,
+      detectOwnerRepo: () => 'o/r',
+    });
+    const result = await adapter.write('bogus', {}, { strict: true });
+    expect(result).toEqual({ ok: true });
+    expect(request.calls.length).toBe(0);
+  });
 });

@@ -8,7 +8,12 @@
  *
  * Contract:
  *   - read(name) → null | parsed data
- *   - write(name, data) → {ok: boolean, error?: Error}
+ *   - write(name, data, opts?) → {ok: boolean, error?: Error}
+ *       opts.strict is accepted for symmetry with the remote adapter and
+ *       the store seam (ticket #11) but has no observable effect on the
+ *       local path — local writes are synchronous and never fail under
+ *       strict mode. The flag is forwarded so the store can pass a single
+ *       options bag to both adapters.
  *   - ensure(name, defaultValue) → {ok: boolean, created: boolean, error?: Error}
  *       Writes defaultValue to <name>.json only when the file is absent.
  *       Used by the boot sync (ticket #9) to seed local copies of remote-synced
@@ -38,7 +43,10 @@ function createLocalAdapter({ baseDir }) {
       }
     },
 
-    async write(name, data) {
+    async write(name, data, opts = {}) {
+      // opts.strict is accepted but has no effect on the local path —
+      // see the contract docblock above.
+      void opts;
       const filePath = fileFor(name);
       const tempPath = `${filePath}.tmp`;
       try {

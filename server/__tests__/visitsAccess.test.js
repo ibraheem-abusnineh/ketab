@@ -81,7 +81,7 @@ describe('createVisitsAccess — stubbed store', () => {
     const ok = await writeVisitsData(record);
 
     expect(stub.visits.write).toHaveBeenCalledTimes(1);
-    expect(stub.visits.write).toHaveBeenCalledWith(record);
+    expect(stub.visits.write).toHaveBeenCalledWith(record, {});
     expect(ok).toBe(true);
   });
 
@@ -108,9 +108,25 @@ describe('createVisitsAccess — stubbed store', () => {
 
     expect(ok).toBe(true);
   });
+
+  test('writeVisitsData(record, {strict: true}) forwards {strict: true} to the store', async () => {
+    const stub = makeStubStore();
+    const { writeVisitsData } = createVisitsAccess({ store: stub });
+    await writeVisitsData({ totalVisits: 1 }, { strict: true });
+    expect(stub.visits.write).toHaveBeenCalledWith({ totalVisits: 1 }, { strict: true });
+  });
+
+  test('writeVisitsData(record, {strict: true}) re-throws StrictRemoteWriteError', async () => {
+    const stub = makeStubStore();
+    const { StrictRemoteWriteError } = require('../storage/remoteAdapter');
+    stub.visits.write.mockRejectedValueOnce(new StrictRemoteWriteError(new Error('GH 500')));
+    const { writeVisitsData } = createVisitsAccess({ store: stub });
+    await expect(writeVisitsData({ totalVisits: 1 }, { strict: true }))
+      .rejects.toBeInstanceOf(StrictRemoteWriteError);
+  });
 });
 
-describe('createVisitsAccess — real store + temp local adapter', () => {
+ describe('createVisitsAccess — real store + temp local adapter', () => {
   let tmpRoot;
 
   beforeEach(() => {

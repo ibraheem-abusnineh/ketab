@@ -81,7 +81,7 @@ describe('createNotificationsAccess — stubbed store', () => {
     const ok = await writeNotifications(arr);
 
     expect(stub.notifications.write).toHaveBeenCalledTimes(1);
-    expect(stub.notifications.write).toHaveBeenCalledWith(arr);
+    expect(stub.notifications.write).toHaveBeenCalledWith(arr, {});
     expect(ok).toBe(true);
   });
 
@@ -108,7 +108,23 @@ describe('createNotificationsAccess — stubbed store', () => {
 
     expect(ok).toBe(true);
   });
-});
+
+  test('writeNotifications(arr, {strict: true}) forwards {strict: true} to the store', async () => {
+    const stub = makeStubStore();
+    const { writeNotifications } = createNotificationsAccess({ store: stub });
+    await writeNotifications([{ id: 'N1' }], { strict: true });
+    expect(stub.notifications.write).toHaveBeenCalledWith([{ id: 'N1' }], { strict: true });
+  });
+
+  test('writeNotifications(arr, {strict: true}) re-throws StrictRemoteWriteError', async () => {
+    const stub = makeStubStore();
+    const { StrictRemoteWriteError } = require('../storage/remoteAdapter');
+    stub.notifications.write.mockRejectedValueOnce(new StrictRemoteWriteError(new Error('GH 500')));
+    const { writeNotifications } = createNotificationsAccess({ store: stub });
+    await expect(writeNotifications([{ id: 'N1' }], { strict: true }))
+      .rejects.toBeInstanceOf(StrictRemoteWriteError);
+  });
+ });
 
 describe('createNotificationsAccess — real store + temp local adapter', () => {
   let tmpRoot;

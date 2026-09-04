@@ -13,6 +13,25 @@
  * unit-testable without touching the network or the host environment.
  */
 
+/**
+ * Strict-mode error (ticket #11).
+ *
+ * Thrown by `write(name, data, {strict: true})` when the GitHub write
+ * returned {ok: false}. The middleware in server/middleware/strictMode.js
+ * converts this into HTTP 502 with body
+ *   { error: "Remote write failed", code: "STRICT_REMOTE_WRITE_FAILED" }
+ *
+ * The error preserves the underlying cause on `.cause` so logs keep the
+ * original GitHub API message.
+ */
+class StrictRemoteWriteError extends Error {
+  constructor(cause) {
+    super('Remote write failed');
+    this.name = 'StrictRemoteWriteError';
+    this.code = 'STRICT_REMOTE_WRITE_FAILED';
+    if (cause) this.cause = cause;
+  }
+}
 const KEY_MAP = {
   visits: 'server/data/visits.json',
   notifications: 'server/data/notifications.json',
@@ -94,7 +113,7 @@ function createRemoteAdapter(deps = {}) {
     }
   }
 
-  async function write(name, data) {
+  async function write(name, data, opts = {}) {
     if (!isConfigured()) return { ok: true };
     const repoPath = KEY_MAP[name];
     if (!repoPath) return { ok: true };
@@ -109,6 +128,9 @@ function createRemoteAdapter(deps = {}) {
       return { ok: true };
     } catch (e) {
       console.error('GitHub write error:', e.message);
+      if (opts && opts.strict) {
+        throw new StrictRemoteWriteError(e);
+      }
       return { ok: false, error: e };
     }
   }
@@ -116,4 +138,4 @@ function createRemoteAdapter(deps = {}) {
   return { read, write, isConfigured };
 }
 
-module.exports = { createRemoteAdapter };
+module.exports = { createRemoteAdapter, StrictRemoteWriteError };

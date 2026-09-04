@@ -37,6 +37,12 @@ const { createNotificationsRouter } = require('./routes/notifications');
 const { createStatsRouter } = require('./routes/stats');
 const { createReportsRouter } = require('./routes/reports');
 
+// Strict-mode error middleware (ticket #11). Mounted AFTER every router so
+// it can catch StrictRemoteWriteError thrown by route handlers via the
+// store seam and convert it into HTTP 502. Other errors fall through to
+// Express's default 500 path.
+const { strictModeErrorHandler } = require('./middleware/strictMode');
+
 // Global error handlers (preserved from legacy).
 process.on('uncaughtException', (err) => {
   console.error('UNCAUGHT EXCEPTION:', err.message);
@@ -83,6 +89,10 @@ app.use(createProfileRouter(store));
 app.use(createNotificationsRouter(store));
 app.use(createStatsRouter(store));
 app.use(createReportsRouter(store));
+
+// Strict-mode 502 translator (ticket #11). Mounted last so it sees
+// StrictRemoteWriteError thrown from any route handler.
+app.use(strictModeErrorHandler);
 
 // Listener.
 const PORT = process.env.PORT || 5000;

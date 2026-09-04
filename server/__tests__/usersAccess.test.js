@@ -70,7 +70,7 @@ describe('createUsersAccess — stubbed store', () => {
     const ok = await writeUsersData(users);
 
     expect(stub.users.write).toHaveBeenCalledTimes(1);
-    expect(stub.users.write).toHaveBeenCalledWith(users);
+    expect(stub.users.write).toHaveBeenCalledWith(users, {});
     expect(ok).toBe(true);
   });
 
@@ -101,7 +101,23 @@ describe('createUsersAccess — stubbed store', () => {
 
     expect(ok).toBe(true);
   });
-});
+
+  test('writeUsersData(users, {strict: true}) forwards {strict: true} to the store', async () => {
+    const stub = makeStubStore();
+    const { writeUsersData } = createUsersAccess({ store: stub });
+    await writeUsersData([{ nationalNumber: 'X' }], { strict: true });
+    expect(stub.users.write).toHaveBeenCalledWith([{ nationalNumber: 'X' }], { strict: true });
+  });
+
+  test('writeUsersData(users, {strict: true}) re-throws StrictRemoteWriteError', async () => {
+    const stub = makeStubStore();
+    const { StrictRemoteWriteError } = require('../storage/remoteAdapter');
+    stub.users.write.mockRejectedValueOnce(new StrictRemoteWriteError(new Error('GH 500')));
+    const { writeUsersData } = createUsersAccess({ store: stub });
+    await expect(writeUsersData([{ nationalNumber: 'X' }], { strict: true }))
+      .rejects.toBeInstanceOf(StrictRemoteWriteError);
+  });
+ });
 
 describe('createUsersAccess — real store + temp local adapter', () => {
   let tmpRoot;

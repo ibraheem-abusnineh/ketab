@@ -63,8 +63,8 @@ describe('createStore', () => {
     const result = await store.notifications.write([{ id: 1 }]);
     expect(result.ok).toBe(true);
     expect(result.source).toBe('local');
-    expect(local.write).toHaveBeenCalledWith('notifications', [{ id: 1 }]);
-    expect(remote.write).toHaveBeenCalledWith('notifications', [{ id: 1 }]);
+    expect(local.write).toHaveBeenCalledWith('notifications', [{ id: 1 }], {});
+    expect(remote.write).toHaveBeenCalledWith('notifications', [{ id: 1 }], {});
   });
 
   test('users.write returns {ok, source: "both"} when both adapters succeed', async () => {
@@ -98,7 +98,7 @@ describe('createStore', () => {
     const result = await store.courses.write({ arabic: { locked: true } });
     expect(result.ok).toBe(true);
     expect(['local', 'both']).toContain(result.source);
-    expect(local.write).toHaveBeenCalledWith('courses', { arabic: { locked: true } });
+    expect(local.write).toHaveBeenCalledWith('courses', { arabic: { locked: true } }, {});
   });
 
   test('does not call remote write when remote is not configured', async () => {
@@ -106,5 +106,35 @@ describe('createStore', () => {
     const store = createStore({ local, remote });
     await store.users.write([]);
     expect(remote.write).not.toHaveBeenCalled();
+  });
+
+  test('strict write forwards {strict: true} to local and remote adapters', async () => {
+    const { local, remote } = makeStubAdapters();
+    const store = createStore({ local, remote });
+    await store.users.write([{ nationalNumber: 'X1' }], { strict: true });
+    expect(local.write).toHaveBeenCalledWith('users', [{ nationalNumber: 'X1' }], { strict: true });
+    expect(remote.write).toHaveBeenCalledWith('users', [{ nationalNumber: 'X1' }], { strict: true });
+  });
+
+  test('strict write re-throws StrictRemoteWriteError when remote fails', async () => {
+    const { local, remote } = makeStubAdapters();
+    const { StrictRemoteWriteError } = require('../storage/remoteAdapter');
+    remote.write.mockRejectedValue(new StrictRemoteWriteError(new Error('GH 500')));
+    const store = createStore({ local, remote });
+    await expect(store.users.write([{ x: 1 }], { strict: true }))
+      .rejects.toBeInstanceOf(StrictRemoteWriteError);
+  });
+
+  test('strict write still returns best-effort {ok: true, source: "local"} when local succeeds and remote throws a non-strict error', async () => {
+    // Sanity: strict only re-throws the typed StrictRemoteWriteError. Any
+    // other thrown error (e.g. a raw network throw without the typed
+    // wrapper) keeps the legacy best-effort behavior.
+    const { local, remote } = makeStubAdapters();
+    remote.write.mockRejectedValue(new Error('ECONNRESET (raw)'));
+    const store = createStore({ local, remote });
+    const result = await store.users.write([{ x: 1 }], { strict: true });
+    expect(result.ok).toBe(true);
+    expect(result.source).toBe('local');
+    expect(result.error).toBeInstanceOf(Error);
   });
 });

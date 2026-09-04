@@ -61,8 +61,8 @@ function buildEntity(name, local, remote, opts = {}) {
         return null;
       }
     },
-    async write(data) {
-      const localResult = await local.write(name, data);
+    async write(data, opts = {}) {
+      const localResult = await local.write(name, data, opts);
       if (!localResult || !localResult.ok) {
         const error = (localResult && localResult.error) || new Error(`local write failed for ${name}`);
         return { ok: false, source: 'none', error };
@@ -71,7 +71,14 @@ function buildEntity(name, local, remote, opts = {}) {
         return { ok: true, source: 'local' };
       }
       try {
-        const remoteResult = await remote.write(name, data);
+        // Forward the strict flag to the remote adapter (ticket #11).
+        // On strict + remote failure the adapter throws StrictRemoteWriteError;
+        // the route layer's catch forwards it to the strict-mode error
+        // middleware which emits HTTP 502. Local writes already succeeded
+        // by this point (checked above), so the partial-write surface is
+        // identical to the legacy dual-write semantics: local is the
+        // source of truth at runtime (ADR-0001).
+        const remoteResult = await remote.write(name, data, opts);
         if (remoteResult && remoteResult.ok) {
           return { ok: true, source: 'both' };
         }
@@ -81,6 +88,12 @@ function buildEntity(name, local, remote, opts = {}) {
           error: (remoteResult && remoteResult.error) || new Error('remote write failed'),
         };
       } catch (err) {
+        // Re-throw strict-mode errors so the route layer's catch can
+        // forward them to the strict-mode error middleware. Any other
+        // thrown error is converted to the legacy best-effort result.
+        if (err && err.name === 'StrictRemoteWriteError') {
+          throw err;
+        }
         return { ok: true, source: 'local', error: err };
       }
     },

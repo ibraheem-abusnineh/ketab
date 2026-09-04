@@ -14,22 +14,33 @@
  * Two cross-cutting helpers (createNotification + the CSV upload pipeline)
  * are local to this module because they are only used by users routes.
  */
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-const { parseCSV, validateUser } = require('../utils/csvParser');
-const { createUsersAccess } = require('../storage/usersAccess');
-const { createNotificationsAccess } = require('../storage/notificationsAccess');
-const { requireAdmin } = require('../middleware/auth');
+ const express = require('express');
+ const fs = require('fs');
+ const path = require('path');
+ const { v4: uuidv4 } = require('uuid');
+ const { parseCSV, validateUser } = require('../utils/csvParser');
+ const { createUsersAccess } = require('../storage/usersAccess');
+ const { createNotificationsAccess } = require('../storage/notificationsAccess');
+ const { requireAdmin } = require('../middleware/auth');
+const { StrictRemoteWriteError } = require('../storage/remoteAdapter');
 
 const ALLOWED_UPDATE_FIELDS = ['name', 'role', 'school', 'phone', 'directorate'];
+
+ /**
+ * Parse `req.query.strict === 'true'` for forwarding to the store seam.
+ * ticket #11: when strict + remote write fails, the store throws
+ * StrictRemoteWriteError which the route catch forwards to the strict
+ * error middleware (HTTP 502).
+ */
+function strictFromQuery(req) {
+  return { strict: req.query.strict === 'true' };
+}
 
 /**
  * Create a "profile_update" notification (admin inbox). Mirrors the
  * legacy createNotification() helper (server/index.js:91-106).
  */
-async function createNotification(notificationsAccess, userId, userName, changes) {
+async function createNotification(notificationsAccess, userId, userName, changes, opts = {}) {
   const notification = {
     id: uuidv4(),
     type: 'profile_update',
@@ -41,7 +52,7 @@ async function createNotification(notificationsAccess, userId, userName, changes
   };
   const notifications = await notificationsAccess.readNotifications();
   notifications.unshift(notification);
-  await notificationsAccess.writeNotifications(notifications);
+  await notificationsAccess.writeNotifications(notifications, opts);
   return notification;
 }
 
@@ -62,46 +73,46 @@ function createUsersRouter(store) {
   });
 
   // POST /api/users/add
-  router.post('/api/users/add', requireAdmin, async (req, res) => {
-    try {
-      const { nationalNumber, name, role, school, phone, directorate } = req.body || {};
-      const user = { nationalNumber, name, role, school, phone, directorate };
-      const validation = validateUser(user);
-
-      if (!validation.valid) {
-        return res.status(400).json({
-          success: false,
-          error: 'Validation failed',
-          details: validation.errors,
-        });
-      }
-
-      const users = await usersAccess.readUsersData();
-      const existingUser = users.find((u) => u.nationalNumber === nationalNumber);
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          error: 'User with this national number already exists',
-        });
-      }
-
-      users.push(user);
-
-      if (await usersAccess.writeUsersData(users)) {
-        res.json({ success: true, user });
-      } else {
-        res.status(500).json({ success: false, error: 'Failed to save user' });
-      }
-    } catch (error) {
-      console.error('Error adding user:', error);
-      res.status(500).json({ success: false, error: 'Internal server error' });
-    }
+   router.post('/api/users/add', requireAdmin, async (req, res, next) => {
+     try {
+       const { nationalNumber, name, role, school, phone, directorate } = req.body || {};
+       const user = { nationalNumber, name, role, school, phone, directorate };
+       const validation = validateUser(user);
+ 
+       if (!validation.valid) {
+         return res.status(400).json({
+           success: false,
+           error: 'Validation failed',
+           details: validation.errors,
+         });
+       }
+ 
+       const users = await usersAccess.readUsersData();
+       const existingUser = users.find((u) => u.nationalNumber === nationalNumber);
+       if (existingUser) {
+         return res.status(400).json({
+           success: false,
+           error: 'User with this national number already exists',
+         });
+       }
+ 
+       users.push(user);
+ 
+       if (await usersAccess.writeUsersData(users, strictFromQuery(req))) {
+         res.json({ success: true, user });
+       } else {
+         res.status(500).json({ success: false, error: 'Failed to save user' });
+       }
+     } catch (error) {
+      if (error instanceof StrictRemoteWriteError) return next(error);
+       console.error('Error adding user:', error);
+       res.status(500).json({ success: false, error: 'Internal server error' });
+     }
   });
-
   // PUT /api/users/:nationalNumber
-  router.put('/api/users/:nationalNumber', requireAdmin, async (req, res) => {
+  router.put('/api/users/:nationalNumber', requireAdmin, async (req, res, next) => {
     try {
-      const { nationalNumber } = req.params;
+       const { nationalNumber } = req.params;
       const updates = req.body || {};
 
       if (!nationalNumber) {
@@ -130,24 +141,26 @@ function createUsersRouter(store) {
 
       if (changes.length > 0) {
         users[userIndex] = { ...users[userIndex], ...sanitizedUpdates };
-        await usersAccess.writeUsersData(users);
+        await usersAccess.writeUsersData(users, strictFromQuery(req));
         await createNotification(
           notificationsAccess,
           users[userIndex].nationalNumber,
           users[userIndex].name,
-          changes
+          changes,
+          strictFromQuery(req)
         );
       }
 
       res.json({ success: true, user: users[userIndex] });
     } catch (error) {
+      if (error instanceof StrictRemoteWriteError) return next(error);
       console.error('Error updating user:', error);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
-  });
+   });
 
   // DELETE /api/users/:nationalNumber
-  router.delete('/api/users/:nationalNumber', requireAdmin, async (req, res) => {
+  router.delete('/api/users/:nationalNumber', requireAdmin, async (req, res, next) => {
     try {
       const { nationalNumber } = req.params;
 
@@ -163,10 +176,11 @@ function createUsersRouter(store) {
       }
 
       users.splice(userIndex, 1);
-      await usersAccess.writeUsersData(users);
+      await usersAccess.writeUsersData(users, strictFromQuery(req));
 
       res.json({ success: true });
     } catch (error) {
+      if (error instanceof StrictRemoteWriteError) return next(error);
       console.error('Error deleting user:', error);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
@@ -178,7 +192,7 @@ function createUsersRouter(store) {
   // directory before the handler runs. The composer attaches multer at
   // mount time (per ADR: routes own their own deps, composer wires them).
   // The handler expects req.file to be set; if not, return 400.
-  router.post('/api/users/import-csv', requireAdmin, async (req, res) => {
+  router.post('/api/users/import-csv', requireAdmin, async (req, res, next) => {
     try {
       const { strategy, role } = req.body || {};
 
@@ -234,7 +248,7 @@ function createUsersRouter(store) {
           }
           return true;
         });
-        await usersAccess.writeUsersData(validUsers);
+        await usersAccess.writeUsersData(validUsers, strictFromQuery(req));
         result.added = validUsers.length;
       } else {
         const existingUsers = [...users];
@@ -257,11 +271,12 @@ function createUsersRouter(store) {
             result.skipped++;
           }
         }
-        await usersAccess.writeUsersData(existingUsers);
+        await usersAccess.writeUsersData(existingUsers, strictFromQuery(req));
       }
 
       res.json({ success: true, result });
     } catch (error) {
+      if (error instanceof StrictRemoteWriteError) return next(error);
       console.error('Error importing CSV:', error);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
