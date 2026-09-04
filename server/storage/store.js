@@ -19,7 +19,30 @@
  * readFromRemote() is used by the boot sync (ticket #8) to fetch the
  * canonical GitHub copy of an entity. It is intentionally NOT the default
  * read path — local is the runtime source of truth (ADR-0001).
+ *
+ * bootstrap() is the single seam the composer calls at process start
+ * (ticket #9). It encapsulates the legacy `ensureRuntimeDataFiles` +
+ * `syncFromS3` block:
+ *   1. ensure local files exist with their declared defaults
+ *      (visits and notifications; users is intentionally left absent so
+ *      the remote pull can seed an empty list when remote is empty)
+ *   2. if remote is configured, pull remote → local for users, visits,
+ *      notifications; on null payload from remote, seed remote with the
+ *      local default
  */
+
+const {
+  DEFAULT_VISITS_DATA,
+  DEFAULT_NOTIFICATIONS,
+} = require('./defaults');
+
+const REMOTE_BOOT_ENTITIES = ['visits', 'notifications', 'users'];
+const DEFAULT_FOR_ENTITY = {
+  visits: DEFAULT_VISITS_DATA,
+  notifications: DEFAULT_NOTIFICATIONS,
+  // users has no declared default; the legacy behaviour lets the file be
+  // absent and treats the missing local value as [] when seeding remote.
+};
 
 function buildEntity(name, local, remote, opts = {}) {
   const remoteEligible = opts.remoteEligible !== false;
@@ -68,7 +91,7 @@ function buildEntity(name, local, remote, opts = {}) {
  * Construct the store.
  *
  * @param {object} deps
- * @param {object} deps.local  local adapter {read(name), write(name, data)}
+ * @param {object} deps.local  local adapter {read, write, ensure}
  * @param {object} deps.remote remote adapter {read, write, isConfigured}
  */
 function createStore({ local, remote }) {
@@ -84,6 +107,69 @@ function createStore({ local, remote }) {
       remoteEligible: name !== 'courses',
     });
   }
+
+  /**
+   * Bootstrap the storage layer at process start (ticket #9).
+   *
+   * - Ensures visits and notifications have local files (with defaults).
+   *   users is intentionally NOT pre-seeded: the legacy behaviour lets
+   *   users.json be absent until the remote pull seeds it.
+   * - If remote is configured, pulls remote → local for users, visits,
+   *   notifications. When remote returns null, seeds remote with the
+   *   declared default (or `[]` for users when local is absent).
+   *
+   * Idempotent. Safe to call once at module load.
+   */
+  async function bootstrap() {
+    // 1. Local ensures for visits and notifications.
+    await local.ensure('visits', DEFAULT_VISITS_DATA);
+    await local.ensure('notifications', DEFAULT_NOTIFICATIONS);
+
+    // 2. Remote pull for each remote-synced entity.
+    if (!remote || !remote.isConfigured || !remote.isConfigured()) {
+      return;
+    }
+
+    for (const name of REMOTE_BOOT_ENTITIES) {
+      const entity = store[name];
+      let payload = null;
+      try {
+        payload = await entity.readFromRemote();
+      } catch (err) {
+        console.error(`Bootstrap remote read failed for ${name}:`, err);
+        payload = null;
+      }
+
+      if (payload !== null && payload !== undefined) {
+        // Pull branch: remote has the canonical copy → write it to local
+        // (entity.write dual-writes to local+remote, so remote stays in
+        // sync too).
+        await entity.write(payload);
+        console.log(`Bootstrap: loaded ${name} from remote`);
+        continue;
+      }
+
+      // Seed branch: remote returned null → seed the entity with its
+      // default. Use entity.write() (not a direct remote.write) so the
+      // dual-write semantics are preserved: the local file is rewritten
+      // with the default AND remote gets the same payload. This matches
+      // the legacy syncFromS3 behaviour for users/visits/notifications.
+      let seedValue;
+      if (name === 'users') {
+        seedValue = (await local.read('users')) || [];
+      } else {
+        seedValue = DEFAULT_FOR_ENTITY[name];
+      }
+      try {
+        await entity.write(seedValue);
+        console.log(`Bootstrap: seeded remote with default for ${name}`);
+      } catch (err) {
+        console.error(`Bootstrap seed failed for ${name}:`, err);
+      }
+    }
+  }
+
+  store.bootstrap = bootstrap;
   return store;
 }
 

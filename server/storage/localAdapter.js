@@ -9,6 +9,10 @@
  * Contract:
  *   - read(name) → null | parsed data
  *   - write(name, data) → {ok: boolean, error?: Error}
+ *   - ensure(name, defaultValue) → {ok: boolean, created: boolean, error?: Error}
+ *       Writes defaultValue to <name>.json only when the file is absent.
+ *       Used by the boot sync (ticket #9) to seed local copies of remote-synced
+ *       entities before the remote pull.
  */
 
 const fs = require('fs');
@@ -51,6 +55,15 @@ function createLocalAdapter({ baseDir }) {
         }
         return { ok: false, error };
       }
+    },
+
+    async ensure(name, defaultValue) {
+      const filePath = fileFor(name);
+      if (fs.existsSync(filePath)) {
+        return { ok: true, created: false };
+      }
+      const result = await this.write(name, defaultValue);
+      return { ok: !!result && result.ok, created: !!(result && result.ok), error: result && result.error };
     },
   };
 }

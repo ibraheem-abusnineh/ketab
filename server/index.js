@@ -55,8 +55,8 @@ const adminPath = path.join(__dirname, 'data', 'admin.json');
 const usersPath = path.join(__dirname, 'data', 'users.json');
 const coursesPath = path.join(__dirname, 'data', 'courses.json');
 const notificationsPath = path.join(__dirname, 'data', 'notifications.json');
-const DEFAULT_VISITS_DATA = { totalVisits: 0, loginHistory: [] };
-const DEFAULT_NOTIFICATIONS = [];
+// Defaults live in the storage layer (ticket #9). The boot sync reads them
+// via the store; the composer no longer needs them.
 
 // Users data access goes through the storage seam (ticket #7, ADR-0001).
 const { createUsersAccess } = require('./storage/usersAccess');
@@ -76,14 +76,6 @@ async function readNotifications() {
 async function writeNotifications(notifications) {
   return notificationsAccess.writeNotifications(notifications);
 }
-function ensureRuntimeDataFile(filePath, defaultValue) {
-
-
-  if (fs.existsSync(filePath)) {
-    return;
-  }
-  writeJSON(filePath, defaultValue);
-}
 
 // Shared store instance — also used by the visits/notifications wrappers
 // above (ticket #8) so sync reads and writes go through the same seam.
@@ -95,41 +87,6 @@ const syncStore = createStore({
   local: createLocalAdapter({ baseDir: dataDir }),
   remote: syncRemote,
 });
-async function syncFromS3() {
-  if (!syncRemote.isConfigured()) return;
-
-  const visits = await syncStore.visits.readFromRemote();
-  if (visits) {
-    await syncStore.visits.write(visits);
-    console.log(`Remote sync: loaded visits (${visits.totalVisits} visits)`);
-  } else {
-    await syncStore.visits.write(DEFAULT_VISITS_DATA);
-  }
-
-  const notifications = await syncStore.notifications.readFromRemote();
-  if (notifications) {
-    await syncStore.notifications.write(notifications);
-    console.log(`Remote sync: loaded notifications (${notifications.length} items)`);
-  } else {
-    await syncStore.notifications.write(DEFAULT_NOTIFICATIONS);
-  }
-
-  const users = await syncStore.users.readFromRemote();
-  if (users) {
-    await syncStore.users.write(users);
-    console.log(`Remote sync: loaded ${users.length} users`);
-  } else {
-    await syncStore.users.write(readJSON(usersPath, []));
-  }
-}
-
-function ensureRuntimeDataFiles() {
-  ensureRuntimeDataFile(visitsPath, DEFAULT_VISITS_DATA);
-  ensureRuntimeDataFile(notificationsPath, DEFAULT_NOTIFICATIONS);
-  if (syncRemote.isConfigured()) {
-    syncFromS3().catch(e => console.error('Remote startup sync failed:', e));
-  }
-}
 
 async function createNotification(userId, userName, changes) {
   const notification = {
@@ -187,7 +144,7 @@ function ensureCourseSettings() {
 }
 
 ensureCourseSettings();
-ensureRuntimeDataFiles();
+syncStore.bootstrap().catch(e => console.error('Storage bootstrap failed:', e));
 
 function readCourseSettings() {
   ensureCourseSettings();
