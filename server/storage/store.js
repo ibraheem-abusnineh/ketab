@@ -15,6 +15,10 @@
  *   - local ok, remote not configured → source: 'local'
  *   - local ok, remote ok → source: 'both'
  *   - local ok, remote failed → source: 'local', error attached (best-effort)
+ *
+ * readFromRemote() is used by the boot sync (ticket #8) to fetch the
+ * canonical GitHub copy of an entity. It is intentionally NOT the default
+ * read path — local is the runtime source of truth (ADR-0001).
  */
 
 function buildEntity(name, local, remote, opts = {}) {
@@ -22,6 +26,17 @@ function buildEntity(name, local, remote, opts = {}) {
   return {
     async read() {
       return local.read(name);
+    },
+    async readFromRemote() {
+      if (!remoteEligible || !remote || !remote.isConfigured || !remote.isConfigured()) {
+        return null;
+      }
+      try {
+        return await remote.read(name);
+      } catch (err) {
+        console.error(`Remote read failed for ${name}:`, err);
+        return null;
+      }
     },
     async write(data) {
       const localResult = await local.write(name, data);

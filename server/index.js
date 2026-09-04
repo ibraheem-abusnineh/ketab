@@ -11,7 +11,6 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const { parseCSV, validateUser } = require('./utils/csvParser');
 const { readJSON, writeJSON } = require('./utils/fileStorage');
-const s3Storage = require('./utils/s3Storage');
 
 // Global error handlers for debugging App Runner crashes
 process.on('uncaughtException', (err) => {
@@ -62,65 +61,77 @@ const DEFAULT_NOTIFICATIONS = [];
 // Users data access goes through the storage seam (ticket #7, ADR-0001).
 const { createUsersAccess } = require('./storage/usersAccess');
 const { readUsersData, writeUsersData } = createUsersAccess();
-
-function readNotifications() {
-  return readJSON(notificationsPath, []);
+// Visits and notifications data access goes through the storage seam
+// (ticket #8, ADR-0001). The store handles dual-write (local + GitHub);
+// the wrappers preserve the legacy sync return shape (read → object/array,
+// write → true|false).
+const { createVisitsAccess } = require('./storage/visitsAccess');
+const { createNotificationsAccess } = require('./storage/notificationsAccess');
+const visitsAccess = createVisitsAccess();
+const notificationsAccess = createNotificationsAccess();
+async function readNotifications() {
+  return notificationsAccess.readNotifications();
 }
 
-function writeNotifications(notifications) {
-  const ok = writeJSON(notificationsPath, notifications);
-  if (ok && s3Storage.isConfigured()) {
-    s3Storage.writeJSON('ketab/notifications.json', notifications).catch(e =>
-      console.error('S3 write error (notifications):', e)
-    );
-  }
-  return ok;
+async function writeNotifications(notifications) {
+  return notificationsAccess.writeNotifications(notifications);
 }
-
 function ensureRuntimeDataFile(filePath, defaultValue) {
+
+
   if (fs.existsSync(filePath)) {
     return;
   }
   writeJSON(filePath, defaultValue);
 }
 
+// Shared store instance — also used by the visits/notifications wrappers
+// above (ticket #8) so sync reads and writes go through the same seam.
+const { createStore } = require('./storage/store');
+const { createLocalAdapter } = require('./storage/localAdapter');
+const { createRemoteAdapter } = require('./storage/remoteAdapter');
+const syncRemote = createRemoteAdapter();
+const syncStore = createStore({
+  local: createLocalAdapter({ baseDir: dataDir }),
+  remote: syncRemote,
+});
 async function syncFromS3() {
-  if (!s3Storage.isConfigured()) return;
+  if (!syncRemote.isConfigured()) return;
 
-  const visits = await s3Storage.readJSON('ketab/visits.json');
+  const visits = await syncStore.visits.readFromRemote();
   if (visits) {
-    writeJSON(visitsPath, visits);
+    await syncStore.visits.write(visits);
     console.log(`Remote sync: loaded visits (${visits.totalVisits} visits)`);
   } else {
-    await s3Storage.writeJSON('ketab/visits.json', DEFAULT_VISITS_DATA);
+    await syncStore.visits.write(DEFAULT_VISITS_DATA);
   }
 
-  const notifications = await s3Storage.readJSON('ketab/notifications.json');
+  const notifications = await syncStore.notifications.readFromRemote();
   if (notifications) {
-    writeJSON(notificationsPath, notifications);
+    await syncStore.notifications.write(notifications);
     console.log(`Remote sync: loaded notifications (${notifications.length} items)`);
   } else {
-    await s3Storage.writeJSON('ketab/notifications.json', DEFAULT_NOTIFICATIONS);
+    await syncStore.notifications.write(DEFAULT_NOTIFICATIONS);
   }
 
-  const users = await s3Storage.readJSON('ketab/users.json');
+  const users = await syncStore.users.readFromRemote();
   if (users) {
-    writeJSON(usersPath, users);
+    await syncStore.users.write(users);
     console.log(`Remote sync: loaded ${users.length} users`);
   } else {
-    await s3Storage.writeJSON('ketab/users.json', readJSON(usersPath, []));
+    await syncStore.users.write(readJSON(usersPath, []));
   }
 }
 
 function ensureRuntimeDataFiles() {
   ensureRuntimeDataFile(visitsPath, DEFAULT_VISITS_DATA);
   ensureRuntimeDataFile(notificationsPath, DEFAULT_NOTIFICATIONS);
-  if (s3Storage.isConfigured()) {
+  if (syncRemote.isConfigured()) {
     syncFromS3().catch(e => console.error('Remote startup sync failed:', e));
   }
 }
 
-function createNotification(userId, userName, changes) {
+async function createNotification(userId, userName, changes) {
   const notification = {
     id: uuidv4(),
     type: 'profile_update',
@@ -131,13 +142,13 @@ function createNotification(userId, userName, changes) {
     read: false
   };
 
-  const notifications = readNotifications();
+  const notifications = await readNotifications();
   notifications.unshift(notification);
-  writeNotifications(notifications);
+  await writeNotifications(notifications);
   return notification;
 }
 
-function createProfileEditRequest(userId, userName, changes) {
+async function createProfileEditRequest(userId, userName, changes) {
   const request = {
     id: uuidv4(),
     type: 'profile_edit_request',
@@ -149,9 +160,9 @@ function createProfileEditRequest(userId, userName, changes) {
     read: false
   };
 
-  const notifications = readNotifications();
+  const notifications = await readNotifications();
   notifications.unshift(request);
-  writeNotifications(notifications);
+  await writeNotifications(notifications);
   return request;
 }
 const PORT = process.env.PORT || 5000;
@@ -191,18 +202,12 @@ function writeCourseSettings(settings) {
 const upload = multer({ dest: 'uploads/' });
 
 // Helper function to read visits data
-function readVisitsData() {
-  return readJSON(visitsPath, DEFAULT_VISITS_DATA);
+async function readVisitsData() {
+  return visitsAccess.readVisitsData();
 }
 
-function writeVisitsData(visitsData) {
-  const ok = writeJSON(visitsPath, visitsData);
-  if (ok && s3Storage.isConfigured()) {
-    s3Storage.writeJSON('ketab/visits.json', visitsData).catch(e =>
-      console.error('S3 write error (visits):', e)
-    );
-  }
-  return ok;
+async function writeVisitsData(visitsData) {
+  return visitsAccess.writeVisitsData(visitsData);
 }
 
 // Helper function to read admin data
@@ -216,13 +221,12 @@ function writeAdminData(data) {
 
 // API Routes
 
-// Track a visit (increment counter)
-app.post('/api/track-visit', (req, res) => {
+app.post('/api/track-visit', async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     visitsData.totalVisits += 1;
-    
-    if (writeVisitsData(visitsData)) {
+
+    if (await writeVisitsData(visitsData)) {
       console.log(`Visit tracked. Total visits: ${visitsData.totalVisits}`);
       res.json({ success: true, totalVisits: visitsData.totalVisits });
     } else {
@@ -232,9 +236,9 @@ app.post('/api/track-visit', (req, res) => {
     console.error('Error tracking visit:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
-});
+}
+);
 
-// User login with national number
 app.post('/api/login/guest', async (req, res) => {
   try {
     const fullName = (req.body?.fullName || '').trim();
@@ -273,7 +277,7 @@ app.post('/api/login/guest', async (req, res) => {
     }
 
     // Track guest login in visit counters/history so admin analytics include guests.
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     visitsData.totalVisits += 1;
 
     const loginEvent = {
@@ -291,7 +295,7 @@ app.post('/api/login/guest', async (req, res) => {
     if (visitsData.loginHistory.length > 10000) {
       visitsData.loginHistory = visitsData.loginHistory.slice(-10000);
     }
-    writeVisitsData(visitsData);
+    await writeVisitsData(visitsData);
 
     return res.json({
       success: true,
@@ -326,7 +330,7 @@ app.post('/api/login', async (req, res) => {
     }
     
     // Track the visit with detailed information
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     visitsData.totalVisits += 1;
     
     // Add detailed login event
@@ -350,7 +354,7 @@ app.post('/api/login', async (req, res) => {
       visitsData.loginHistory = visitsData.loginHistory.slice(-10000);
     }
     
-    writeVisitsData(visitsData);
+    await writeVisitsData(visitsData);
     
     res.json({ 
       success: true, 
@@ -401,9 +405,9 @@ app.post('/api/developer/login', (req, res) => {
 });
 
 // Get current visit count
-app.get('/api/visit-count', (req, res) => {
+app.get('/api/visit-count', async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     res.json({ totalVisits: visitsData.totalVisits });
   } catch (error) {
     console.error('Error getting visit count:', error);
@@ -642,7 +646,7 @@ app.put('/api/users/:nationalNumber', adminAuth, async (req, res) => {
       await writeUsersData(users);
       
       // Create notification for admins
-      createNotification(
+      await createNotification(
         users[userIndex].nationalNumber,
         users[userIndex].name,
         changes
@@ -795,17 +799,17 @@ function filterByDateRange(loginHistory, startDate, endDate) {
 }
 
 // Get visits grouped by school
-app.get('/api/stats/by-school', adminAuth, (req, res) => {
+app.get('/api/stats/by-school', adminAuth, async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     let loginHistory = visitsData.loginHistory || [];
-    
+
     // Apply date filtering if provided
     const { startDate, endDate } = req.query;
     if (startDate && endDate) {
       loginHistory = filterByDateRange(loginHistory, startDate, endDate);
     }
-    
+
     // Group by school
     const schoolStats = {};
     loginHistory.forEach(login => {
@@ -816,14 +820,14 @@ app.get('/api/stats/by-school', adminAuth, (req, res) => {
       schoolStats[school].count++;
       schoolStats[school].users.add(login.nationalNumber);
     });
-    
+
     // Convert to array format
     const result = Object.entries(schoolStats).map(([school, data]) => ({
       school,
       visitCount: data.count,
       uniqueUsers: data.users.size
     })).sort((a, b) => b.visitCount - a.visitCount);
-    
+
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error getting school stats:', error);
@@ -832,50 +836,50 @@ app.get('/api/stats/by-school', adminAuth, (req, res) => {
 });
 
 // Get visits grouped by time (hour/day)
-app.get('/api/stats/by-time', adminAuth, (req, res) => {
+app.get('/api/stats/by-time', adminAuth, async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     const loginHistory = visitsData.loginHistory || [];
-    
+
     // Group by hour
     const hourlyStats = {};
     const dailyStats = {};
-    
+
     loginHistory.forEach(login => {
       const date = new Date(login.timestamp);
       const hour = date.getHours();
       const day = date.toISOString().split('T')[0];
-      
+
       // Hourly stats
       if (!hourlyStats[hour]) {
         hourlyStats[hour] = 0;
       }
       hourlyStats[hour]++;
-      
+
       // Daily stats
       if (!dailyStats[day]) {
         dailyStats[day] = 0;
       }
       dailyStats[day]++;
     });
-    
+
     // Convert to arrays
     const hourlyData = Object.entries(hourlyStats).map(([hour, count]) => ({
       hour: parseInt(hour),
       count
     })).sort((a, b) => a.hour - b.hour);
-    
+
     const dailyData = Object.entries(dailyStats).map(([day, count]) => ({
       day,
       count
     })).sort((a, b) => a.day.localeCompare(b.day));
-    
-    res.json({ 
-      success: true, 
-      data: { 
-        hourly: hourlyData, 
-        daily: dailyData 
-      } 
+
+    res.json({
+      success: true,
+      data: {
+        hourly: hourlyData,
+        daily: dailyData
+      }
     });
   } catch (error) {
     console.error('Error getting time stats:', error);
@@ -884,17 +888,17 @@ app.get('/api/stats/by-time', adminAuth, (req, res) => {
 });
 
 // Get user login history and statistics
-app.get('/api/stats/user-history', adminAuth, (req, res) => {
+app.get('/api/stats/user-history', adminAuth, async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     let loginHistory = visitsData.loginHistory || [];
-    
+
     // Apply date filtering if provided
     const { startDate, endDate } = req.query;
     if (startDate && endDate) {
       loginHistory = filterByDateRange(loginHistory, startDate, endDate);
     }
-    
+
     // Group by user
     const userStats = {};
     loginHistory.forEach(login => {
@@ -916,7 +920,7 @@ app.get('/api/stats/user-history', adminAuth, (req, res) => {
         time: new Date(login.timestamp).toLocaleTimeString('en-US', { timeZone: 'Asia/Amman' })
       });
     });
-    
+
     // Convert to array and sort by login count
     const result = Object.values(userStats)
       .map(user => ({
@@ -925,7 +929,7 @@ app.get('/api/stats/user-history', adminAuth, (req, res) => {
         recentLogins: user.logins.slice(-5).reverse() // Last 5 logins, most recent first
       }))
       .sort((a, b) => b.loginCount - a.loginCount);
-    
+
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error getting user history:', error);
@@ -934,17 +938,17 @@ app.get('/api/stats/user-history', adminAuth, (req, res) => {
 });
 
 // Get filtered visits with details
-app.get('/api/stats/visits', adminAuth, (req, res) => {
+app.get('/api/stats/visits', adminAuth, async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     let loginHistory = visitsData.loginHistory || [];
-    
+
     // Apply date filtering if provided
     const { startDate, endDate } = req.query;
     if (startDate && endDate) {
       loginHistory = filterByDateRange(loginHistory, startDate, endDate);
     }
-    
+
     // Return visits with details
     const visits = loginHistory.map(login => ({
       timestamp: login.timestamp,
@@ -952,9 +956,9 @@ app.get('/api/stats/visits', adminAuth, (req, res) => {
       name: login.name,
       school: login.school || ''
     }));
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       count: visits.length,
       visits: visits
     });
@@ -981,7 +985,7 @@ app.get('/api/user/profile/:nationalNumber', async (req, res) => {
     }
     
     // Get login history for this user
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     const loginHistory = visitsData.loginHistory || [];
     const userLogins = loginHistory.filter(login => login.nationalNumber === nationalNumber);
     
@@ -1062,7 +1066,7 @@ app.post('/api/user/profile/:nationalNumber/request-edit', async (req, res) => {
     }
 
     // Create a profile edit request for admin approval
-    createProfileEditRequest(
+    await createProfileEditRequest(
       users[userIndex].nationalNumber,
       users[userIndex].name,
       changes
@@ -1123,7 +1127,7 @@ app.put('/api/user/profile/:nationalNumber', async (req, res) => {
 
     // Create a notification about the approved update
     if (changes.length > 0) {
-      createNotification(
+      await createNotification(
         users[userIndex].nationalNumber,
         users[userIndex].name,
         changes
@@ -1138,9 +1142,9 @@ app.put('/api/user/profile/:nationalNumber', async (req, res) => {
 });
 
 // Admin notifications endpoints
-app.get('/api/admin/notifications', adminAuth, (req, res) => {
+app.get('/api/admin/notifications', adminAuth, async (req, res) => {
   try {
-    const notifications = readNotifications();
+    const notifications = await readNotifications();
     res.json({ success: true, notifications });
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -1152,7 +1156,7 @@ app.get('/api/admin/notifications', adminAuth, (req, res) => {
 app.post('/api/admin/profile-requests/:id/approve', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const notifications = readNotifications();
+    const notifications = await readNotifications();
     const requestIndex = notifications.findIndex(n => n.id === id && n.type === 'profile_edit_request');
     
     if (requestIndex === -1) {
@@ -1193,7 +1197,7 @@ app.post('/api/admin/profile-requests/:id/approve', adminAuth, async (req, res) 
       approvedAt: new Date().toISOString()
     };
 
-    writeNotifications(notifications);
+    await writeNotifications(notifications);
 
     res.json({ success: true, message: 'Profile edit request approved', user: users[userIndex] });
   } catch (error) {
@@ -1203,12 +1207,12 @@ app.post('/api/admin/profile-requests/:id/approve', adminAuth, async (req, res) 
 });
 
 // Reject profile edit request
-app.post('/api/admin/profile-requests/:id/reject', adminAuth, (req, res) => {
+app.post('/api/admin/profile-requests/:id/reject', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const notifications = readNotifications();
+    const notifications = await readNotifications();
     const requestIndex = notifications.findIndex(n => n.id === id && n.type === 'profile_edit_request');
-    
+
     if (requestIndex === -1) {
       return res.status(404).json({ success: false, error: 'Request not found' });
     }
@@ -1226,7 +1230,7 @@ app.post('/api/admin/profile-requests/:id/reject', adminAuth, (req, res) => {
       rejectedAt: new Date().toISOString()
     };
 
-    writeNotifications(notifications);
+    await writeNotifications(notifications);
 
     res.json({ success: true, message: 'Profile edit request rejected' });
   } catch (error) {
@@ -1235,19 +1239,19 @@ app.post('/api/admin/profile-requests/:id/reject', adminAuth, (req, res) => {
   }
 });
 
-app.post('/api/admin/notifications/:id/read', adminAuth, (req, res) => {
+app.post('/api/admin/notifications/:id/read', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const notifications = readNotifications();
+    const notifications = await readNotifications();
     const notificationIndex = notifications.findIndex(n => n.id === id);
-    
+
     if (notificationIndex === -1) {
       return res.status(404).json({ success: false, error: 'Notification not found' });
     }
-    
+
     notifications[notificationIndex].read = true;
-    writeNotifications(notifications);
-    
+    await writeNotifications(notifications);
+
     res.json({ success: true });
   } catch (error) {
     console.error('Error marking notification as read:', error);
@@ -1256,30 +1260,30 @@ app.post('/api/admin/notifications/:id/read', adminAuth, (req, res) => {
 });
 
 // Delete a single notification
-app.delete('/api/admin/notifications/:id', adminAuth, (req, res) => {
+app.delete('/api/admin/notifications/:id', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const notifications = readNotifications();
+    const notifications = await readNotifications();
     const notificationIndex = notifications.findIndex(n => n.id === id);
-    
+
     if (notificationIndex === -1) {
       return res.status(404).json({ success: false, error: 'Notification not found' });
     }
-    
+
     const notification = notifications[notificationIndex];
-    
+
     // Don't allow deleting profile edit requests through notification deletion
     // They should be handled through approve/reject actions only
     if (notification.type === 'profile_edit_request') {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Profile edit requests cannot be deleted. Please approve or reject them instead.' 
+      return res.status(400).json({
+        success: false,
+        error: 'Profile edit requests cannot be deleted. Please approve or reject them instead.'
       });
     }
-    
+
     notifications.splice(notificationIndex, 1);
-    writeNotifications(notifications);
-    
+    await writeNotifications(notifications);
+
     res.json({ success: true, message: 'Notification deleted' });
   } catch (error) {
     console.error('Error deleting notification:', error);
@@ -1288,18 +1292,18 @@ app.delete('/api/admin/notifications/:id', adminAuth, (req, res) => {
 });
 
 // Clear all notifications (but keep profile edit requests)
-app.delete('/api/admin/notifications', adminAuth, (req, res) => {
+app.delete('/api/admin/notifications', adminAuth, async (req, res) => {
   try {
-    const notifications = readNotifications();
-    
+    const notifications = await readNotifications();
+
     // Only clear profile_update notifications, keep profile_edit_request notifications
     const profileEditRequests = notifications.filter(n => n.type === 'profile_edit_request');
-    
-    writeNotifications(profileEditRequests);
-    
+
+    await writeNotifications(profileEditRequests);
+
     const clearedCount = notifications.length - profileEditRequests.length;
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: `Cleared ${clearedCount} notification(s). Profile edit requests are preserved.`,
       clearedCount,
       remainingRequests: profileEditRequests.length
@@ -1311,27 +1315,27 @@ app.delete('/api/admin/notifications', adminAuth, (req, res) => {
 });
 
 // Reset visits endpoint (admin only)
-app.post('/api/admin/reset-visits', adminAuth, (req, res) => {
+app.post('/api/admin/reset-visits', adminAuth, async (req, res) => {
   try {
     const { confirmed } = req.body;
-    
+
     if (!confirmed) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Confirmation required. Set confirmed to true.' 
+      return res.status(400).json({
+        success: false,
+        error: 'Confirmation required. Set confirmed to true.'
       });
     }
-    
+
     // Reset visits data
     const resetData = {
       totalVisits: 0,
       loginHistory: []
     };
-    
-    if (writeVisitsData(resetData)) {
+
+    if (await writeVisitsData(resetData)) {
       console.log('Visit counter and login history reset successfully');
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: 'Visit counter and login history have been reset',
         totalVisits: 0
       });
@@ -1347,17 +1351,17 @@ app.post('/api/admin/reset-visits', adminAuth, (req, res) => {
 // Reports API endpoints
 
 // Get school reports with date range filtering
-app.get('/api/reports/by-school', adminAuth, (req, res) => {
+app.get('/api/reports/by-school', adminAuth, async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     let loginHistory = visitsData.loginHistory || [];
-    
+
     // Apply date filtering
     const { startDate, endDate } = req.query;
     if (startDate && endDate) {
       loginHistory = filterByDateRange(loginHistory, startDate, endDate);
     }
-    
+
     // Group by school
     const schoolStats = {};
     loginHistory.forEach(login => {
@@ -1368,14 +1372,14 @@ app.get('/api/reports/by-school', adminAuth, (req, res) => {
       schoolStats[school].count++;
       schoolStats[school].users.add(login.nationalNumber);
     });
-    
+
     // Convert to array format
     const result = Object.entries(schoolStats).map(([school, data]) => ({
       school,
       loginCount: data.count,
       uniqueUsers: data.users.size
     })).sort((a, b) => b.loginCount - a.loginCount);
-    
+
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error getting school reports:', error);
@@ -1384,17 +1388,17 @@ app.get('/api/reports/by-school', adminAuth, (req, res) => {
 });
 
 // Get user reports with date range filtering
-app.get('/api/reports/by-user', adminAuth, (req, res) => {
+app.get('/api/reports/by-user', adminAuth, async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     let loginHistory = visitsData.loginHistory || [];
-    
+
     // Apply date filtering
     const { startDate, endDate } = req.query;
     if (startDate && endDate) {
       loginHistory = filterByDateRange(loginHistory, startDate, endDate);
     }
-    
+
     // Group by user
     const userStats = {};
     loginHistory.forEach(login => {
@@ -1414,11 +1418,11 @@ app.get('/api/reports/by-user', adminAuth, (req, res) => {
         userStats[key].lastLogin = login.timestamp;
       }
     });
-    
+
     // Convert to array and sort by login count
     const result = Object.values(userStats)
       .sort((a, b) => b.loginCount - a.loginCount);
-    
+
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error getting user reports:', error);
@@ -1427,21 +1431,21 @@ app.get('/api/reports/by-user', adminAuth, (req, res) => {
 });
 
 // Export reports as PDF (simplified - returns JSON for now, can be enhanced with PDF library)
-app.get('/api/reports/export/pdf', adminAuth, (req, res) => {
+app.get('/api/reports/export/pdf', adminAuth, async (req, res) => {
   try {
-    const visitsData = readVisitsData();
+    const visitsData = await readVisitsData();
     let loginHistory = visitsData.loginHistory || [];
-    
+
     // Apply date filtering
     const { startDate, endDate } = req.query;
     if (startDate && endDate) {
       loginHistory = filterByDateRange(loginHistory, startDate, endDate);
     }
-    
+
     // For now, return JSON data. In production, use a library like pdfkit or puppeteer to generate actual PDF
     // For simplicity, we'll return a CSV-style response that can be converted client-side
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'PDF export not fully implemented. Please use CSV export.',
       data: {
         startDate,
