@@ -36,6 +36,7 @@ const { createProfileRouter } = require('./routes/profile');
 const { createNotificationsRouter } = require('./routes/notifications');
 const { createStatsRouter } = require('./routes/stats');
 const { createReportsRouter } = require('./routes/reports');
+const { createDevRouter } = require('./routes/dev');
 
 // Strict-mode error middleware (ticket #11). Mounted AFTER every router so
 // it can catch StrictRemoteWriteError thrown by route handlers via the
@@ -89,6 +90,7 @@ app.use(createProfileRouter(store));
 app.use(createNotificationsRouter(store));
 app.use(createStatsRouter(store));
 app.use(createReportsRouter(store));
+app.use(createDevRouter(store));
 
 // Strict-mode 502 translator (ticket #11). Mounted last so it sees
 // StrictRemoteWriteError thrown from any route handler.
