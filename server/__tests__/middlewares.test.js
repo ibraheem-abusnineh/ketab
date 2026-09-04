@@ -148,3 +148,59 @@ describe('requireDev', () => {
     expect(res.status).toHaveBeenCalledWith(401);
   });
 });
+
+describe('Authorization header normalization (Bearer prefix)', () => {
+  test('requireDev accepts `Authorization: Bearer dev_…` form', () => {
+    const req = makeReq('Bearer dev_' + 'a'.repeat(32));
+    const res = makeRes();
+    const next = jest.fn();
+    requireDev(req, res, next);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  test('requireAdmin accepts `Authorization: Bearer admin_…` form', () => {
+    const req = makeReq('Bearer admin_' + 'a'.repeat(32));
+    const res = makeRes();
+    const next = jest.fn();
+    requireAdmin(req, res, next);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  test('requireAuth accepts `Authorization: Bearer dev_…` form', () => {
+    const req = makeReq('Bearer dev_' + 'b'.repeat(32));
+    const res = makeRes();
+    const next = jest.fn();
+    requireAuth(req, res, next);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  test('requireDev still accepts the bare `Authorization: dev_…` form (backward compat)', () => {
+    const req = makeReq('dev_' + 'a'.repeat(32));
+    const res = makeRes();
+    const next = jest.fn();
+    requireDev(req, res, next);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  test('requireDev rejects `Bearer nonsense` (bogus token) with 401', () => {
+    const req = makeReq('Bearer nonsense');
+    const res = makeRes();
+    const next = jest.fn();
+    requireDev(req, res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(401);
+  });
+
+  test('requireDev rejects a missing Authorization header with 401 (after normalization)', () => {
+    const req = makeReq(null);
+    const res = makeRes();
+    const next = jest.fn();
+    requireDev(req, res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(401);
+  });
+});
