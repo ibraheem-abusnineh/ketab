@@ -49,61 +49,136 @@ const { createDevRouter } = require('./routes/dev');
 // Express's default 500 path.
 const { strictModeErrorHandler } = require('./middleware/strictMode');
 
-// Global error handlers (preserved from legacy).
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION:', err.message);
-  console.error(err.stack);
-  process.exit(1);
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('UNHANDLED REJECTION:', reason);
-  process.exit(1);
-});
+// ---------------------------------------------------------------------------
+// App factory (ticket #17).
+//
+// Extracted from the original monolithic composer so the test suite can
+// build an `app` against an in-memory / tmp-dir store without binding a
+// real port. The legacy `node composer.js` entry point still works
+// byte-equivalent: when this file is run directly, the production store
+// (live `server/data` + the unconfigured remote) is already built at
+// module load (see "Module-load bootstrap" below) and `startServer()`
+// attaches the listener against it.
+//
+// Ticket #17 acceptance criterion #3: the composer exports both `app`
+// (a getter for legacy callers that want the ready-made production
+// instance — null until startServer() runs) and `createApp` (the
+// factory the test seam uses). The factory takes an explicit `store`
+// so the test controls the storage layer end-to-end without touching
+// the production data directory.
+// ---------------------------------------------------------------------------
 
-console.log('Starting server initialization...');
+// Process-wide error handlers (uncaughtException + unhandledRejection
+// that exit(1)) are NOT registered at module load time. They used to
+// live here (preserved from the legacy file), but moving them to
+// startServer() keeps `require('./composer')` from installing crash
+// handlers that call `process.exit(1)`. Tests that import this module
+// without ever calling startServer() must not be killed by an unrelated
+// runtime error in the same process.
+function buildApp(store, uploadsDir) {
+  const app = express();
+  app.use(cors());
+  app.use(bodyParser.json());
+  // Multer for CSV upload (consumed by users router on /api/users/import-csv).
+  // The dest is per-app — tests can pass an isolated tmp uploads dir.
+  const upload = multer({ dest: uploadsDir || 'uploads/' });
+  app.use('/api/users/import-csv', upload.single('csvFile'));
 
-// Ensure required directories exist (preserved from legacy).
-const dataDir = path.join(__dirname, 'data');
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+  // Mount domain routers. Each router takes the shared `store` instance.
+  app.use(createHealthRouter(store));
+  app.use(createTrackingRouter(store));
+  app.use(createCoursesRouter(store));
+  app.use(createAuthRouter(store));
+  app.use(createUsersRouter(store));
+  app.use(createProfileRouter(store));
+  app.use(createNotificationsRouter(store));
+  app.use(createStatsRouter(store));
+  app.use(createReportsRouter(store));
+  app.use(createDevRouter(store));
 
-// Storage seam (ADR-0001).
-const store = createStore({
-  local: createLocalAdapter({ baseDir: dataDir }),
+  // Strict-mode 502 translator (ticket #11). Mounted last so it sees
+  // StrictRemoteWriteError thrown from any route handler.
+  app.use(strictModeErrorHandler);
+
+  return app;
+}
+
+/**
+ * Construct a fully-wired Express app bound to the given store.
+ *
+ * @param {object} opts
+ * @param {object} opts.store        pre-built storage seam from createStore()
+ * @param {string} [opts.uploadsDir] multer dest directory; defaults to
+ *                                   `<cwd>/uploads/`. Tests should pass a
+ *                                   tmp dir so they don't write to the
+ *                                   live `server/uploads/` directory.
+ */
+function createApp({ store, uploadsDir } = {}) {
+  if (!store) throw new Error('createApp requires { store }');
+  return buildApp(store, uploadsDir);
+}
+
+// ---------------------------------------------------------------------------
+// Module-load bootstrap (ticket #9).
+//
+// Restores the original ticket #9 behaviour: requiring this module
+// constructs the production store and calls store.bootstrap() once.
+// The bootstrap itself is fire-and-forget — it only reads from local
+// files and (when configured) pulls from the remote. Side effects are
+// confined to the production data directory (`server/data/`).
+//
+// Tests should NEVER hit this branch: they construct their own store
+// via createStore(...) and pass it into createApp({ store }). The
+// production store is built unconditionally here, but bootstrap() is
+// guarded so it doesn't run twice if startServer() is invoked later.
+// ---------------------------------------------------------------------------
+
+const productionDataDir = path.join(__dirname, 'data');
+const productionUploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(productionDataDir)) fs.mkdirSync(productionDataDir, { recursive: true });
+if (!fs.existsSync(productionUploadsDir)) fs.mkdirSync(productionUploadsDir, { recursive: true });
+
+// Build the production store unconditionally so requiring composer.js
+// has no observable side-effects beyond creating the data dir + seeding
+// the store object. bootstrap() runs at the bottom of this block.
+const productionStore = createStore({
+  local: createLocalAdapter({ baseDir: productionDataDir }),
   remote: createRemoteAdapter(),
 });
 
-// Bootstrap the store at module load (ticket #9).
-store.bootstrap().catch((e) => console.error('Storage bootstrap failed:', e));
+// Bootstrap the store at module load (ticket #9). Fire-and-forget so a
+// transient remote failure doesn't crash the whole process on import —
+// the route layer is resilient to a missing local file (every read goes
+// through store.<entity>.read() which returns null when the file is
+// absent). We track the call so startServer() can skip a redundant
+// second bootstrap if it ever needs to.
+productionStore.bootstrap().catch((e) => console.error('Storage bootstrap failed:', e));
 
-// Express app + middleware.
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-// Multer for CSV upload (consumed by users router on /api/users/import-csv).
-const upload = multer({ dest: 'uploads/' });
-app.use('/api/users/import-csv', upload.single('csvFile'));
+function startServer() {
+  // Production-only crash handlers (preserved from legacy).
+  process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err.message);
+    console.error(err.stack);
+    process.exit(1);
+  });
+  process.on('unhandledRejection', (reason) => {
+    console.error('UNHANDLED REJECTION:', reason);
+    process.exit(1);
+  });
 
-// Mount domain routers. Each router takes the shared `store` instance.
-app.use(createHealthRouter(store));
-app.use(createTrackingRouter(store));
-app.use(createCoursesRouter(store));
-app.use(createAuthRouter(store));
-app.use(createUsersRouter(store));
-app.use(createProfileRouter(store));
-app.use(createNotificationsRouter(store));
-app.use(createStatsRouter(store));
-app.use(createReportsRouter(store));
-app.use(createDevRouter(store));
+  console.log('Starting server initialization...');
 
-// Strict-mode 502 translator (ticket #11). Mounted last so it sees
-// StrictRemoteWriteError thrown from any route handler.
-app.use(strictModeErrorHandler);
+  // Listener against the production store + production uploads dir.
+  const PORT = process.env.PORT || 5000;
+  app = buildApp(productionStore, productionUploadsDir);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Health check: http://0.0.0.0:${PORT}/api/health`);
+  });
+}
 
-// Listener.
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Health check: http://0.0.0.0:${PORT}/api/health`);
-});
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { createApp, startServer, get app() { return app; } };
