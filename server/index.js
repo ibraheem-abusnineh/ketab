@@ -59,19 +59,9 @@ const notificationsPath = path.join(__dirname, 'data', 'notifications.json');
 const DEFAULT_VISITS_DATA = { totalVisits: 0, loginHistory: [] };
 const DEFAULT_NOTIFICATIONS = [];
 
-function readUsersData() {
-  return readJSON(usersPath, []);
-}
-
-function writeUsersData(users) {
-  const ok = writeJSON(usersPath, users);
-  if (ok && s3Storage.isConfigured()) {
-    s3Storage.writeJSON('ketab/users.json', users).catch(e =>
-      console.error('GitHub write error (users):', e)
-    );
-  }
-  return ok;
-}
+// Users data access goes through the storage seam (ticket #7, ADR-0001).
+const { createUsersAccess } = require('./storage/usersAccess');
+const { readUsersData, writeUsersData } = createUsersAccess();
 
 function readNotifications() {
   return readJSON(notificationsPath, []);
@@ -245,7 +235,7 @@ app.post('/api/track-visit', (req, res) => {
 });
 
 // User login with national number
-app.post('/api/login/guest', (req, res) => {
+app.post('/api/login/guest', async (req, res) => {
   try {
     const fullName = (req.body?.fullName || '').trim();
     const phoneNumber = (req.body?.phoneNumber || '').trim();
@@ -258,7 +248,7 @@ app.post('/api/login/guest', (req, res) => {
       return res.status(400).json({ success: false, error: 'Phone must be exactly 10 digits' });
     }
 
-    const users = readUsersData();
+    const users = await readUsersData();
 
     // Reuse an existing guest by phone number when available.
     let guestUser = users.find(u => u.role === 'guest' && (u.phone || '').trim() === phoneNumber);
@@ -278,7 +268,7 @@ app.post('/api/login/guest', (req, res) => {
       guestUser.name = fullName;
     }
 
-    if (!writeUsersData(users)) {
+    if (!(await writeUsersData(users))) {
       return res.status(500).json({ success: false, error: 'Failed to save guest user' });
     }
 
@@ -320,7 +310,7 @@ app.post('/api/login/guest', (req, res) => {
 });
 
 // User login with national number
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   try {
     const { nationalNumber } = req.body;
     
@@ -328,7 +318,7 @@ app.post('/api/login', (req, res) => {
       return res.status(400).json({ success: false, error: 'National number required' });
     }
     
-    const users = readUsersData();
+    const users = await readUsersData();
     const user = users.find(u => u.nationalNumber === nationalNumber.trim());
     
     if (!user) {
@@ -557,9 +547,9 @@ app.post('/api/admin/change-password', adminAuth, (req, res) => {
 // User Management APIs
 
 // Get all users
-app.get('/api/users', adminAuth, (req, res) => {
+app.get('/api/users', adminAuth, async (req, res) => {
   try {
-    const users = readUsersData();
+    const users = await readUsersData();
     res.json({ success: true, users });
   } catch (error) {
     console.error('Error getting users:', error);
@@ -568,7 +558,7 @@ app.get('/api/users', adminAuth, (req, res) => {
 });
 
 // Add single user
-app.post('/api/users/add', adminAuth, (req, res) => {
+app.post('/api/users/add', adminAuth, async (req, res) => {
   try {
     const { nationalNumber, name, role, school, phone, directorate } = req.body;
     
@@ -583,7 +573,7 @@ app.post('/api/users/add', adminAuth, (req, res) => {
       });
     }
     
-    const users = readUsersData();
+    const users = await readUsersData();
     
     // Check if user already exists
     const existingUser = users.find(u => u.nationalNumber === nationalNumber);
@@ -596,7 +586,7 @@ app.post('/api/users/add', adminAuth, (req, res) => {
     
     users.push(user);
     
-    if (writeUsersData(users)) {
+    if (await writeUsersData(users)) {
       res.json({ success: true, user });
     } else {
       res.status(500).json({ success: false, error: 'Failed to save user' });
@@ -609,7 +599,7 @@ app.post('/api/users/add', adminAuth, (req, res) => {
 
 // Delete user
 // Update user endpoint
-app.put('/api/users/:nationalNumber', adminAuth, (req, res) => {
+app.put('/api/users/:nationalNumber', adminAuth, async (req, res) => {
   try {
     const { nationalNumber } = req.params;
     const updates = req.body;
@@ -618,7 +608,7 @@ app.put('/api/users/:nationalNumber', adminAuth, (req, res) => {
       return res.status(400).json({ success: false, error: 'National number required' });
     }
     
-    const users = readUsersData();
+    const users = await readUsersData();
     const userIndex = users.findIndex(u => u.nationalNumber === nationalNumber.trim());
     
     if (userIndex === -1) {
@@ -649,7 +639,7 @@ app.put('/api/users/:nationalNumber', adminAuth, (req, res) => {
       };
       
       // Save updated users data
-      writeUsersData(users);
+      await writeUsersData(users);
       
       // Create notification for admins
       createNotification(
@@ -666,7 +656,7 @@ app.put('/api/users/:nationalNumber', adminAuth, (req, res) => {
   }
 });
 
-app.delete('/api/users/:nationalNumber', adminAuth, (req, res) => {
+app.delete('/api/users/:nationalNumber', adminAuth, async (req, res) => {
   try {
     const { nationalNumber } = req.params;
     
@@ -674,7 +664,7 @@ app.delete('/api/users/:nationalNumber', adminAuth, (req, res) => {
       return res.status(400).json({ success: false, error: 'National number required' });
     }
     
-    const users = readUsersData();
+    const users = await readUsersData();
     const userIndex = users.findIndex(u => u.nationalNumber === nationalNumber.trim());
     
     if (userIndex === -1) {
@@ -685,7 +675,7 @@ app.delete('/api/users/:nationalNumber', adminAuth, (req, res) => {
     users.splice(userIndex, 1);
     
     // Save updated users data
-    writeUsersData(users);
+    await writeUsersData(users);
     
     res.json({ success: true });
   } catch (error) {
@@ -734,7 +724,7 @@ app.post('/api/users/import-csv', adminAuth, upload.single('csvFile'), async (re
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
     
-    const users = readUsersData();
+    const users = await readUsersData();
     let result = { added: 0, updated: 0, skipped: 0, errors: [] };
     
     if (strategy === 'replace') {
@@ -748,7 +738,7 @@ app.post('/api/users/import-csv', adminAuth, upload.single('csvFile'), async (re
         return true;
       });
       
-      writeUsersData(validUsers);
+      await writeUsersData(validUsers);
       result.added = validUsers.length;
     } else {
       // Add or upsert strategy
@@ -777,7 +767,7 @@ app.post('/api/users/import-csv', adminAuth, upload.single('csvFile'), async (re
         }
       }
       
-      writeUsersData(existingUsers);
+      await writeUsersData(existingUsers);
     }
     
     res.json({ success: true, result });
@@ -975,7 +965,7 @@ app.get('/api/stats/visits', adminAuth, (req, res) => {
 });
 
 // Get user profile data
-app.get('/api/user/profile/:nationalNumber', (req, res) => {
+app.get('/api/user/profile/:nationalNumber', async (req, res) => {
   try {
     const { nationalNumber } = req.params;
     
@@ -983,7 +973,7 @@ app.get('/api/user/profile/:nationalNumber', (req, res) => {
       return res.status(400).json({ success: false, error: 'National number required' });
     }
     
-    const users = readUsersData();
+    const users = await readUsersData();
     const user = users.find(u => u.nationalNumber === nationalNumber.trim());
     
     if (!user) {
@@ -1036,7 +1026,7 @@ app.get('/api/user/profile/:nationalNumber', (req, res) => {
 });
 
 // Profile edit request endpoint (user submits a request for admin approval)
-app.post('/api/user/profile/:nationalNumber/request-edit', (req, res) => {
+app.post('/api/user/profile/:nationalNumber/request-edit', async (req, res) => {
   try {
     const { nationalNumber } = req.params;
     const updates = req.body;
@@ -1046,7 +1036,7 @@ app.post('/api/user/profile/:nationalNumber/request-edit', (req, res) => {
       return res.status(400).json({ success: false, error: 'National number required' });
     }
     
-    const users = readUsersData();
+    const users = await readUsersData();
     const userIndex = users.findIndex(u => u.nationalNumber === nationalNumber.trim());
     
     if (userIndex === -1) {
@@ -1089,7 +1079,7 @@ app.post('/api/user/profile/:nationalNumber/request-edit', (req, res) => {
 });
 
 // Update user profile endpoint (admin-only, for approving requests)
-app.put('/api/user/profile/:nationalNumber', (req, res) => {
+app.put('/api/user/profile/:nationalNumber', async (req, res) => {
   try {
     const { nationalNumber } = req.params;
     const updates = req.body;
@@ -1099,7 +1089,7 @@ app.put('/api/user/profile/:nationalNumber', (req, res) => {
       return res.status(400).json({ success: false, error: 'National number required' });
     }
     
-    const users = readUsersData();
+    const users = await readUsersData();
     const userIndex = users.findIndex(u => u.nationalNumber === nationalNumber.trim());
     
     if (userIndex === -1) {
@@ -1129,7 +1119,7 @@ app.put('/api/user/profile/:nationalNumber', (req, res) => {
     };
 
     // Save updated users data
-    writeUsersData(users);
+    await writeUsersData(users);
 
     // Create a notification about the approved update
     if (changes.length > 0) {
@@ -1159,7 +1149,7 @@ app.get('/api/admin/notifications', adminAuth, (req, res) => {
 });
 
 // Approve profile edit request
-app.post('/api/admin/profile-requests/:id/approve', adminAuth, (req, res) => {
+app.post('/api/admin/profile-requests/:id/approve', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const notifications = readNotifications();
@@ -1175,7 +1165,7 @@ app.post('/api/admin/profile-requests/:id/approve', adminAuth, (req, res) => {
     }
 
     // Update user profile with requested changes
-    const users = readUsersData();
+    const users = await readUsersData();
     const userIndex = users.findIndex(u => u.nationalNumber === request.userId);
     
     if (userIndex === -1) {
@@ -1193,7 +1183,7 @@ app.post('/api/admin/profile-requests/:id/approve', adminAuth, (req, res) => {
       ...updates
     };
 
-    writeUsersData(users);
+    await writeUsersData(users);
 
     // Update request status
     notifications[requestIndex] = {
