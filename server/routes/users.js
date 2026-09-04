@@ -8,8 +8,8 @@
  *   DELETE /api/users/:nationalNumber
  *   POST   /api/users/import-csv
  *
- * The router uses the requireAdmin middleware from server/middleware/auth
- * for every route (matches the legacy adminAuth gate on each).
+ * Per ADR-0003, the router uses the `requireAdmin` middleware from
+ * server/middleware/auth for every route.
  *
  * Two cross-cutting helpers (createNotification + the CSV upload pipeline)
  * are local to this module because they are only used by users routes.

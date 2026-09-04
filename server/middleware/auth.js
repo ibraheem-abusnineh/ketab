@@ -1,7 +1,7 @@
 /**
  * Operator middlewares (ADR-0003, CONTEXT.md: Actor).
  *
- * Three middlewares replace the legacy single AdminAuth:
+ * Three operator middlewares:
  *
  *   requireAuth  — admits any valid Actor token (admin_ or dev_, length ≥ 32)
  *   requireAdmin — admits admin_ tokens AND dev_ tokens (dev is a superset

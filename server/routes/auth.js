@@ -8,10 +8,10 @@
  *   POST /api/admin/login           — bcrypt against admin.json
  *   POST /api/admin/change-password — bcrypt round-trip with same-password guard
  *
- * The legacy `adminAuth` middleware (server/index.js:38-50) is replaced
- * by `requireAdmin` from server/middleware/auth.js. The composer attaches
- * the middleware at mount time; this router declares the handlers
- * without inline auth checks.
+ * Per ADR-0003, `requireAdmin` from server/middleware/auth.js gates the
+ * admin routes in this router. The composer attaches the middleware at
+ * mount time; this router declares the handlers without inline auth
+ * checks.
  *
  * Ticket #14: `/api/login` and `/api/login/guest` write the per-day
  * aggregate via `incrementLoginCount` from `server/storage/visitsAccess`.

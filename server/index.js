@@ -9,9 +9,10 @@
  *   5. Starts the HTTP listener
  *
  * ADR-0001: store is the seam; every router takes `store` and calls
- * `store.<entity>.{read, write}`. The legacy `adminAuth` middleware is
- * replaced by `requireAdmin` from server/middleware/auth (ADR-0003),
- * applied per-route inside the routers.
+ * `store.<entity>.{read, write}`.
+ * ADR-0003: every route gates its own operator policy — `requireAdmin`,
+ * `requireAuth`, or `requireDev` from server/middleware/auth — applied
+ * per-route inside the routers.
  */
 try { require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }); } catch (_) {}
 
