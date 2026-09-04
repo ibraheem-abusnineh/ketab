@@ -4,10 +4,9 @@
  * Talks to the GitHub Contents API. The local file is the source of truth
  * at runtime; the remote write is best-effort (ADR-0002).
  *
- * This module is the rename target for `server/utils/s3Storage.js` (a
- * misleading name — the remote is GitHub, not S3). The rename is its own
- * ticket; for now the public surface is preserved: read(name) / write(name)
- * and isConfigured().
+ * This adapter is a thin wrapper around `server/utils/gitHubStorage.js`
+ * that adapts the lower-level readJSON/writeJSON/isConfigured surface to
+ * the store's read(name) / write(name) interface.
  *
  * Injectable dependencies (request, env, detectOwnerRepo) make the adapter
  * unit-testable without touching the network or the host environment.
