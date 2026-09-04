@@ -122,12 +122,14 @@ describe('dev router', () => {
       return token;
     }
 
-    test('GET /api/dev/visits returns raw visits (including loginHistory)', async () => {
+    test('GET /api/dev/visits returns raw visits (per-day aggregate shape)', async () => {
+      // loginHistory is now per (nationalNumber, date) day-record per
+      // ADR-0004 / ticket #14.
       const visitsFixture = {
-        totalVisits: 3,
+        totalVisits: 8,
         loginHistory: [
-          { nationalNumber: '111', name: 'Alice', at: 1 },
-          { nationalNumber: '222', name: 'Bob', at: 2 },
+          { nationalNumber: '111', name: 'Alice', school: 'Alpha', date: '2026-04-15', loginCount: 3, pageViews: 5, lastSeenAt: '2026-04-15T10:00:00Z' },
+          { nationalNumber: '222', name: 'Bob', school: 'Beta', date: '2026-04-16', loginCount: 1, pageViews: 2, lastSeenAt: '2026-04-16T09:00:00Z' },
         ],
       };
       const store = makeStubStore({ visits: visitsFixture });

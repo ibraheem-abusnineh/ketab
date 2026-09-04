@@ -168,9 +168,16 @@ describe('notifications router', () => {
   });
 
   describe('POST /api/admin/reset-visits', () => {
-    test('resets visits when confirmed=true', async () => {
+    test('resets visits when confirmed=true (new per-day aggregate shape)', async () => {
+      // Fixture uses the new per-day aggregate shape (ADR-0004). The
+      // reset must zero totalVisits and replace loginHistory with [].
       const store = makeStubStore({
-        visits: { totalVisits: 50, loginHistory: [{ nationalNumber: 'X' }] },
+        visits: {
+          totalVisits: 50,
+          loginHistory: [
+            { nationalNumber: 'X', name: 'X', school: 'X', date: '2026-04-15', loginCount: 3, pageViews: 5, lastSeenAt: '2026-04-15T10:00:00Z' },
+          ],
+        },
       });
       ctx = await startApp(mount(store));
       const res = await asAdmin('POST', ctx, '/api/admin/reset-visits', { confirmed: true });

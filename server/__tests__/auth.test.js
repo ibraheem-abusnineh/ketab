@@ -95,7 +95,7 @@ describe('auth router', () => {
       expect(res.status).toBe(400);
     });
 
-    test('records a visit and login history entry on success', async () => {
+    test('records a visit and per-day aggregate entry on success', async () => {
       const store = makeStubStore();
       ctx = await startApp(mountOpen(store));
       await request(ctx.baseUrl, 'POST', '/api/login/guest', {
@@ -105,9 +105,15 @@ describe('auth router', () => {
       const visits = await store.visits.read();
       expect(visits.totalVisits).toBe(1);
       expect(visits.loginHistory).toHaveLength(1);
-      expect(visits.loginHistory[0].name).toBe('Sara');
-      expect(visits.loginHistory[0].role).toBe('guest');
+      const record = visits.loginHistory[0];
+      expect(record.name).toBe('Sara');
+      expect(record.school).toBe('زيارة عامة');
+      expect(record.loginCount).toBe(1);
+      expect(record.pageViews).toBe(0);
+      expect(record.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(typeof record.lastSeenAt).toBe('string');
     });
+
   });
 
   describe('POST /api/login', () => {
@@ -140,8 +146,14 @@ describe('auth router', () => {
       const visits = await store.visits.read();
       expect(visits.totalVisits).toBe(1);
       expect(visits.loginHistory).toHaveLength(1);
+      const record = visits.loginHistory[0];
+      expect(record.nationalNumber).toBe('X1');
+      expect(record.name).toBe('Ahmed');
+      expect(record.school).toBe('Alpha');
+      expect(record.loginCount).toBe(1);
+      expect(record.pageViews).toBe(0);
+      expect(record.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
-
     test('returns 400 when nationalNumber is missing', async () => {
       const store = makeStubStore();
       ctx = await startApp(mountOpen(store));

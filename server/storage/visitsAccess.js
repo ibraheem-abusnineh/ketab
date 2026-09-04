@@ -1,5 +1,5 @@
 /**
- * Visits access seam — ticket #8.
+ * Visits access seam — ticket #8, ticket #14.
  *
  * Thin async wrappers around `store.visits.read()` /
  * `store.visits.write(record)` that preserve the legacy
@@ -18,7 +18,14 @@
  * `createVisitsAccess()` once at module scope and uses the returned
  * {readVisitsData, writeVisitsData} directly.
  *
- * ADR-0001 (storage seam) and ADR-0002 (best-effort error policy).
+ * Ticket #14 also adds the per-day aggregate helpers
+ * (`findOrCreateDayRecord`, `incrementLoginCount`, `incrementPageViews`,
+ * `asiaAmmanDate`) used by the login and page-load writers to maintain
+ * `loginHistory` as the per-user, per-day aggregate per ADR-0004. The
+ * storage seam signature is unchanged — `writeVisitsData` is shape-agnostic.
+ *
+ * ADR-0001 (storage seam), ADR-0002 (best-effort error policy), ADR-0004
+ * (loginHistory grain).
  */
 
 const path = require('path');
@@ -26,7 +33,84 @@ const { createStore } = require('./store');
 const { createLocalAdapter } = require('./localAdapter');
 const { createRemoteAdapter } = require('./remoteAdapter');
 
+/**
+ * Default visits data (ticket #14).
+ *
+ * `loginHistory` is a per-user, per-day aggregate per ADR-0004. The
+ * empty array is the empty day-record list — semantically unchanged
+ * from the legacy shape, but the meaning of each element is now
+ * `{ nationalNumber, name, school, date, loginCount, pageViews, lastSeenAt }`.
+ */
 const DEFAULT_VISITS_DATA = { totalVisits: 0, loginHistory: [] };
+
+/**
+ * Asia/Amman calendar day for a given instant. Accepts a `Date`
+ * instance, an ISO 8601 string, or `undefined` (default: now).
+ * Returns `YYYY-MM-DD`. Pure function. Ticket #14.
+ */
+function asiaAmmanDate(instant) {
+  const d = instant === undefined ? new Date() : new Date(instant);
+  return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Amman' });
+}
+
+/**
+ * Find or create the day-record for `(nationalNumber, date)`. Mutates
+ * the `visitsData` array only when no matching record exists; returns
+ * the existing record if found, or appends and returns a new one.
+ *
+ * `date` is a calendar day string in `YYYY-MM-DD` form (Asia/Amman
+ * per ADR-0004). The caller is responsible for computing it from the
+ * `lastSeenAt` instant — `asiaAmmanDate(lastSeenAt)` does the right thing.
+ *
+ * Ticket #14.
+ */
+function findOrCreateDayRecord(visitsData, partial) {
+  const { nationalNumber, name, school, date } = partial || {};
+  if (!visitsData || !Array.isArray(visitsData.loginHistory)) {
+    visitsData.loginHistory = [];
+  }
+  const existing = visitsData.loginHistory.find(
+    (r) => r && r.nationalNumber === nationalNumber && r.date === date
+  );
+  if (existing) return existing;
+  const fresh = {
+    nationalNumber,
+    name: name || '',
+    school: school || '',
+    date,
+    loginCount: 0,
+    pageViews: 0,
+    lastSeenAt: null,
+  };
+  visitsData.loginHistory.push(fresh);
+  return fresh;
+}
+
+/**
+ * Find-or-create the day-record for `(nationalNumber, date)` and
+ * increment `loginCount`. Updates `lastSeenAt` to `at` (default: now).
+ * Returns the day-record. Ticket #14.
+ */
+function incrementLoginCount(visitsData, partial) {
+  const { nationalNumber, name, school, date, at } = partial || {};
+  const record = findOrCreateDayRecord(visitsData, { nationalNumber, name, school, date });
+  record.loginCount += 1;
+  record.lastSeenAt = at || new Date().toISOString();
+  return record;
+}
+
+/**
+ * Find-or-create the day-record for `(nationalNumber, date)` and
+ * increment `pageViews`. Updates `lastSeenAt` to `at` (default: now).
+ * Returns the day-record. Ticket #14.
+ */
+function incrementPageViews(visitsData, partial) {
+  const { nationalNumber, name, school, date, at } = partial || {};
+  const record = findOrCreateDayRecord(visitsData, { nationalNumber, name, school, date });
+  record.pageViews += 1;
+  record.lastSeenAt = at || new Date().toISOString();
+  return record;
+}
 
 function defaultStore() {
   const baseDir = path.join(__dirname, '..', 'data');
@@ -82,4 +166,11 @@ function createVisitsAccess({ store: providedStore, storeFactory = defaultStore,
   };
 }
 
-module.exports = { createVisitsAccess, DEFAULT_VISITS_DATA };
+module.exports = {
+  createVisitsAccess,
+  DEFAULT_VISITS_DATA,
+  findOrCreateDayRecord,
+  incrementLoginCount,
+  incrementPageViews,
+  asiaAmmanDate,
+};

@@ -1,5 +1,5 @@
 /**
- * Auth router (ticket #10).
+ * Auth router (ticket #10, ticket #14).
  *
  * Five routes lifted from server/index.js:
  *   POST /api/login/guest           — guest login, creates user on first contact
@@ -13,15 +13,22 @@
  * the middleware at mount time; this router declares the handlers
  * without inline auth checks.
  *
+ * Ticket #14: `/api/login` and `/api/login/guest` write the per-day
+ * aggregate via `incrementLoginCount` from `server/storage/visitsAccess`.
+ * The legacy per-event push + `VISIT_HISTORY_CAP` are dropped. The
+ * legacy `loginEvent` push has been replaced with `findOrCreateDayRecord`
+ * + `loginCount += 1` semantics. `totalVisits` is preserved.
  */
 const { requireAdmin } = require('../middleware/auth');
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { createUsersAccess } = require('../storage/usersAccess');
-const { createVisitsAccess } = require('../storage/visitsAccess');
-
-const VISIT_HISTORY_CAP = 10000;
+const {
+  createVisitsAccess,
+  incrementLoginCount,
+  asiaAmmanDate,
+} = require('../storage/visitsAccess');
 
 function generateToken(prefix) {
   return `${prefix}${crypto.randomBytes(24).toString('hex')}`;
@@ -69,23 +76,17 @@ function createAuthRouter(store) {
         return res.status(500).json({ success: false, error: 'Failed to save guest user' });
       }
 
-      // Track guest login in visit counters/history so admin analytics include guests.
+      // Track guest login in the per-day aggregate (ADR-0004, ticket #14).
       const visitsData = await visitsAccess.readVisitsData();
       visitsData.totalVisits += 1;
-
-      const loginEvent = {
+      const now = new Date();
+      incrementLoginCount(visitsData, {
         nationalNumber: guestUser.nationalNumber,
         name: guestUser.name,
         school: guestUser.school || '',
-        role: guestUser.role,
-        timestamp: new Date().toISOString(),
-      };
-
-      if (!visitsData.loginHistory) visitsData.loginHistory = [];
-      visitsData.loginHistory.push(loginEvent);
-      if (visitsData.loginHistory.length > VISIT_HISTORY_CAP) {
-        visitsData.loginHistory = visitsData.loginHistory.slice(-VISIT_HISTORY_CAP);
-      }
+        date: asiaAmmanDate(now),
+        at: now.toISOString(),
+      });
       await visitsAccess.writeVisitsData(visitsData);
 
       return res.json({
@@ -120,23 +121,17 @@ function createAuthRouter(store) {
         return res.status(401).json({ success: false, error: 'Invalid national number' });
       }
 
-      // Track the visit with detailed information.
+      // Track the login in the per-day aggregate (ADR-0004, ticket #14).
       const visitsData = await visitsAccess.readVisitsData();
       visitsData.totalVisits += 1;
-
-      const loginEvent = {
+      const now = new Date();
+      incrementLoginCount(visitsData, {
         nationalNumber: user.nationalNumber,
         name: user.name,
         school: user.school || '',
-        role: user.role,
-        timestamp: new Date().toISOString(),
-      };
-
-      if (!visitsData.loginHistory) visitsData.loginHistory = [];
-      visitsData.loginHistory.push(loginEvent);
-      if (visitsData.loginHistory.length > VISIT_HISTORY_CAP) {
-        visitsData.loginHistory = visitsData.loginHistory.slice(-VISIT_HISTORY_CAP);
-      }
+        date: asiaAmmanDate(now),
+        at: now.toISOString(),
+      });
       await visitsAccess.writeVisitsData(visitsData);
 
       return res.json({

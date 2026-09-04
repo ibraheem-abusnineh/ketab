@@ -199,6 +199,10 @@ function createNotificationsRouter(store) {
         });
       }
 
+      // Reset shape (ticket #14): the empty `loginHistory` is the empty
+      // day-record list per ADR-0004 — semantically unchanged from the
+      // legacy shape, but the array elements are now per-day aggregates
+      // `{ nationalNumber, name, school, date, loginCount, pageViews, lastSeenAt }`.
       const resetData = { totalVisits: 0, loginHistory: [] };
       if (await visitsAccess.writeVisitsData(resetData)) {
         console.log('Visit counter and login history reset successfully');

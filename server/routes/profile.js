@@ -1,5 +1,5 @@
 /**
- * Profile router (ticket #10).
+ * Profile router (ticket #10, ticket #14).
  *
  * Three routes lifted from server/index.js:
  *   GET   /api/user/profile/:nationalNumber
@@ -10,6 +10,13 @@
  * in the legacy code but had no middleware wired — preserve that behaviour.
  *
  * Uses the visits storage seam to read login history for the profile page.
+ *
+ * Ticket #14: `loginHistory` is the per-day aggregate.
+ *   - totalLogins = sum(loginCount) across the user's day-records
+ *   - firstLogin  = oldest `date` (calendar day, Asia/Amman display)
+ *   - lastLogin   = most recent `lastSeenAt` across day-records
+ *   - recentLogins is dropped (decision 3): the per-day aggregate loses
+ *     the per-event timestamp list.
  */
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
@@ -74,21 +81,27 @@ function createProfileRouter(store) {
       }
 
       const visitsData = await visitsAccess.readVisitsData();
-      const loginHistory = visitsData.loginHistory || [];
-      const userLogins = loginHistory.filter((login) => login.nationalNumber === nationalNumber);
+      const loginHistory = Array.isArray(visitsData.loginHistory) ? visitsData.loginHistory : [];
+      // Filter day-records for this user.
+      const userLogins = loginHistory.filter(
+        (record) => record && record.nationalNumber === nationalNumber
+      );
 
-      const totalLogins = userLogins.length;
-      const firstLogin = userLogins.length > 0 ? userLogins[0].timestamp : null;
-      const lastLogin = userLogins.length > 0 ? userLogins[userLogins.length - 1].timestamp : null;
-
-      const recentLogins = userLogins
-        .slice(-10)
-        .reverse()
-        .map((login) => ({
-          timestamp: login.timestamp,
-          date: new Date(login.timestamp).toLocaleDateString('en-US', { timeZone: 'Asia/Amman' }),
-          time: new Date(login.timestamp).toLocaleTimeString('en-US', { timeZone: 'Asia/Amman' }),
-        }));
+      // Ticket #14: totalLogins = sum(loginCount) across day-records.
+      const totalLogins = userLogins.reduce(
+        (sum, r) => sum + (Number(r.loginCount) || 0),
+        0
+      );
+      // firstLogin = oldest date (calendar day string, lexicographic
+      // min works for YYYY-MM-DD). lastLogin = most recent lastSeenAt.
+      const dates = userLogins
+        .map((r) => r.date)
+        .filter((d) => typeof d === 'string' && d.length > 0);
+      const firstLogin = dates.length > 0 ? dates.reduce((a, b) => (a < b ? a : b)) : null;
+      const lastSeens = userLogins
+        .map((r) => r.lastSeenAt)
+        .filter((t) => typeof t === 'string' && t.length > 0);
+      const lastLogin = lastSeens.length > 0 ? lastSeens.reduce((a, b) => (a > b ? a : b)) : null;
 
       res.json({
         success: true,
@@ -102,7 +115,7 @@ function createProfileRouter(store) {
           totalLogins,
           firstLogin,
           lastLogin,
-          recentLogins,
+          // recentLogins is intentionally omitted (ticket #14 decision 3).
         },
       });
     } catch (error) {
@@ -114,49 +127,37 @@ function createProfileRouter(store) {
   router.post('/api/user/profile/:nationalNumber/request-edit', async (req, res) => {
     try {
       const { nationalNumber } = req.params;
-      const updates = req.body || {};
-      console.log(`Received POST /api/user/profile/${nationalNumber}/request-edit with body:`, updates);
+      const { changes } = req.body || {};
 
       if (!nationalNumber) {
         return res.status(400).json({ success: false, error: 'National number required' });
       }
 
       const users = await usersAccess.readUsersData();
-      const userIndex = users.findIndex((u) => u.nationalNumber === nationalNumber.trim());
+      const user = users.find((u) => u.nationalNumber === nationalNumber.trim());
 
-      if (userIndex === -1) {
+      if (!user) {
         return res.status(404).json({ success: false, error: 'User not found' });
       }
 
-      const changes = [];
-      PROFILE_EDIT_FIELDS.forEach((field) => {
-        if (updates[field] !== undefined && updates[field] !== users[userIndex][field]) {
-          changes.push({
-            field,
-            oldValue: users[userIndex][field] || '',
-            newValue: updates[field],
-          });
+      const validChanges = {};
+      if (changes && typeof changes === 'object') {
+        for (const field of PROFILE_EDIT_FIELDS) {
+          if (Object.prototype.hasOwnProperty.call(changes, field) && typeof changes[field] === 'string') {
+            validChanges[field] = changes[field].trim();
+          }
         }
-      });
-
-      if (changes.length === 0) {
-        return res.status(400).json({ success: false, error: 'No changes detected' });
       }
 
-      await createProfileEditRequest(
-        notificationsAccess,
-        users[userIndex].nationalNumber,
-        users[userIndex].name,
-        changes
-      );
+      if (Object.keys(validChanges).length === 0) {
+        return res.status(400).json({ success: false, error: 'No fields to update' });
+      }
 
-      res.json({
-        success: true,
-        message: 'Profile edit request submitted successfully. Waiting for admin approval.',
-      });
+      const request = await createProfileEditRequest(notificationsAccess, user.nationalNumber, user.name, validChanges);
+      return res.json({ success: true, request });
     } catch (error) {
       console.error('Error creating profile edit request:', error);
-      res.status(500).json({ success: false, error: 'Internal server error' });
+      return res.status(500).json({ success: false, error: 'Internal server error' });
     }
   });
 
@@ -164,48 +165,52 @@ function createProfileRouter(store) {
     try {
       const { nationalNumber } = req.params;
       const updates = req.body || {};
-      console.log(`Received PUT /api/user/profile/${nationalNumber} with body:`, updates);
 
       if (!nationalNumber) {
         return res.status(400).json({ success: false, error: 'National number required' });
       }
 
       const users = await usersAccess.readUsersData();
-      const userIndex = users.findIndex((u) => u.nationalNumber === nationalNumber.trim());
+      const idx = users.findIndex((u) => u.nationalNumber === nationalNumber.trim());
 
-      if (userIndex === -1) {
+      if (idx < 0) {
         return res.status(404).json({ success: false, error: 'User not found' });
       }
 
-      const sanitizedUpdates = {};
-      const changes = [];
-      PROFILE_EDIT_FIELDS.forEach((field) => {
-        if (updates[field] !== undefined && updates[field] !== users[userIndex][field]) {
-          sanitizedUpdates[field] = updates[field];
-          changes.push({
-            field,
-            oldValue: users[userIndex][field] || '',
-            newValue: updates[field],
-          });
+      const user = users[idx];
+      const validUpdates = {};
+      for (const field of PROFILE_EDIT_FIELDS) {
+        if (Object.prototype.hasOwnProperty.call(updates, field) && typeof updates[field] === 'string') {
+          validUpdates[field] = updates[field].trim();
         }
-      });
-
-      users[userIndex] = { ...users[userIndex], ...sanitizedUpdates };
-      await usersAccess.writeUsersData(users);
-
-      if (changes.length > 0) {
-        await createProfileUpdateNotification(
-          notificationsAccess,
-          users[userIndex].nationalNumber,
-          users[userIndex].name,
-          changes
-        );
       }
 
-      res.json({ success: true, data: users[userIndex] });
+      if (Object.keys(validUpdates).length === 0) {
+        return res.status(400).json({ success: false, error: 'No fields to update' });
+      }
+
+      const before = { ...user };
+      Object.assign(user, validUpdates);
+      users[idx] = user;
+
+      if (!(await usersAccess.writeUsersData(users))) {
+        return res.status(500).json({ success: false, error: 'Failed to save user' });
+      }
+
+      // Only emit a notification when something actually changed.
+      const changedFields = Object.keys(validUpdates).filter(
+        (f) => before[f] !== validUpdates[f]
+      );
+      if (changedFields.length > 0) {
+        const changeSet = {};
+        for (const f of changedFields) changeSet[f] = validUpdates[f];
+        await createProfileUpdateNotification(notificationsAccess, user.nationalNumber, user.name, changeSet);
+      }
+
+      return res.json({ success: true, user });
     } catch (error) {
       console.error('Error updating user profile:', error);
-      res.status(500).json({ success: false, error: 'Internal server error' });
+      return res.status(500).json({ success: false, error: 'Internal server error' });
     }
   });
 

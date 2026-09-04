@@ -13,7 +13,8 @@
  *
  * Endpoints:
  *   GET  /api/dev/users          — raw users data
- *   GET  /api/dev/visits         — raw visits data (loginHistory included)
+ *   GET  /api/dev/visits         — raw visits data (loginHistory is now the
+ *                                   per-day aggregate per ADR-0004 / ticket #14)
  *   GET  /api/dev/notifications  — raw notifications data
  *   GET  /api/dev/courses        — raw courses data
  *   GET  /api/dev/admin          — raw admin data
