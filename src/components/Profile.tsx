@@ -17,11 +17,6 @@ interface ProfileData {
   totalLogins: number;
   firstLogin: string | null;
   lastLogin: string | null;
-  recentLogins: Array<{
-    timestamp: string;
-    date: string;
-    time: string;
-  }>;
 }
 
 interface EditableFields {
@@ -61,7 +56,6 @@ const Profile: React.FC = () => {
         totalLogins: 1,
         firstLogin: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
-        recentLogins: []
       });
       setLoading(false);
     } else {
@@ -381,25 +375,12 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            {/* Recent Activity Card */}
+            {/* Recent Activity Card - per-event history not preserved (ADR-0004 / #14) */}
             <div className="profile-card recent-activity">
               <h2 className="card-title">النشاط الأخير</h2>
-              {profileData.recentLogins.length > 0 ? (
-                <div className="activity-list">
-                  {profileData.recentLogins.map((login, index) => (
-                    <div key={index} className="activity-item">
-                      <div className="activity-time">
-                        {login.date} الساعة {login.time}
-                      </div>
-                      <div className="activity-status">دخول</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="no-activity">
-                  <p>لا يوجد نشاط حديث</p>
-                </div>
-              )}
+              <div className="no-activity">
+                <p>سجل الدخول التفصيلي غير محفوظ في هذه الصفحة. راجع إجمالي الدخول وأول وآخر دخول في الأعلى.</p>
+              </div>
             </div>
           </div>
         )}
