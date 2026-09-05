@@ -4,6 +4,7 @@ import { getAuthState, AUTH_CHANGED_EVENT } from './utils/auth';
 import Cover from './components/Cover';
 import LettersIndex from './components/LettersIndex';
 import WorksheetRouter from './components/WorksheetRouter';
+import NumbersIndex from './components/NumbersIndex';
 import Profile from './components/Profile';
 import FeedbackButton from './components/FeedbackButton';
 import AdminLogin from './components/AdminLogin';
@@ -40,6 +41,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthed, adminSession, handleAdm
         <Route path="/" element={<Cover />} />
         <Route path="/letters" element={isAuthed ? <LettersIndex /> : <Navigate to="/" replace />} />
         <Route path="/worksheet/:letter" element={isAuthed ? <WorksheetRouter /> : <Navigate to="/" replace />} />
+        <Route path="/numbers" element={isAuthed ? <NumbersIndex /> : <Navigate to="/" replace />} />
         <Route path="/profile" element={isAuthed ? <Profile /> : <Navigate to="/" replace />} />
         <Route path="/admin" element={<AdminLogin onLoginSuccess={handleAdminLogin} />} />
         <Route path="/admin/dashboard" element={

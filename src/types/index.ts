@@ -62,7 +62,22 @@ export type PageType =
   | 'letter-recognition'
   | 'syllable-writing'
   | 'vowel-writing'
-  | 'matching';
+  | 'matching'
+  | 'number-introduction'
+  | 'number-tracing'
+  | 'number-neighbors'
+  | 'missing-sequence'
+  | 'build-number'
+  | 'odd-one-out'
+  | 'compare-order'
+  | 'number-line-jump';
+
+export interface NumberData {
+  value: number;
+  word: string;
+  videoUrl?: string;
+  signImageUrl?: string;
+}
 
 export interface VideoPopupProps {
   isOpen: boolean;

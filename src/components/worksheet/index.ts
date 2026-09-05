@@ -8,3 +8,12 @@ export { default as MatchingExercisePage } from './MatchingExercisePage';
 export { default as TracingExercisePage } from './TracingExercisePage';
 export { default as SpyExercisePage } from './SpyExercisePage';
 
+export { default as NumberIntroductionPage } from './NumberIntroductionPage';
+export { default as NumberTracingPage } from './NumberTracingPage';
+export { default as NumberNeighborsPage } from './NumberNeighborsPage';
+export { default as MissingSequencePage } from './MissingSequencePage';
+export { default as BuildNumberPage } from './BuildNumberPage';
+export { default as OddOneOutPage } from './OddOneOutPage';
+export { default as CompareOrderPage } from './CompareOrderPage';
+export { default as NumberLineJumpPage } from './NumberLineJumpPage';
+

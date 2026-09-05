@@ -1,0 +1,94 @@
+.odd-one-out {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+}
+
+.odd-one-out-banner {
+  background: linear-gradient(135deg, #f9d4d8, #E8697A);
+  border: 3px solid #84333c;
+  border-radius: 14px;
+  padding: 14px 22px;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #2B2440;
+  font-family: 'Cairo', sans-serif;
+}
+
+.odd-one-out-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 76px);
+  gap: 12px;
+  justify-items: center;
+}
+
+.odd-one-out-card {
+  width: 76px;
+  height: 76px;
+  border-radius: 14px;
+  background: #FFFFFF;
+  border: 3px solid #DCD5EA;
+  color: #2B2440;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: 1.8em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
+}
+
+.odd-one-out-card.mirrored {
+  transform: scaleX(-1);
+}
+
+.odd-one-out-card.correct {
+  background: #6FBE8C;
+  border-color: #4A9C68;
+  color: #FFFFFF;
+  animation: odd-one-out-bounce 0.4s ease-out;
+}
+
+.odd-one-out-card.wrong {
+  background: #E8697A;
+  border-color: #C94A5C;
+  color: #FFFFFF;
+  animation: odd-one-out-shake 0.4s ease-in-out;
+}
+
+.odd-one-out-card.disabled {
+  cursor: not-allowed;
+}
+
+.odd-one-out-card:not(.disabled):not(.correct):hover {
+  transform: scale(1.05);
+}
+
+.odd-one-out-card.mirrored:not(.disabled):not(.correct):hover {
+  transform: scaleX(-1) scale(1.05);
+}
+
+.odd-one-out-status {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  color: #2B2440;
+}
+
+@keyframes odd-one-out-bounce {
+  0% { transform: scale(0.3); opacity: 0; }
+  55% { transform: scale(1.12); }
+  75% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@keyframes odd-one-out-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}

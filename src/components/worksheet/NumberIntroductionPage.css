@@ -1,0 +1,141 @@
+.number-introduction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 28px 24px;
+}
+
+.number-introduction-banner {
+  background: linear-gradient(135deg, #ffd0db, #f4a6bb);
+  border: 3px solid #84333c;
+  border-radius: 14px;
+  padding: 14px 22px;
+  font-size: 1.6em;
+  font-weight: 700;
+  color: #2B2440;
+  text-align: center;
+  font-family: 'Cairo', sans-serif;
+}
+
+.number-introduction-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.number-introduction-numeral {
+  font-family: 'Cairo', sans-serif;
+  font-size: 6em;
+  font-weight: 800;
+  color: #2B2440;
+  line-height: 1;
+}
+
+.number-introduction-word {
+  font-family: 'Cairo', sans-serif;
+  font-size: 1.75em;
+  font-weight: 700;
+  color: #2B2440;
+  text-align: center;
+}
+
+.number-introduction-dots {
+  background: #FDF0F4;
+  border: 2px solid #F4A6BB;
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+  max-width: 260px;
+}
+
+.number-introduction-dot-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.number-introduction-dot {
+  font-size: 1.1em;
+  display: inline-block;
+  animation: number-dot-pop 0.35s ease-out both;
+}
+
+@keyframes number-dot-pop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.number-introduction-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.number-introduction-slot {
+  flex: 1 1 280px;
+  max-width: 420px;
+  background: #EAF6FB;
+  border: 2px dashed #3A8CB5;
+  border-radius: 14px;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #3A8CB5;
+  opacity: 0.85;
+  text-align: center;
+  padding: 12px;
+}
+
+.number-introduction-slot.has-asset {
+  background: #FFFFFF;
+  border-style: solid;
+  padding: 0;
+  overflow: hidden;
+}
+
+.number-introduction-slot.has-asset img,
+.number-introduction-slot.has-asset video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.number-introduction-slot-icon {
+  font-size: 2em;
+}
+
+.number-introduction-slot-label {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: 0.9em;
+}
+
+.number-sign-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.number-sign-placeholder-icon {
+  font-size: 2em;
+}
+
+.number-sign-placeholder-label {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: 0.85em;
+}
