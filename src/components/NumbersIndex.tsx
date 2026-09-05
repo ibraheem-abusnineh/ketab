@@ -17,7 +17,7 @@ const NumbersIndex: React.FC = () => {
       style={{ direction: 'rtl' }}
     >
       <div className="flex justify-between items-center mb-5">
-        <div className="hidden lg:flex absolute top-[25px] left-[25px] z-[100] bg-white rounded-md border-2 border-[#84333c] w-[150px] h-[150px] lg:w-[200px] lg:h-[200px] p-[10px] items-center justify-center">
+        <div className="hidden lg:flex absolute top-[25px] right-[25px] z-[100] bg-white rounded-md border-2 border-[#84333c] w-[150px] h-[150px] lg:w-[200px] lg:h-[200px] p-[10px] items-center justify-center">
           <LogoWithImage
             logoPath="qra-logo.svg"
             className="w-full h-auto block"
@@ -35,7 +35,7 @@ const NumbersIndex: React.FC = () => {
         الأعداد من ١ إلى ١٠٠
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(64px,1fr))] lg:grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-[10px] justify-items-center">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(64px,1fr))] lg:grid-cols-[repeat(auto-fit,minmax(80px,1fr))] lg:pr-[240px] gap-[10px] justify-items-center">
         {numbersOrder.map((n) => (
           <button
             type="button"
