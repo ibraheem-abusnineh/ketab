@@ -157,7 +157,54 @@ function createUsersRouter(store) {
       console.error('Error updating user:', error);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
-   });
+  });
+
+  // PUT /api/users/:nationalNumber/nationalNumber
+  //
+  // Change a user's nationalNumber (login id). Body: { newNationalNumber }.
+  // Returns 404 if the user does not exist, 400 if the new value is
+  // missing/non-string, 409 if the new number is already taken, 200
+  // on success with the updated user payload.
+  router.put('/api/users/:nationalNumber/nationalNumber', requireAdmin, async (req, res, next) => {
+    try {
+      const { nationalNumber } = req.params;
+      const { newNationalNumber } = req.body || {};
+
+      if (!nationalNumber || !nationalNumber.trim()) {
+        return res.status(400).json({ success: false, error: 'National number required' });
+      }
+
+      if (typeof newNationalNumber !== 'string' || !newNationalNumber.trim()) {
+        return res.status(400).json({ success: false, error: 'New national number is required' });
+      }
+
+      const trimmedNew = newNationalNumber.trim();
+
+      const users = await usersAccess.readUsersData();
+      const userIndex = users.findIndex((u) => u.nationalNumber === nationalNumber.trim());
+
+      if (userIndex === -1) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+
+      if (users.some((u) => u.nationalNumber === trimmedNew)) {
+        return res.status(409).json({ success: false, error: 'National number already in use' });
+      }
+
+      const oldNumber = users[userIndex].nationalNumber;
+      users[userIndex] = { ...users[userIndex], nationalNumber: trimmedNew };
+
+      await usersAccess.writeUsersData(users, strictFromQuery(req));
+
+      console.log(`[users] Changed nationalNumber for user ${oldNumber} -> ${trimmedNew}`);
+
+      res.json({ success: true, user: users[userIndex] });
+    } catch (error) {
+      if (error instanceof StrictRemoteWriteError) return next(error);
+      console.error('Error changing user national number:', error);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  });
 
   // DELETE /api/users/:nationalNumber
   router.delete('/api/users/:nationalNumber', requireAdmin, async (req, res, next) => {

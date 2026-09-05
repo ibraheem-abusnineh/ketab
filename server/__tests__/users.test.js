@@ -124,6 +124,63 @@ describe('users router', () => {
     });
   });
 
+  describe('PUT /api/users/:nationalNumber/nationalNumber', () => {
+    test('changes the user\'s national number and the new id resolves to the same user', async () => {
+      const store = makeStubStore({
+        users: [{ nationalNumber: 'N1', name: 'Ahmed', role: 'parent', school: 'Alpha' }],
+        notifications: [],
+      });
+      ctx = await startApp(mount(store));
+      const res = await asAdmin('PUT', ctx, '/api/users/N1/nationalNumber', { newNationalNumber: 'N1-NEW' });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.user.nationalNumber).toBe('N1-NEW');
+      expect(res.body.user.name).toBe('Ahmed');
+
+      const users = await store.users.read();
+      expect(users[0].nationalNumber).toBe('N1-NEW');
+      expect(users[0].name).toBe('Ahmed');
+      // Confirm the new id resolves to the same user via the list endpoint.
+      const lookup = await asAdmin('GET', ctx, '/api/users', undefined);
+      expect(lookup.status).toBe(200);
+      expect(lookup.body.users.find((u) => u.nationalNumber === 'N1-NEW')).toBeTruthy();
+      expect(lookup.body.users.find((u) => u.nationalNumber === 'N1')).toBeUndefined();
+    });
+
+    test('returns 409 when the new national number is already in use', async () => {
+      const store = makeStubStore({
+        users: [
+          { nationalNumber: 'N1', name: 'A', role: 'parent' },
+          { nationalNumber: 'N2', name: 'B', role: 'parent' },
+        ],
+        notifications: [],
+      });
+      ctx = await startApp(mount(store));
+      const res = await asAdmin('PUT', ctx, '/api/users/N1/nationalNumber', { newNationalNumber: 'N2' });
+      expect(res.status).toBe(409);
+      const users = await store.users.read();
+      expect(users.find((u) => u.nationalNumber === 'N1')).toBeTruthy();
+      expect(users.find((u) => u.nationalNumber === 'N2')).toBeTruthy();
+    });
+
+    test('returns 400 when the new national number is missing', async () => {
+      const store = makeStubStore({
+        users: [{ nationalNumber: 'N1', name: 'A', role: 'parent' }],
+        notifications: [],
+      });
+      ctx = await startApp(mount(store));
+      const res = await asAdmin('PUT', ctx, '/api/users/N1/nationalNumber', {});
+      expect(res.status).toBe(400);
+    });
+
+    test('returns 404 when the user does not exist', async () => {
+      const store = makeStubStore({ users: [], notifications: [] });
+      ctx = await startApp(mount(store));
+      const res = await asAdmin('PUT', ctx, '/api/users/MISSING/nationalNumber', { newNationalNumber: 'NEW' });
+      expect(res.status).toBe(404);
+    });
+  });
+
   describe('DELETE /api/users/:nationalNumber', () => {
     test('removes the user', async () => {
       const store = makeStubStore({

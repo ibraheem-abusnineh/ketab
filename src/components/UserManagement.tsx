@@ -62,6 +62,11 @@ const UserManagement: React.FC = (): React.ReactElement => {
   // Delete confirmation
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
+  // Change national number confirmation
+  const [userToChangeNumber, setUserToChangeNumber] = useState<User | null>(null);
+  const [newNationalNumberInput, setNewNationalNumberInput] = useState('');
+  const [changeNumberError, setChangeNumberError] = useState('');
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -196,6 +201,48 @@ const UserManagement: React.FC = (): React.ReactElement => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChangeNationalNumber = async () => {
+    if (!userToChangeNumber) return;
+    const trimmed = newNationalNumberInput.trim();
+    if (!trimmed) {
+      setChangeNumberError('New national number is required');
+      return;
+    }
+    if (trimmed === userToChangeNumber.nationalNumber) {
+      setChangeNumberError('New number must be different from the current one');
+      return;
+    }
+
+    setLoading(true);
+    setChangeNumberError('');
+    try {
+      const response = await apiFetch(`/api/users/${userToChangeNumber.nationalNumber}/nationalNumber`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newNationalNumber: trimmed }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUserToChangeNumber(null);
+        setNewNationalNumberInput('');
+        setError('');
+        await fetchUsers();
+      } else {
+        setChangeNumberError(data.error || 'Failed to change national number');
+      }
+    } catch (error: any) {
+      setChangeNumberError(error.message || 'Network error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openChangeNumberModal = (user: User) => {
+    setUserToChangeNumber(user);
+    setNewNationalNumberInput('');
+    setChangeNumberError('');
   };
 
   const handleImportCSV = async (e: React.FormEvent) => {
@@ -440,6 +487,12 @@ const UserManagement: React.FC = (): React.ReactElement => {
                         Edit
                       </button>
                       <button
+                        onClick={() => openChangeNumberModal(user)}
+                        className="btn btn-secondary btn-sm"
+                      >
+                        Change Number
+                      </button>
+                      <button
                         onClick={() => setUserToDelete(user)}
                         className="btn btn-danger btn-sm"
                       >
@@ -638,7 +691,52 @@ const UserManagement: React.FC = (): React.ReactElement => {
           </div>
         </div>
       )}
-    </div>
+
+      {/* Change National Number Confirmation Modal */}
+      {userToChangeNumber && (
+        <div className="modal-overlay" onClick={() => setUserToChangeNumber(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Change National Number</h3>
+            <p>
+              Update the login national number for <strong>{userToChangeNumber.name}</strong>{' '}
+              (currently <code>{userToChangeNumber.nationalNumber}</code>).
+            </p>
+            <p className="warning">
+              Changing a national number changes the user's login. This action cannot be undone.
+            </p>
+            <div className="form-group">
+              <label htmlFor="new-national-number">New National Number</label>
+              <input
+                id="new-national-number"
+                type="text"
+                value={newNationalNumberInput}
+                onChange={(e) => setNewNationalNumberInput(e.target.value)}
+                className="edit-input"
+                autoFocus
+              />
+            </div>
+            {changeNumberError && (
+              <div className="modal-error" role="alert">{changeNumberError}</div>
+            )}
+            <div className="form-actions">
+              <button
+                onClick={() => setUserToChangeNumber(null)}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleChangeNationalNumber}
+                className="btn btn-primary"
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : 'Confirm Change'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+     </div>
   );
 };
 
