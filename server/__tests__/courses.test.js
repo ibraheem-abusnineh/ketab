@@ -38,6 +38,7 @@ describe('courses router', () => {
         courses: {
           arabic: { locked: false, label: 'Arabic Language' },
           english: { locked: true, label: 'English Language' },
+          math: { locked: false, label: 'Math' },
         },
       });
     });
@@ -74,6 +75,24 @@ describe('courses router', () => {
       // Verify it was written to the store.
       const written = await store.courses.read();
       expect(written.arabic).toEqual({ locked: true, label: 'Arabic (locked)' });
+    });
+
+    test('updates the math course setting and persists it', async () => {
+      const store = makeStubStore();
+      ctx = await startApp(mount(store));
+      const res = await requestWithHeaders(
+        ctx.baseUrl,
+        'PUT',
+        '/api/admin/courses/math',
+        { locked: true },
+        { authorization: ADMIN_TOKEN }
+      );
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.course).toEqual({ locked: true, label: 'Math' });
+      // Verify it was written to the store.
+      const written = await store.courses.read();
+      expect(written.math).toEqual({ locked: true, label: 'Math' });
     });
 
     test('normalises the courseId to lowercase', async () => {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type CourseType = 'arabic' | 'english';
+export type CourseType = 'arabic' | 'english' | 'math';
 
 // Get the current course from localStorage or default to 'arabic'
 export const getCourseState = (): CourseType => {

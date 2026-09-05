@@ -20,7 +20,8 @@ interface CourseAvailabilityContextValue {
 
 const DEFAULT_COURSES: CourseMap = {
   arabic: { locked: false, label: 'Arabic Language' },
-  english: { locked: true, label: 'English Language' }
+  english: { locked: true, label: 'English Language' },
+  math: { locked: false, label: 'Math' }
 };
 
 const CourseAvailabilityContext = createContext<CourseAvailabilityContextValue | undefined>(undefined);

@@ -5,12 +5,14 @@ import { CourseType } from '../utils/courseState';
 
 const DISPLAY_NAMES: Record<CourseType, string> = {
   arabic: 'Arabic Language',
-  english: 'English Language'
+  english: 'English Language',
+  math: 'Math'
 };
 
 const DESCRIPTIONS: Record<CourseType, string> = {
   arabic: 'Available to all users.',
-  english: 'Unlock to allow learners to access the English sign language materials.'
+  english: 'Unlock to allow learners to access the English sign language materials.',
+  math: 'Unlock to allow learners to access the numbers (math) worksheets.'
 };
 
 const CourseManagement: React.FC = () => {
