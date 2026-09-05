@@ -1,7 +1,7 @@
 import { NumberData } from '../types';
 import { arabicWord } from '../utils/arabicWord';
 
-export const numbersOrder: number[] = Array.from({ length: 100 }, (_, i) => i + 1);
+export const numbersOrder: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 /**
  * Every entry is generated from arabicWord(n); no hand-authored Arabic names.

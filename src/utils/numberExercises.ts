@@ -38,8 +38,13 @@ export interface MissingSequenceResult {
 /**
  * Numbers that come before `value` in ascending order.
  * Returns 1 or 2 entries (value-2 and value-1), filtered to >= 0.
+ *
+ * For value=0 there are no smaller non-negative integers, so we return [].
+ * The Neighbors page treats an empty target list as auto-complete (no slots
+ * to fill), which is the right behavior: there's nothing to learn "before 0".
  */
 export function getNeighborTargets(value: number): number[] {
+  if (value <= 0) return [];
   return [value - 2, value - 1].filter((v) => v >= 0);
 }
 
@@ -48,6 +53,10 @@ export function getNeighborTargets(value: number): number[] {
  * blanked out. All shown numbers and all choice distractors are in
  * [0, value]. `seed` is used to make the missing slot deterministic in
  * tests (any number works; in components pass `value`).
+ *
+ * For value=0 we get a trivial puzzle (sequence [null], missing 0, choices
+ * [0]) — the child clicks the only available tile. The page handles this
+ * gracefully: a single blank cell with one choice, completes on tap.
  */
 export function getMissingSequence(seed: number, value: number): MissingSequenceResult {
   const length = Math.min(5, value + 1);
@@ -74,6 +83,10 @@ export function getMissingSequence(seed: number, value: number): MissingSequence
  * may exceed `value`. The set always includes the target value as a
  * correct, non-mirrored card plus a mirrored version of the target as
  * a decoy.
+ *
+ * For value=0 there is no reversed variant ("0" reversed is "0") and the
+ * mirrored decoy is also display "0" — it is distinguished from the
+ * correct cards by the `mirror: true` flag and the CSS scaleX(-1) flip.
  */
 export function getOddOneOutCards(value: number, _seed?: number): OddOneOutCard[] {
   const list: OddOneOutCard[] = [];
@@ -96,6 +109,12 @@ export function getOddOneOutCards(value: number, _seed?: number): OddOneOutCard[
 /**
  * Three tiles for the ascending-order drag exercise. `value` is always
  * the largest tile; the other two are drawn from numbers < value.
+ *
+ * For value=0 and value=1 there are no numbers < value, so all three
+ * tiles fall back to the target value itself. The page completes when
+ * the user fills the three slots (ascending-order check passes because
+ * all tiles are equal). This is the documented degenerate-but-complete
+ * behavior — for value=0 the user trivially fills 3 slots of "0".
  */
 export function getCompareOrderTiles(value: number, seed?: number): CompareOrderTile[] {
   const below: number[] = [];
@@ -117,6 +136,11 @@ export function getCompareOrderTiles(value: number, seed?: number): CompareOrder
  * line runs from `start` (clamped to 0) to `start + targetIndex`,
  * with `overshootBuffer` extra ticks past the target so the child can
  * see they overshot.
+ *
+ * For value=0 we get {start:0, targetIndex:0, overshootBuffer:5} — the
+ * token starts on the target, so the page auto-completes on mount. This
+ * is acceptable: a child learning "0" sees the line correctly and the
+ * step marks done without requiring any hops.
  */
 export function getNumberLineConfig(value: number): NumberLineConfig {
   const start = Math.max(0, value - 10);

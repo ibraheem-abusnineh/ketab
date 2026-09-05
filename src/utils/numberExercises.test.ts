@@ -23,6 +23,10 @@ describe('getNeighborTargets', () => {
     expect(getNeighborTargets(11)).toEqual([9, 10]);
   });
 
+  test('returns empty array for value=0 (no valid neighbors)', () => {
+    expect(getNeighborTargets(0)).toEqual([]);
+  });
+
   test('every neighbor is < value and >= 0', () => {
     for (let v = 2; v <= 50; v++) {
       const ns = getNeighborTargets(v);
@@ -78,6 +82,13 @@ describe('getMissingSequence', () => {
     const nums = out.sequence.filter((n): n is number => n !== null);
     expect(new Set(nums).size).toBe(nums.length);
   });
+
+  test('for value=0 returns a trivial single-blank puzzle (missing=0, choices=[0])', () => {
+    const out = getMissingSequence(0, 0);
+    expect(out.sequence).toEqual([null]);
+    expect(out.missing).toBe(0);
+    expect(out.choices).toEqual([0]);
+  });
 });
 
 describe('getOddOneOutCards', () => {
@@ -109,6 +120,19 @@ describe('getOddOneOutCards', () => {
     const cards = getOddOneOutCards(5, 99);
     const decoyDisplays = cards.filter((c) => !c.correct).map((c) => c.display);
     expect(decoyDisplays.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('for value=0: 3 correct "0" cards, no reversed variant, mirrored decoy present', () => {
+    const cards = getOddOneOutCards(0, 99);
+    const correctCards = cards.filter((c) => c.correct && !c.mirror);
+    expect(correctCards.length).toBe(3);
+    correctCards.forEach((c) => expect(c.display).toBe('0'));
+    // "0" reversed is "0" so no reversed variant exists
+    const reversedDecoy = cards.find((c) => c.correct === false && c.display === '00');
+    expect(reversedDecoy).toBeUndefined();
+    // Mirrored decoy of "0" exists
+    const mirrored = cards.find((c) => c.mirror && c.display === '0');
+    expect(mirrored).toBeDefined();
   });
 });
 
@@ -142,6 +166,15 @@ describe('getCompareOrderTiles', () => {
       expect(t.value).toBeGreaterThanOrEqual(0);
       expect(t.value).toBeLessThanOrEqual(20);
     });
+  });
+
+  test('for value=0 still returns 3 tiles (fallback to value itself, all zeros)', () => {
+    const tiles = getCompareOrderTiles(0, 99);
+    expect(tiles.length).toBe(3);
+    expect(tiles.every((t) => t.value === 0)).toBe(true);
+    // Every id is unique
+    const ids = tiles.map((t) => t.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
 
@@ -177,5 +210,12 @@ describe('getNumberLineConfig', () => {
       expect(cfg.overshootBuffer).toBeGreaterThan(0);
       expect(cfg.targetIndex).toBeGreaterThan(0);
     }
+  });
+
+  test('for value=0: start=0, targetIndex=0, overshootBuffer=5 (auto-complete on mount)', () => {
+    const cfg = getNumberLineConfig(0);
+    expect(cfg.start).toBe(0);
+    expect(cfg.targetIndex).toBe(0);
+    expect(cfg.overshootBuffer).toBe(5);
   });
 });
