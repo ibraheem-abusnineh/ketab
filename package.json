@@ -39,7 +39,10 @@
     "server:setup": "cd server && npm run setup",
     "dev:full": "concurrently \"npm start\" \"npm run server\"",
     "install:all": "npm install && cd server && npm install",
-    "test:server": "jest server/__tests__/"
+    "test:server": "jest server/__tests__/",
+    "data:export": "node server/scripts/data-export.js",
+    "data:import": "node server/scripts/data-import.js",
+    "data:roundtrip": "node server/scripts/data-roundtrip.js"
   },
   "eslintConfig": {
     "extends": [

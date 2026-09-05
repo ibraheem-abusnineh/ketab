@@ -30,6 +30,7 @@ backup_*
 !/server/uploads/.gitkeep
 /server/data/visits.json
 /server/data/notifications.json
+/server/data/seeds/
 
 # graphify output
 graphify-out/
