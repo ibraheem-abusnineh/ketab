@@ -1,0 +1,108 @@
+/* CoursePickerModal — mirrors the entry-warning modal pattern in Cover.tsx */
+
+.course-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: coursePickerFadeIn 0.25s ease-out;
+}
+
+@keyframes coursePickerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.course-picker-modal {
+  background: #fff;
+  border: 3px solid #84333c;
+  border-radius: 12px;
+  width: 90vw;
+  max-width: 520px;
+  padding: 28px 28px 24px 28px;
+  position: relative;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: coursePickerScaleIn 0.25s ease-out;
+  direction: rtl;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+}
+
+@keyframes coursePickerScaleIn {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.course-picker-title {
+  font-size: 1.7em;
+  color: #84333c;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.course-picker-subtitle {
+  font-size: 1.05em;
+  color: #5a2428;
+  margin-bottom: 22px;
+  font-weight: 600;
+}
+
+.course-picker-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.course-picker-btn {
+  background: #84333c;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  min-height: 80px;
+  padding: 14px 20px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(132, 51, 60, 0.3);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.course-picker-btn:hover,
+.course-picker-btn:focus-visible {
+  background: #a45a64;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(132, 51, 60, 0.4);
+  outline: none;
+}
+
+.course-picker-btn:active {
+  transform: translateY(0);
+}
+
+.course-picker-icon {
+  font-size: 2.1em;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+.course-picker-label {
+  font-size: 1.15em;
+  font-weight: 700;
+  line-height: 1.1;
+}

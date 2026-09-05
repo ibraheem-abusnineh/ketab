@@ -163,8 +163,15 @@ const LettersIndex: React.FC = () => {
             className="w-full h-auto block"
           />
         </div>
-        <button 
-          className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto" 
+        <button
+          className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)]"
+          onClick={() => navigate('/numbers')}
+          aria-label="الأعداد"
+        >
+          الأعداد
+        </button>
+        <button
+          className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
           onClick={handleProfileClick}
         >
           {labels.profile}

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginWithNationalNumber, clearAuthOnStart, getLastNationalNumber, loginAsGuest } from '../utils/auth';
+import { loginWithNationalNumber, clearAuthOnStart, getLastNationalNumber, loginAsGuest, getAuthState } from '../utils/auth';
+import CoursePickerModal from './CoursePickerModal';
 
 const Cover: React.FC = () => {
   const navigate = useNavigate();
   const [showNotice, setShowNotice] = useState(false);
+  const [showCoursePicker, setShowCoursePicker] = useState(false);
+  const [pickedUserName, setPickedUserName] = useState<string | undefined>(undefined);
   const [showLogin, setShowLogin] = useState(false);
   const [nationalNumber, setNationalNumber] = useState('');
   const [guestFullName, setGuestFullName] = useState('');
@@ -43,7 +46,9 @@ const Cover: React.FC = () => {
       .then((ok) => {
         if (ok) {
           setError('');
-          navigate('/letters');
+          const auth = getAuthState();
+          setPickedUserName(auth.user?.name || auth.username);
+          setShowCoursePicker(true);
         } else {
           setError('الرقم الوطني غير صحيح');
         }
@@ -69,11 +74,18 @@ const Cover: React.FC = () => {
       .then((ok) => {
         if (ok) {
           setError('');
-          navigate('/letters');
+          const auth = getAuthState();
+          setPickedUserName(auth.user?.name || auth.username || trimmedName);
+          setShowCoursePicker(true);
         }
       })
       .catch(() => setError('فشل دخول الضيف'))
       .finally(() => setLoading(false));
+  };
+
+  const handleCoursePick = (course: 'letters' | 'numbers') => {
+    setShowCoursePicker(false);
+    navigate(course === 'letters' ? '/letters' : '/numbers');
   };
 
   const handleCloseLogin = () => {
@@ -195,6 +207,12 @@ const Cover: React.FC = () => {
           </div>
         </div>
       )}
+
+      <CoursePickerModal
+        open={showCoursePicker}
+        userName={pickedUserName}
+        onPick={handleCoursePick}
+      />
     </div>
   );
 };
