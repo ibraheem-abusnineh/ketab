@@ -221,14 +221,20 @@ const Profile: React.FC = () => {
     <div className="profile-container">
       <div className="profile-header">
         <h1 className="profile-title">ملفي الشخصي</h1>
-          <div className="profile-actions">
-            <button onClick={handleBackToLetters} className="back-btn">
-              ← العودة إلى الحروف
-            </button>
-            <button onClick={handleLogout} className="logout-btn">
-              تسجيل الخروج
-            </button>
-          </div>
+        <div className="profile-actions">
+          <button onClick={handleBackToLetters} className="back-btn">
+            ← العودة إلى الحروف
+          </button>
+          <button onClick={() => navigate('/letters')} className="back-btn">
+            الحروف
+          </button>
+          <button onClick={() => navigate('/numbers')} className="back-btn">
+            الأعداد
+          </button>
+          <button onClick={handleLogout} className="logout-btn">
+            تسجيل الخروج
+          </button>
+        </div>
         </div>
 
         {profileData.nationalNumber === 'GUEST' ? (

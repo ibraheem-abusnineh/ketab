@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { lettersData, lettersOrder } from '../data/lettersData';
 import { englishLettersData, englishLettersOrder } from '../data/englishLettersData';
 import LetterImage from './LetterImage';
@@ -11,6 +11,7 @@ import { getAuthState } from '../utils/auth';
 
 const LettersIndex: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [course, setCourse] = useCourseState();
   const [lockedCourse, setLockedCourse] = useState<CourseType | null>(null);
@@ -190,6 +191,12 @@ const LettersIndex: React.FC = () => {
           onClick={() => handleCourseSelection('english')}
         >
           {labels.englishCourse}
+        </button>
+        <button
+          className={`py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px ${location.pathname === '/numbers' ? 'bg-[#84333c] text-white' : 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white'}`}
+          onClick={() => navigate('/numbers')}
+        >
+          الأعداد
         </button>
       </div>
       
