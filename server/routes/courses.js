@@ -20,15 +20,18 @@ const DEFAULT_COURSE_SETTINGS = {
   arabic: { locked: false, label: 'Arabic Language' },
   english: { locked: true, label: 'English Language' },
   math: { locked: false, label: 'Math' },
-};
+  awareness: { locked: true, label: 'Awareness' },
+ };
 
 function cloneDefaultCourses() {
   return {
     arabic: { ...DEFAULT_COURSE_SETTINGS.arabic },
     english: { ...DEFAULT_COURSE_SETTINGS.english },
     math: { ...DEFAULT_COURSE_SETTINGS.math },
-  };
-}
+    awareness: { ...DEFAULT_COURSE_SETTINGS.awareness },
+   };
+ }
+
 
 
 function createCoursesRouter(store) {
@@ -49,7 +52,7 @@ function createCoursesRouter(store) {
 
     const normalizedCourseId = (courseId || '').toLowerCase().trim();
 
-    if (!['arabic', 'english', 'math'].includes(normalizedCourseId)) {
+    if (!['arabic', 'english', 'math', 'awareness'].includes(normalizedCourseId)) {
       return res.status(404).json({ success: false, error: 'Course not found' });
     }
 

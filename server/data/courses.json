@@ -8,7 +8,11 @@
     "label": "English Language"
   },
   "math": {
-    "locked": true,
+    "locked": false,
     "label": "Math"
+  },
+  "awareness": {
+    "locked": true,
+    "label": "Awareness"
   }
 }
