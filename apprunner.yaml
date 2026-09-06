@@ -10,4 +10,4 @@ run:
     port: 5000
   env:
     - name: GH_TOKEN
-      value: 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
+      value: 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
