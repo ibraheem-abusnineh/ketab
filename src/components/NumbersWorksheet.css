@@ -1,172 +1,180 @@
 .numbers-worksheet-container {
-  background-color: #ffffff;
-  width: 800px;
-  min-height: 1100px;
-  margin: 20px auto;
-  padding: 30px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  border-radius: 10px;
-  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #fff;
   border: 3px solid #84333c;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  gap: 14px;
+  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
 }
 
 .numbers-worksheet-header {
-  text-align: center;
-  margin-bottom: 20px;
-  padding: 14px;
-  background: linear-gradient(90deg, #ffd0db, #f4a6bb, #ffd0db);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.numbers-worksheet-home-btn {
+  background: #fff;
   border: 2px solid #84333c;
-  border-radius: 8px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.numbers-worksheet-header h1 {
-  font-size: 2em;
+  border-radius: 999px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #84333c;
-  margin: 0;
-  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
-  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
 }
 
-.numbers-worksheet-header h2 {
-  font-size: 1.3em;
-  color: #5a2428;
-  margin: 4px 0 0 0;
-  font-weight: 400;
+.numbers-worksheet-home-btn:hover {
+  transform: scale(1.08);
+}
+
+.numbers-worksheet-home-btn:active {
+  transform: scale(0.92);
 }
 
 .numbers-worksheet-dots {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
-  justify-content: center;
-  margin-bottom: 18px;
+  align-items: center;
 }
 
 .numbers-worksheet-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #E4E0F0;
-  transition: background 200ms ease, transform 200ms ease;
-}
-
-.numbers-worksheet-dot.active {
-  background: #D9748F;
-  transform: scale(1.4);
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #e0d8d0;
+  transition: all 0.2s ease;
 }
 
 .numbers-worksheet-dot.done {
-  background: #6FBE8C;
+  background: #f0d000;
+}
+
+.numbers-worksheet-dot.active {
+  width: 16px;
+  background: #84333c;
 }
 
 .numbers-worksheet-page {
-  flex: 1;
+  width: 100%;
+}
+
+.numbers-worksheet-learn {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  width: 100%;
 }
 
-.numbers-worksheet-completion {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  padding: 32px;
-  text-align: center;
-}
-
-.numbers-worksheet-completion-trophy {
-  font-size: 4em;
-  animation: numbers-completion-bounce 0.6s ease-out;
-}
-
-.numbers-worksheet-completion h2 {
-  font-size: 1.8em;
-  color: #84333c;
-  margin: 0;
-}
-
-.numbers-worksheet-completion-stars {
-  display: flex;
-  gap: 8px;
-  font-size: 2em;
-}
-
-.numbers-worksheet-completion-stars span {
-  animation: numbers-completion-pop 0.4s ease-out both;
-}
-
-.numbers-worksheet-footer {
-  text-align: center;
-  margin-top: 18px;
-  padding-top: 12px;
-  border-top: 1px dashed #84333c;
-  color: #84333c;
-  font-family: 'Cairo', sans-serif;
+.numbers-worksheet-learn-image {
+  width: 100%;
+  border: 3px solid #84333c;
+  border-radius: 8px;
+  display: block;
 }
 
 .numbers-worksheet-nav {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 18px;
-  padding: 12px;
-  border-top: 2px solid #f0d000;
-}
-
-.numbers-worksheet-nav button {
-  background: #FFFFFF;
-  border: 2px solid #84333c;
-  color: #84333c;
-  font-family: 'Cairo', sans-serif;
+  justify-content: space-between;
+  gap: 12px;
   font-weight: 700;
-  font-size: 1em;
-  border-radius: 10px;
-  padding: 10px 20px;
+}
+
+.numbers-worksheet-nav button,
+.numbers-worksheet-finished-actions button {
+  font-family: 'Noto Sans Arabic', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 10px 22px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 200ms ease, transform 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.numbers-worksheet-nav button:not(:disabled):hover {
+.numbers-worksheet-nav .primary-btn,
+.numbers-worksheet-finished-actions .primary-btn {
   background: #84333c;
-  color: #FFFFFF;
-  transform: translateY(-2px);
+  color: #fff;
+  border: none;
 }
 
-.numbers-worksheet-nav button:disabled {
-  background: #E4E0F0;
-  border-color: #CFC9E0;
-  color: #A9A2C0;
+.numbers-worksheet-nav .primary-btn:hover:not(:disabled),
+.numbers-worksheet-finished-actions .primary-btn:hover {
+  background: #a45a64;
+}
+
+.numbers-worksheet-nav .primary-btn:disabled {
+  background: #ccc;
+  color: #888;
   cursor: not-allowed;
 }
 
-.numbers-worksheet-nav button.primary {
-  background: #84333c;
-  color: #FFFFFF;
+.numbers-worksheet-nav .primary-btn.glow:not(:disabled) {
+  animation: numbers-worksheet-glow 1.6s ease-in-out infinite;
 }
 
-.numbers-worksheet-nav button.primary:disabled {
-  background: #E4E0F0;
-  color: #A9A2C0;
-}
-
-.numbers-worksheet-nav .indicator {
-  font-family: 'Cairo', sans-serif;
-  font-weight: 700;
+.numbers-worksheet-nav .outline-btn,
+.numbers-worksheet-finished-actions .outline-btn {
+  background: #fff;
   color: #84333c;
+  border: 2px solid #84333c;
 }
 
-@keyframes numbers-completion-bounce {
+.numbers-worksheet-nav .outline-btn:hover,
+.numbers-worksheet-finished-actions .outline-btn:hover {
+  background: rgba(132, 51, 60, 0.08);
+}
+
+.numbers-worksheet-finished {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  text-align: center;
+}
+
+.numbers-worksheet-finished-emoji {
+  font-size: 3.5rem;
+  animation: numbers-worksheet-bounce-in 0.6s ease-out;
+}
+
+.numbers-worksheet-finished-heading {
+  font-family: 'Amiri', serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #84333c;
+  margin: 0;
+}
+
+.numbers-worksheet-finished-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@keyframes numbers-worksheet-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(240, 208, 0, 0); }
+  50% { box-shadow: 0 0 16px 4px rgba(240, 208, 0, 0.7); }
+}
+
+@keyframes numbers-worksheet-bounce-in {
   0% { transform: scale(0.3); opacity: 0; }
-  55% { transform: scale(1.12); }
-  75% { transform: scale(0.96); }
-  100% { transform: scale(1); }
-}
-
-@keyframes numbers-completion-pop {
-  from { transform: scale(0); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
+  55% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }

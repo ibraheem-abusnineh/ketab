@@ -1,0 +1,68 @@
+.number-drawable {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.number-drawable-board {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 612 / 792;
+  border: 3px solid #84333c;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  touch-action: none;
+}
+
+.number-drawable-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.number-drawable-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.number-drawable-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.number-drawable-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #ccc;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.number-drawable-swatch:hover {
+  transform: scale(1.1);
+}
+
+.number-drawable-swatch.selected {
+  border: 3px solid #333;
+}
+
+.number-drawable-clear {
+  font-family: 'Noto Sans Arabic', sans-serif;
+  font-weight: 700;
+}

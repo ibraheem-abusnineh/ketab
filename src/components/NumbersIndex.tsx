@@ -69,7 +69,7 @@ const NumbersIndex: React.FC = () => {
       </div>
 
       <div className="text-center text-[2.2em] text-[#84333c] mb-[30px] font-bold drop-shadow-[1px_1px_2px_rgba(255,255,255,0.8)]">
-        الأعداد من ١ إلى ١٠٠
+        الأعداد من ٠ إلى ١٠
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(64px,1fr))] lg:grid-cols-[repeat(auto-fit,minmax(80px,1fr))] lg:pr-[240px] gap-[10px] justify-items-center">
