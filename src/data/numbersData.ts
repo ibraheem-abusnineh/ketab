@@ -11,7 +11,7 @@ export const numbersOrder: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
  */
 export const numbersData: Record<number, NumberData> = numbersOrder.reduce(
   (acc, n) => {
-    acc[n] = { value: n, word: arabicWord(n) };
+    acc[n] = { value: n, word: arabicWord(n), videoUrl: `/numbers/${n}.mp4` };
     return acc;
   },
   {} as Record<number, NumberData>
