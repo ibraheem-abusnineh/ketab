@@ -1,0 +1,83 @@
+{
+  "0.mp4": {
+    "file": "0.mp4",
+    "duration": 10.517,
+    "opener_end": 2.78,
+    "number_end": 5.24,
+    "closer_start": 7.36,
+    "keep_start": 2.78,
+    "keep_end": 5.487,
+    "transcript": " Okay,  one  two  three  start  zero  one  two  three  stop",
+    "review": false
+  },
+  "1.mp4": {
+    "file": "1.mp4",
+    "duration": 7.253,
+    "opener_end": 2.08,
+    "number_end": 4.18,
+    "closer_start": 4.98,
+    "keep_start": 2.08,
+    "keep_end": 4.454,
+    "transcript": " One,  two,  three,  start.  One.  One,  two,  three,  stop.",
+    "review": false
+  },
+  "2.mp4": {
+    "file": "2.mp4",
+    "manual": true,
+    "keep_start": 2.32,
+    "keep_end": 4.4
+  },
+  "3.mp4": {
+    "file": "3.mp4",
+    "manual": true,
+    "keep_start": 2.02,
+    "keep_end": 4.35
+  },
+  "4.mp4": {
+    "file": "4.mp4",
+    "manual": true,
+    "keep_start": 1.62,
+    "keep_end": 3.66
+  },
+  "5.mp4": {
+    "file": "5.mp4",
+    "manual": true,
+    "keep_start": 2.3,
+    "keep_end": 4.38
+  },
+  "6.mp4": {
+    "file": "6.mp4",
+    "manual": true,
+    "keep_start": 2.21,
+    "keep_end": 4.25
+  },
+  "7.mp4": {
+    "file": "7.mp4",
+    "manual": true,
+    "keep_start": 2.08,
+    "keep_end": 4.5
+  },
+  "8.mp4": {
+    "file": "8.mp4",
+    "manual": true,
+    "keep_start": 2.09,
+    "keep_end": 4.1
+  },
+  "9.mp4": {
+    "file": "9.mp4",
+    "manual": true,
+    "keep_start": 2.06,
+    "keep_end": 4.05
+  },
+  "10.mp4": {
+    "file": "10.mp4",
+    "duration": 7.424,
+    "opener_end": 1.89,
+    "number_end": 3.94,
+    "closer_start": 4.72,
+    "keep_start": 1.89,
+    "keep_end": 4.318,
+    "transcript": " One,  two,  three,  start.  Tim!  One,  two,  three,  stop.",
+    "review": false
+  }
+}
