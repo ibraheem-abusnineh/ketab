@@ -144,6 +144,22 @@ const NumbersWorksheet: React.FC = () => {
 
   const goHome = () => navigate('/numbers');
 
+  // After the user finishes a number's last page, wait briefly so they
+  // see the celebratory screen, then auto-advance to the next number.
+  // On the last number (10) we keep the existing "أتقنت كل الأعداد" menu
+  // so the user has somewhere to go from here.
+  useEffect(() => {
+    if (!finished) return;
+    const currentIndex = numbersOrder.indexOf(selectedNumber);
+    const isLastNumber = currentIndex === numbersOrder.length - 1;
+    if (isLastNumber || currentIndex < 0) return;
+    const nextNumber = numbersOrder[currentIndex + 1];
+    const timer = setTimeout(() => {
+      navigate(`/worksheet/${nextNumber}`);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [finished, selectedNumber, navigate]);
+
   if (!numberData || !page) {
     return <div>Number not found</div>;
   }
@@ -237,30 +253,43 @@ const NumbersWorksheet: React.FC = () => {
         </>
       )}
 
-      {finished && (
-        <div className="numbers-worksheet-finished">
-          <div className="numbers-worksheet-finished-emoji" aria-hidden="true">
-            🏆
+      {finished && (() => {
+        const currentIndex = numbersOrder.indexOf(selectedNumber);
+        const isLastNumber = currentIndex === numbersOrder.length - 1;
+        const nextNumber = isLastNumber ? null : numbersOrder[currentIndex + 1];
+        return (
+          <div className="numbers-worksheet-finished">
+            <div className="numbers-worksheet-finished-emoji" aria-hidden="true">
+              🏆
+            </div>
+            <h2 className="numbers-worksheet-finished-heading">
+              {isLastNumber
+                ? 'أحسنت! أتقنت كل الأعداد'
+                : `أحسنت! أتقنتَ العدد ${numberData.value}`}
+            </h2>
+            {!isLastNumber && (
+              <p className="numbers-worksheet-finished-hint">
+                الانتقال إلى العدد {nextNumber}…
+              </p>
+            )}
+            <div className="numbers-worksheet-finished-actions">
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => {
+                  restartAll();
+                }}
+              >
+                <RotateCcwIcon /> إعادة
+              </button>
+              <button type="button" className="outline-btn" onClick={goHome}>
+                <HomeIcon />
+                {isLastNumber ? ' العودة إلى القائمة' : ' القائمة'}
+              </button>
+            </div>
           </div>
-          <h2 className="numbers-worksheet-finished-heading">
-            أحسنت! أتقنتَ العدد {numberData.value}
-          </h2>
-          <div className="numbers-worksheet-finished-actions">
-            <button
-              type="button"
-              className="primary-btn"
-              onClick={() => {
-                restartAll();
-              }}
-            >
-              <RotateCcwIcon /> إعادة
-            </button>
-            <button type="button" className="outline-btn" onClick={goHome}>
-              <HomeIcon /> القائمة
-            </button>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

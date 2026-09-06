@@ -160,6 +160,13 @@
   color: #84333c;
   margin: 0;
 }
+.numbers-worksheet-finished-hint {
+  margin: 0;
+  font-family: 'Noto Sans Arabic', sans-serif;
+  font-size: 0.95rem;
+  color: #6c4750;
+  opacity: 0.85;
+}
 
 .numbers-worksheet-finished-actions {
   display: flex;

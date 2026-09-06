@@ -36,3 +36,13 @@ React frontend (TypeScript) + Express backend (CommonJS). Frontend in `src/`, ba
 - Frontend proxies API to backend via `src/setupProxy.ts` (no CORS issues in dev)
 - Server binds to `0.0.0.0` (accessible from network); backend port defaults to 5000
 - Copy `.env.example` if env vars needed; backend reads `PORT` env var
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on github.com/ibraheem-abusnineh/ketab. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
