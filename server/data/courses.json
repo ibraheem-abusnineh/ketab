@@ -6,5 +6,9 @@
   "english": {
     "locked": false,
     "label": "English Language"
+  },
+  "math": {
+    "locked": false,
+    "label": "Math"
   }
 }
