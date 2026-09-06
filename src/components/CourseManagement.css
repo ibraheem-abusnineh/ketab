@@ -128,3 +128,23 @@
   font-size: 0.9rem;
 }
 
+.course-locked-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #fff1e6;
+  border: 1px solid #f3c89a;
+  color: #7a3d00;
+  font-size: 0.9rem;
+}
+
+.course-locked-message strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #a35200;
+}
+
+.course-locked-message p {
+  margin: 0;
+  line-height: 1.4;
+}
+
