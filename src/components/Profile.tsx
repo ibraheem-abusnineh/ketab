@@ -216,9 +216,6 @@ const Profile: React.FC = () => {
           <button onClick={() => navigate('/letters')} className="back-btn">
             الحروف
           </button>
-          <button onClick={() => navigate('/numbers')} className="back-btn">
-            الأعداد
-          </button>
           <button onClick={handleLogout} className="logout-btn">
             تسجيل الخروج
           </button>

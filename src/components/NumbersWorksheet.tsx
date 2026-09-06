@@ -142,7 +142,7 @@ const NumbersWorksheet: React.FC = () => {
     }
   };
 
-  const goHome = () => navigate('/numbers');
+  const goHome = () => navigate('/letters');
 
   // After the user finishes a number's last page, wait briefly so they
   // see the celebratory screen, then auto-advance to the next number.

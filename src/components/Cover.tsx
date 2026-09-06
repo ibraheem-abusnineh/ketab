@@ -83,9 +83,9 @@ const Cover: React.FC = () => {
       .finally(() => setLoading(false));
   };
 
-  const handleCoursePick = (course: 'letters' | 'numbers') => {
+  const handleCoursePick = (_course: 'letters' | 'numbers') => {
     setShowCoursePicker(false);
-    navigate(course === 'letters' ? '/letters' : '/numbers');
+    navigate('/letters');
   };
 
   const handleCloseLogin = () => {
