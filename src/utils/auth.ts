@@ -63,23 +63,6 @@ export function clearAuthOnStart(): void {
   logout();
 }
 
-// Helper function to track visit on backend
-async function trackVisit(): Promise<void> {
-  try {
-    const response = await apiFetch('/api/track-visit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    const data = await response.json();
-    console.log('Visit tracked successfully:', data);
-  } catch (error) {
-    console.warn('Failed to track visit, but login will continue:', error);
-  }
-}
-
 export async function loginAsDeveloper(password: string): Promise<{
   success: boolean;
   sessionToken?: string;

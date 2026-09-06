@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { lettersData, lettersOrder } from '../data/lettersData';
 import { englishLettersData, englishLettersOrder } from '../data/englishLettersData';
@@ -22,7 +22,7 @@ const LettersIndex: React.FC = () => {
     title: string;
   }
 
-  const getDataForCourse = (selectedCourse: string): CourseData => {
+  const getDataForCourse = useCallback((selectedCourse: string): CourseData => {
     switch (selectedCourse) {
       case 'english':
         return {
@@ -35,16 +35,16 @@ const LettersIndex: React.FC = () => {
         return {
           letters: lettersOrder,
           data: lettersData,
-          title: 'فَهْرَسُ الْأبَجَدِيَّةِ الْإِشَارَّيَةِ الْعَرَبَيّةِ الْأُرْدُنِيةِ'
+          title: 'فَهْرَسُ الْأبَجَدِيَّةِ الْإِشَارَّيَّةِ الْعَرَبَيّةِ الْأُرْدُنِيةِ'
         };
     }
-  };
+  }, []);
 
   const [currentData, setCurrentData] = useState<CourseData>(getDataForCourse('arabic'));
 
   useEffect(() => {
     setCurrentData(getDataForCourse(course));
-  }, [course]);
+  }, [course, getDataForCourse]);
 
   const lettersPerPage = Math.ceil(currentData.letters.length / 2);
 

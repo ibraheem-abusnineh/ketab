@@ -1,4 +1,4 @@
-import { LetterData, VocabularyItem } from '../types';
+import { LetterData } from '../types';
 
 export const englishLettersData: { [key: string]: LetterData } = {
   A: {

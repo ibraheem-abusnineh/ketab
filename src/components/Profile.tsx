@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuthState, logout } from '../utils/auth';
 import { useCourseState, CourseType } from '../utils/courseState';
-import { lettersData, lettersOrder } from '../data/lettersData';
 import './Profile.css';
 import { apiFetch } from '../utils/api';
 import { useCourseAvailability } from '../context/CourseAvailabilityContext';
@@ -137,8 +136,6 @@ const Profile: React.FC = () => {
       const contentType = response.headers.get('content-type') || '';
       if (response.ok) {
         if (contentType.includes('application/json')) {
-          const data = await response.json();
-          // Show success message
           setError(''); // Clear any errors
           alert('تم إرسال طلب تعديل الملف الشخصي بنجاح. في انتظار موافقة المدير.');
           setIsEditing(false);
@@ -173,15 +170,6 @@ const Profile: React.FC = () => {
     });
   };
 
-  const formatTime = (dateString: string | null) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZone: 'Asia/Amman'
-    });
-  };
 
   if (loading) {
     return (

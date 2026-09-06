@@ -5,7 +5,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { englishLettersData, englishLettersOrder } from '../data/englishLettersData';
 import { englishLetterInfo } from '../data/englishLetterInfo';
 import VideoPopup from './VideoPopup';
-import { LetterSquare, MatchingWord, GestureBox, Vowel, SyllablePair } from '../types';
+import { LetterSquare, MatchingWord, GestureBox } from '../types';
 import {
   IntroductionPage,
   VocabularyPage,

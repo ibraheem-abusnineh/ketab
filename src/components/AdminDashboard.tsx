@@ -31,9 +31,12 @@ interface Props {
 }
 
 const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [visitCount, setVisitCount] = useState<number>(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<'statistics' | 'users' | 'history' | 'notifications' | 'requests' | 'reports' | 'courses'>('statistics');
   const [notifications, setNotifications] = useState<Notification[]>([]);

@@ -17,13 +17,6 @@ interface UserReport {
   lastLogin: string;
 }
 
-interface Visit {
-  timestamp: string;
-  count: number;
-}
-
-type PeriodType = 'day' | 'week' | 'month' | 'custom';
-
 const Reports: React.FC = () => {
   // Set default date range (current month: start of month to end of month)
   const getDefaultDateRange = () => {
