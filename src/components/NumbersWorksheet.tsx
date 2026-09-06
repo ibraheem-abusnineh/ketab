@@ -8,7 +8,8 @@ import {
   NumberDrawablePage,
   NumberHotspotPage,
 } from './worksheet';
-import './NumbersWorksheet.css';
+import { useCourseAvailability } from '../context/CourseAvailabilityContext';
+import { getAuthState } from '../utils/auth';
 
 const PAGE_ORDER = ['1', '2', '3', '4', '5', '6'];
 
@@ -63,6 +64,9 @@ const NumbersWorksheet: React.FC = () => {
   // unit being a letter or a number.
   const { letter } = useParams<{ letter: string }>();
   const navigate = useNavigate();
+  const { courses: availability } = useCourseAvailability();
+  const mathLocked = availability.math?.locked;
+  const isDev = getAuthState().user?.role === 'developer';
 
   const parsed = letter ? parseInt(letter, 10) : NaN;
   const initial =
@@ -76,10 +80,6 @@ const NumbersWorksheet: React.FC = () => {
   const [drawn, setDrawn] = useState(false);
   const [finished, setFinished] = useState(false);
 
-  const numberData: NumberData | undefined = numbersData[selectedNumber];
-  const pageKey = useMemo(() => PAGE_ORDER[pageIdx], [pageIdx]);
-  const page = numberData?.pages[pageKey];
-
   // Sync URL → state when the user navigates /worksheet/:n directly.
   useEffect(() => {
     if (!Number.isNaN(parsed) && numbersOrder.includes(parsed) && parsed !== selectedNumber) {
@@ -91,7 +91,6 @@ const NumbersWorksheet: React.FC = () => {
     }
   }, [parsed, selectedNumber]);
 
-  // Reset completion when the selected number changes.
   const restartAll = useCallback(() => {
     setPageIdx(0);
     setCompleted(false);
@@ -102,7 +101,6 @@ const NumbersWorksheet: React.FC = () => {
   useEffect(() => {
     restartAll();
   }, [selectedNumber, restartAll]);
-
   useEffect(() => {
     const titleBeforePrint = document.title;
     const onBeforePrint = () => {
@@ -118,6 +116,52 @@ const NumbersWorksheet: React.FC = () => {
       window.removeEventListener('afterprint', onAfterPrint);
     };
   }, []);
+
+  // After the user finishes a number's last page, wait briefly so they
+  // see the celebratory screen, then auto-advance to the next number.
+  // On the last number (10) we keep the existing "أتقنت كل الأعداد" menu
+  // so the user has somewhere to go from here.
+  useEffect(() => {
+    if (!finished) return;
+    const currentIndex = numbersOrder.indexOf(selectedNumber);
+    const isLastNumber = currentIndex === numbersOrder.length - 1;
+    if (isLastNumber || currentIndex < 0) return;
+    const nextNumber = numbersOrder[currentIndex + 1];
+    const timer = setTimeout(() => {
+      navigate(`/worksheet/${nextNumber}`);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [finished, selectedNumber, navigate]);
+  const numberData: NumberData | undefined = numbersData[selectedNumber];
+  const pageKey = useMemo(() => PAGE_ORDER[pageIdx], [pageIdx]);
+  const page = numberData?.pages[pageKey];
+
+  if (mathLocked && !isDev) {
+    return (
+      <div
+        className="bg-white rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.15)] border-[3px] border-[#84333c] p-[30px] lg:p-[40px_30px_30px_30px] mt-10 mx-auto relative w-full max-w-[1100px] lg:max-w-[98vw]"
+        dir="rtl"
+        style={{ direction: 'rtl' }}
+      >
+        <div className="flex justify-between items-center mb-5">
+          <button
+            className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
+            onClick={() => navigate('/letters')}
+          >
+            الحروف
+          </button>
+        </div>
+        <div className="text-center text-[2.2em] text-[#84333c] mb-[30px] font-bold drop-shadow-[1px_1px_2px_rgba(255,255,255,0.8)]">
+          المحتوى مقفل
+        </div>
+        <p className="text-center text-[1.1em] text-[#333] leading-[1.6]">
+          محتوى الأعداد (الرياضيات) مقفل حالياً.
+        </p>
+      </div>
+    );
+  }
+
+
 
   const resetStepState = () => {
     setCompleted(false);
@@ -144,21 +188,6 @@ const NumbersWorksheet: React.FC = () => {
 
   const goHome = () => navigate('/letters');
 
-  // After the user finishes a number's last page, wait briefly so they
-  // see the celebratory screen, then auto-advance to the next number.
-  // On the last number (10) we keep the existing "أتقنت كل الأعداد" menu
-  // so the user has somewhere to go from here.
-  useEffect(() => {
-    if (!finished) return;
-    const currentIndex = numbersOrder.indexOf(selectedNumber);
-    const isLastNumber = currentIndex === numbersOrder.length - 1;
-    if (isLastNumber || currentIndex < 0) return;
-    const nextNumber = numbersOrder[currentIndex + 1];
-    const timer = setTimeout(() => {
-      navigate(`/worksheet/${nextNumber}`);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [finished, selectedNumber, navigate]);
 
   if (!numberData || !page) {
     return <div>Number not found</div>;

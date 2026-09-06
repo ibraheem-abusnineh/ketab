@@ -30,7 +30,7 @@ const normalizeCourses = (courses?: Partial<Record<string, CourseStatus>>): Cour
   const normalized: CourseMap = { ...DEFAULT_COURSES };
   if (courses) {
     (Object.keys(courses) as string[]).forEach(key => {
-      if (key === 'arabic' || key === 'english') {
+      if (key === 'arabic' || key === 'english' || key === 'math') {
         const status = courses[key];
         if (status && typeof status.locked === 'boolean') {
           normalized[key] = {
