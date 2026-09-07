@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { lettersData, lettersOrder } from '../data/lettersData';
 import { englishLettersData, englishLettersOrder } from '../data/englishLettersData';
 import LetterImage from './LetterImage';
@@ -11,6 +11,7 @@ import { getAuthState } from '../utils/auth';
 
 const LettersIndex: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [course, setCourse] = useCourseState();
   const [lockedCourse, setLockedCourse] = useState<CourseType | null>(null);
@@ -163,6 +164,13 @@ const LettersIndex: React.FC = () => {
             className="w-full h-auto block"
           />
         </div>
+
+        <button
+          className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
+          onClick={() => navigate('/numbers')}
+        >
+          الأعداد
+        </button>
         <button
           className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
           onClick={() => navigate('/awareness')}
@@ -190,8 +198,14 @@ const LettersIndex: React.FC = () => {
         >
           {labels.englishCourse}
         </button>
+        <button
+          className={`py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px ${location.pathname === '/numbers' ? 'bg-[#84333c] text-white' : 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white'}`}
+          onClick={() => navigate('/numbers')}
+        >
+          الأعداد
+        </button>
       </div>
-      
+
       <div className="text-center text-[2.5em] text-[#84333c] mb-[30px] font-bold drop-shadow-[1px_1px_2px_rgba(255,255,255,0.8)]">
         {currentData.title}
       </div>
