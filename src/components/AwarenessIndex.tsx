@@ -3,21 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import LogoWithImage from './LogoWithImage';
 import { useCourseAvailability } from '../context/CourseAvailabilityContext';
 import { getAuthState } from '../utils/auth';
+import { useCourseState } from '../utils/courseState';
+import CourseTabRow from './CourseTabRow';
 
-const AWARENESS_VIDEO_URL = '/awareness/awareness.mp4';
+const AWARENESS_VIDEOS = [
+  { src: '/awareness/video1.mp4', title: 'فيديو التوعية الأول' },
+  { src: '/awareness/video2.mp4', title: 'فيديو التوعية الثاني' },
+  { src: '/awareness/video3.mp4', title: 'فيديو التوعية الثالث' },
+];
 
 const AwarenessIndex: React.FC = () => {
   const navigate = useNavigate();
   const { courses: availability } = useCourseAvailability();
+  const [course] = useCourseState();
+  const isEnglish = course === 'english';
   const awarenessLocked = availability.awareness?.locked;
   const isDev = getAuthState().user?.role === 'developer';
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const labels = {
+    lockedTitle: isEnglish ? 'Course Locked' : 'المحتوى مقفل',
+    lockedBody: isEnglish
+      ? 'The Awareness course is currently locked.'
+      : 'محتوى التوعية مقفل حالياً.',
+  };
 
   if (awarenessLocked && !isDev) {
     return (
       <div
         className="bg-white rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.15)] border-[3px] border-[#84333c] p-[30px] lg:p-[40px_30px_30px_30px] mt-10 mx-auto relative w-full max-w-[1100px] lg:max-w-[98vw]"
-        dir="rtl"
-        style={{ direction: 'rtl' }}
+        dir={isEnglish ? 'ltr' : 'rtl'}
+        style={{ direction: isEnglish ? 'ltr' : 'rtl' }}
       >
         <div className="flex justify-between items-center mb-5">
           <div className="hidden lg:flex absolute top-[25px] right-[25px] z-[100] bg-white rounded-md border-2 border-[#84333c] w-[150px] h-[150px] lg:w-[200px] lg:h-[200px] p-[10px] items-center justify-center">
@@ -26,28 +42,27 @@ const AwarenessIndex: React.FC = () => {
               className="w-full h-auto block"
             />
           </div>
-          <button
-            className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
-            onClick={() => navigate('/letters')}
-          >
-            الحروف
-          </button>
         </div>
+
+        <CourseTabRow />
+
         <div className="text-center text-[2.2em] text-[#84333c] mb-[30px] font-bold drop-shadow-[1px_1px_2px_rgba(255,255,255,0.8)]">
-          المحتوى مقفل
+          {labels.lockedTitle}
         </div>
         <p className="text-center text-[1.1em] text-[#333] leading-[1.6]">
-          محتوى التوعية مقفل حالياً.
+          {labels.lockedBody}
         </p>
       </div>
     );
   }
 
+  const active = AWARENESS_VIDEOS[activeIndex] ?? AWARENESS_VIDEOS[0];
+
   return (
     <div
       className="bg-white rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.15)] border-[3px] border-[#84333c] p-[30px] lg:p-[40px_30px_30px_30px] mt-10 mx-auto relative w-full max-w-[1100px] lg:max-w-[98vw]"
-      dir="rtl"
-      style={{ direction: 'rtl' }}
+      dir={isEnglish ? 'ltr' : 'rtl'}
+      style={{ direction: isEnglish ? 'ltr' : 'rtl' }}
     >
       <div className="flex justify-between items-center mb-5">
         <div className="hidden lg:flex absolute top-[25px] right-[25px] z-[100] bg-white rounded-md border-2 border-[#84333c] w-[150px] h-[150px] lg:w-[200px] lg:h-[200px] p-[10px] items-center justify-center">
@@ -56,25 +71,38 @@ const AwarenessIndex: React.FC = () => {
             className="w-full h-auto block"
           />
         </div>
-        <button
-          className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
-          onClick={() => navigate('/letters')}
-        >
-          الحروف
-        </button>
       </div>
+
+      <CourseTabRow />
+
       <div className="text-center text-[2.2em] text-[#84333c] mb-[30px] font-bold drop-shadow-[1px_1px_2px_rgba(255,255,255,0.8)]">
-        التوعية
+        {isEnglish ? 'Awareness' : 'التوعية'}
       </div>
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-5">
         <video
-          src={AWARENESS_VIDEO_URL}
+          key={active.src}
+          src={active.src}
           controls
           className="w-full max-w-[800px] rounded-lg border-2 border-[#84333c]"
-          aria-label="فيديو التوعية"
+          aria-label={active.title}
         >
           متصفحك لا يدعم تشغيل الفيديو.
         </video>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        {AWARENESS_VIDEOS.map((v, i) => (
+          <button
+            key={v.src}
+            onClick={() => setActiveIndex(i)}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold border-2 transition-all duration-200 cursor-pointer ${
+              i === activeIndex
+                ? 'bg-[#84333c] text-white border-[#84333c]'
+                : 'bg-white text-[#84333c] border-[#84333c] hover:bg-[#f3e8eb]'
+            }`}
+          >
+            {v.title}
+          </button>
+        ))}
       </div>
     </div>
   );
