@@ -12,7 +12,10 @@ import { useCourseAvailability } from '../context/CourseAvailabilityContext';
 import { getAuthState } from '../utils/auth';
 import './NumbersWorksheet.css';
 
-const PAGE_ORDER = ['1', '2', '3', '4', '5', '6'];
+// Page order per the math-content revision doc: after the learn page's
+// video, the child practices writing (trace the guided numeral, then
+// write it) BEFORE the counting/choosing questions. Color stays last.
+const PAGE_ORDER = ['1', '5', '2', '3', '4', '6'];
 
 const isDrawType = (type: NumberPageType): boolean =>
   type === 'write' || type === 'trace' || type === 'color';
