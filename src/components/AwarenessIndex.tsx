@@ -7,9 +7,10 @@ import { useCourseState } from '../utils/courseState';
 import CourseTabRow from './CourseTabRow';
 
 const AWARENESS_VIDEOS = [
-  { src: '/awareness/video1.mp4', title: 'فيديو التوعية الأول' },
-  { src: '/awareness/video2.mp4', title: 'فيديو التوعية الثاني' },
-  { src: '/awareness/video3.mp4', title: 'فيديو التوعية الثالث' },
+  { src: '/awareness/focus-on-road.mp4', titleEn: 'Focus on the Road', titleAr: 'ركّز على الطريق' },
+  { src: '/awareness/addiction.mp4', titleEn: 'Addiction', titleAr: 'الإدمان' },
+  { src: '/awareness/cyber-fraud.mp4', titleEn: 'Cyber Fraud', titleAr: 'الاحتيال الإلكتروني' },
+  { src: '/awareness/heat-stress.mp4', titleEn: 'Protection from Heat Stress', titleAr: 'حمايتك من الإجهاد مع تزايد الحرارة' },
 ];
 
 const AwarenessIndex: React.FC = () => {
@@ -84,7 +85,7 @@ const AwarenessIndex: React.FC = () => {
           src={active.src}
           controls
           className="w-full max-w-[800px] rounded-lg border-2 border-[#84333c]"
-          aria-label={active.title}
+          aria-label={isEnglish ? active.titleEn : active.titleAr}
         >
           متصفحك لا يدعم تشغيل الفيديو.
         </video>
@@ -100,7 +101,7 @@ const AwarenessIndex: React.FC = () => {
                 : 'bg-white text-[#84333c] border-[#84333c] hover:bg-[#f3e8eb]'
             }`}
           >
-            {v.title}
+            {isEnglish ? v.titleEn : v.titleAr}
           </button>
         ))}
       </div>
