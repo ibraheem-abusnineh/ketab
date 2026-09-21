@@ -5,9 +5,6 @@ build:
     build:
       - npm --prefix server install
 run:
-  command: node server/index.js
+  command: node server/composer.js
   network:
     port: 5000
-  env:
-    - name: GH_TOKEN
-      value: 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
