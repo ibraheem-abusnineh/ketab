@@ -39,6 +39,11 @@ const UserManagement: React.FC = (): React.ReactElement => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [editingUser, setEditingUser] = useState<string | null>(null);
+  // Draft for the inline National Number edit. Kept separate from the row's
+  // nationalNumber because rows and edit state are keyed by the ORIGINAL
+  // number — writing each keystroke into the row would change its key and
+  // collapse the editing UI mid-edit.
+  const [editNationalNumber, setEditNationalNumber] = useState('');
   
   // Add user form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -121,16 +126,31 @@ const UserManagement: React.FC = (): React.ReactElement => {
 
   const handleEditClick = (nationalNumber: string) => {
     setEditingUser(nationalNumber);
+    setEditNationalNumber(nationalNumber);
   };
 
   const handleCancelEdit = () => {
     setEditingUser(null);
+    setEditNationalNumber('');
     setError('');
   };
 
   const handleUpdateUser = async (user: EditUser) => {
     if (!user || !user.nationalNumber) {
       setError('Invalid user data');
+      return;
+    }
+
+    // editingUser holds the ORIGINAL number the row was opened with.
+    const originalNumber = editingUser;
+    if (!originalNumber) {
+      setError('Invalid user data');
+      return;
+    }
+
+    const trimmedNewNumber = editNationalNumber.trim();
+    if (!trimmedNewNumber) {
+      setError('National number is required');
       return;
     }
 
@@ -141,7 +161,8 @@ const UserManagement: React.FC = (): React.ReactElement => {
         throw new Error('Name and role are required fields');
       }
 
-      const response = await apiFetch(`/api/users/${user.nationalNumber.trim()}`, {
+      // 1. Save the regular fields against the current (old) number.
+      const response = await apiFetch(`/api/users/${originalNumber.trim()}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -157,15 +178,31 @@ const UserManagement: React.FC = (): React.ReactElement => {
       });
 
       const data = await response.json();
-      if (data.success && data.user) {
-        setUsers(users.map(u => 
-          u.nationalNumber === user.nationalNumber ? { ...data.user } : u
-        ));
-        setEditingUser(null);
-        setError('');
-      } else {
+      if (!data.success) {
         throw new Error(data.error || 'Failed to update user');
       }
+
+      // 2. If the national number changed, rename via the dedicated endpoint
+      //    (server rejects duplicates with 409).
+      if (trimmedNewNumber !== originalNumber.trim()) {
+        const renameResponse = await apiFetch(`/api/users/${originalNumber.trim()}/nationalNumber`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ newNationalNumber: trimmedNewNumber })
+        });
+        const renameData = await renameResponse.json();
+        if (!renameData.success) {
+          throw new Error(renameData.error || 'Failed to change national number');
+        }
+      }
+
+      setEditingUser(null);
+      setEditNationalNumber('');
+      setError('');
+      await fetchUsers();
     } catch (error: any) {
       setError(error.message || 'Network error while updating user');
     } finally {
@@ -400,7 +437,19 @@ const UserManagement: React.FC = (): React.ReactElement => {
           <tbody>
             {filteredUsers.map(user => (
               <tr key={user.nationalNumber}>
-                <td>{user.nationalNumber}</td>
+                <td>
+                  {editingUser === user.nationalNumber ? (
+                    <input
+                      type="text"
+                      value={editNationalNumber}
+                      onChange={(e) => setEditNationalNumber(e.target.value)}
+                      className="edit-input"
+                      title="Changing this changes the user's login"
+                    />
+                  ) : (
+                    user.nationalNumber
+                  )}
+                </td>
                 <td>
                   {editingUser === user.nationalNumber ? (
                     <input

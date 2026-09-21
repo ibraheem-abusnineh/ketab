@@ -6,15 +6,13 @@ import LetterImage from './LetterImage';
 import { useCourseState, CourseType } from '../utils/courseState';
 import { LetterData } from '../types';
 import LogoWithImage from './LogoWithImage';
-import { useCourseAvailability } from '../context/CourseAvailabilityContext';
-import { getAuthState } from '../utils/auth';
+import CourseTabRow from './CourseTabRow';
 
 const LettersIndex: React.FC = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [course, setCourse] = useCourseState();
   const [lockedCourse, setLockedCourse] = useState<CourseType | null>(null);
-  const { courses: availability } = useCourseAvailability();
   interface CourseData {
     letters: string[];
     data: Record<string, LetterData>;
@@ -115,15 +113,7 @@ const LettersIndex: React.FC = () => {
 
   const isEnglish = course === 'english';
 
-  const englishLocked = availability.english.locked;
-
-  const handleCourseSelection = (targetCourse: CourseType) => {
-    const isDev = getAuthState().user?.role === 'developer';
-    if (!isDev && availability[targetCourse]?.locked) {
-      setLockedCourse(targetCourse);
-      return;
-    }
-
+  const handleCourseChange = (targetCourse: CourseType) => {
     if (course !== targetCourse) {
       setCourse(targetCourse);
       setCurrentPage(1);
@@ -132,10 +122,6 @@ const LettersIndex: React.FC = () => {
 
   const labels = {
     profile: isEnglish ? '👤 Profile' : '👤 الملف الشخصي',
-    arabicCourse: isEnglish ? 'Arabic Language' : 'اللغة العربية',
-    englishCourse: englishLocked
-      ? isEnglish ? '🔒 English Language' : '🔒 اللغة الإنجليزية'
-      : isEnglish ? 'English Language' : 'اللغة الإنجليزية',
     previousPage: isEnglish ? 'Previous Page' : 'الصفحة السابقة',
     nextPage: isEnglish ? 'Next Page' : 'الصفحة التالية',
     goFirstLetter: isEnglish ? 'Go to First Letter' : 'انتقل إلى أول حرف',
@@ -163,6 +149,7 @@ const LettersIndex: React.FC = () => {
             className="w-full h-auto block"
           />
         </div>
+
         <button
           className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
           onClick={handleProfileClick}
@@ -171,21 +158,12 @@ const LettersIndex: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex justify-center gap-5 mb-[30px] flex-wrap">
-        <button
-          className={`py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px ${course === 'arabic' ? 'bg-[#84333c] text-white' : 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white'}`}
-          onClick={() => setCourse('arabic')}
-        >
-          {labels.arabicCourse}
-        </button>
-        <button
-          className={`py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px ${course === 'english' ? 'bg-[#84333c] text-white' : 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white'} ${englishLocked ? 'opacity-60 cursor-not-allowed relative hover:bg-gray-100 hover:text-[#666] hover:border-[#ccc] hover:transform-none' : ''}`}
-          onClick={() => handleCourseSelection('english')}
-        >
-          {labels.englishCourse}
-        </button>
-      </div>
-      
+      <CourseTabRow
+        activeOverride={course}
+        onCourseChange={handleCourseChange}
+        onLockedClick={setLockedCourse}
+      />
+
       <div className="text-center text-[2.5em] text-[#84333c] mb-[30px] font-bold drop-shadow-[1px_1px_2px_rgba(255,255,255,0.8)]">
         {currentData.title}
       </div>

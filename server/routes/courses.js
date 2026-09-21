@@ -7,26 +7,31 @@
  * consistency with the rest of the routes, but the store writes are
  * `remoteEligible: false`, so only the local file changes.
  *
- * This router does NOT import `requireAuth` directly: the composer
- * attaches the auth middleware at mount time. The router only declares
- * the route handlers; gating is the composer's job. This keeps the
- * router modules unit-testable without auth wiring.
+ * The PUT route uses the `requireAdmin` middleware per-route (matching
+ * users.js / stats.js / reports.js / notifications.js). The GET route
+ * stays public so the CourseAvailabilityContext can read the lock
+ * state on every page load.
  */
+const { requireAdmin } = require('../middleware/auth');
+
 const express = require('express');
 
 const DEFAULT_COURSE_SETTINGS = {
   arabic: { locked: false, label: 'Arabic Language' },
   english: { locked: true, label: 'English Language' },
   math: { locked: false, label: 'Math' },
-};
+  awareness: { locked: true, label: 'Awareness' },
+ };
 
 function cloneDefaultCourses() {
   return {
     arabic: { ...DEFAULT_COURSE_SETTINGS.arabic },
     english: { ...DEFAULT_COURSE_SETTINGS.english },
     math: { ...DEFAULT_COURSE_SETTINGS.math },
-  };
-}
+    awareness: { ...DEFAULT_COURSE_SETTINGS.awareness },
+   };
+ }
+
 
 
 function createCoursesRouter(store) {
@@ -41,14 +46,13 @@ function createCoursesRouter(store) {
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   });
-
-  router.put('/api/admin/courses/:courseId', async (req, res) => {
+  router.put('/api/admin/courses/:courseId', requireAdmin, async (req, res) => {
     const { courseId } = req.params;
     const { locked, label } = req.body || {};
 
     const normalizedCourseId = (courseId || '').toLowerCase().trim();
 
-    if (!['arabic', 'english', 'math'].includes(normalizedCourseId)) {
+    if (!['arabic', 'english', 'math', 'awareness'].includes(normalizedCourseId)) {
       return res.status(404).json({ success: false, error: 'Course not found' });
     }
 

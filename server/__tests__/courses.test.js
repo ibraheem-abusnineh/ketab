@@ -39,6 +39,7 @@ describe('courses router', () => {
           arabic: { locked: false, label: 'Arabic Language' },
           english: { locked: true, label: 'English Language' },
           math: { locked: false, label: 'Math' },
+          awareness: { locked: true, label: 'Awareness' },
         },
       });
     });

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { numbersData, numbersOrder } from '../data/numbersData';
@@ -8,9 +8,14 @@ import {
   NumberDrawablePage,
   NumberHotspotPage,
 } from './worksheet';
+import { useCourseAvailability } from '../context/CourseAvailabilityContext';
+import { getAuthState } from '../utils/auth';
 import './NumbersWorksheet.css';
 
-const PAGE_ORDER = ['1', '2', '3', '4', '5', '6'];
+// Page order per the math-content revision doc: after the learn page's
+// video, the child practices writing (trace the guided numeral, then
+// write it) BEFORE the counting/choosing questions. Color stays last.
+const PAGE_ORDER = ['1', '5', '2', '3', '4', '6'];
 
 const isDrawType = (type: NumberPageType): boolean =>
   type === 'write' || type === 'trace' || type === 'color';
@@ -46,6 +51,7 @@ const RotateCcwIcon: React.FC<IconProps> = ({ size = 16 }) => (
     <path d="M3 4v5h5" />
   </svg>
 );
+void RotateCcwIcon; // kept for potential future use
 const PartyPopperIcon: React.FC<IconProps> = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5.8 11.3 2 22l10.7-3.79" />
@@ -63,6 +69,9 @@ const NumbersWorksheet: React.FC = () => {
   // unit being a letter or a number.
   const { letter } = useParams<{ letter: string }>();
   const navigate = useNavigate();
+  const { courses: availability } = useCourseAvailability();
+  const mathLocked = availability.math?.locked;
+  const isDev = getAuthState().user?.role === 'developer';
 
   const parsed = letter ? parseInt(letter, 10) : NaN;
   const initial =
@@ -74,11 +83,6 @@ const NumbersWorksheet: React.FC = () => {
   const [pageIdx, setPageIdx] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [drawn, setDrawn] = useState(false);
-  const [finished, setFinished] = useState(false);
-
-  const numberData: NumberData | undefined = numbersData[selectedNumber];
-  const pageKey = useMemo(() => PAGE_ORDER[pageIdx], [pageIdx]);
-  const page = numberData?.pages[pageKey];
 
   // Sync URL → state when the user navigates /worksheet/:n directly.
   useEffect(() => {
@@ -87,22 +91,14 @@ const NumbersWorksheet: React.FC = () => {
       setPageIdx(0);
       setCompleted(false);
       setDrawn(false);
-      setFinished(false);
     }
   }, [parsed, selectedNumber]);
 
-  // Reset completion when the selected number changes.
-  const restartAll = useCallback(() => {
+  useEffect(() => {
     setPageIdx(0);
     setCompleted(false);
     setDrawn(false);
-    setFinished(false);
-  }, []);
-
-  useEffect(() => {
-    restartAll();
-  }, [selectedNumber, restartAll]);
-
+  }, [selectedNumber]);
   useEffect(() => {
     const titleBeforePrint = document.title;
     const onBeforePrint = () => {
@@ -119,6 +115,37 @@ const NumbersWorksheet: React.FC = () => {
     };
   }, []);
 
+  const numberData: NumberData | undefined = numbersData[selectedNumber];
+  const pageKey = useMemo(() => PAGE_ORDER[pageIdx], [pageIdx]);
+  const page = numberData?.pages[pageKey];
+
+  if (mathLocked && !isDev) {
+    return (
+      <div
+        className="bg-white rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.15)] border-[3px] border-[#84333c] p-[30px] lg:p-[40px_30px_30px_30px] mt-10 mx-auto relative w-full max-w-[1100px] lg:max-w-[98vw]"
+        dir="rtl"
+        style={{ direction: 'rtl' }}
+      >
+        <div className="flex justify-between items-center mb-5">
+          <button
+            className="bg-[#84333c] text-white border-none rounded-lg py-3 px-5 text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(132,51,60,0.3)] hover:bg-[#a45a64] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(132,51,60,0.4)] ml-auto"
+            onClick={() => navigate('/letters')}
+          >
+            الحروف
+          </button>
+        </div>
+        <div className="text-center text-[2.2em] text-[#84333c] mb-[30px] font-bold drop-shadow-[1px_1px_2px_rgba(255,255,255,0.8)]">
+          المحتوى مقفل
+        </div>
+        <p className="text-center text-[1.1em] text-[#333] leading-[1.6]">
+          محتوى الأعداد (الرياضيات) مقفل حالياً.
+        </p>
+      </div>
+    );
+  }
+
+
+
   const resetStepState = () => {
     setCompleted(false);
     setDrawn(false);
@@ -133,32 +160,25 @@ const NumbersWorksheet: React.FC = () => {
     }
   };
 
+  // Finishing the last page advances straight to the next number — no
+  // intermediate congratulation screen. After the final number (10) we
+  // return to the numbers menu.
   const goNext = () => {
     if (pageIdx < PAGE_ORDER.length - 1) {
       setPageIdx(pageIdx + 1);
       resetStepState();
+      return;
+    }
+    const currentIndex = numbersOrder.indexOf(selectedNumber);
+    if (currentIndex < 0 || currentIndex === numbersOrder.length - 1) {
+      navigate('/numbers');
     } else {
-      setFinished(true);
+      navigate(`/worksheet/${numbersOrder[currentIndex + 1]}`);
     }
   };
 
   const goHome = () => navigate('/letters');
 
-  // After the user finishes a number's last page, wait briefly so they
-  // see the celebratory screen, then auto-advance to the next number.
-  // On the last number (10) we keep the existing "أتقنت كل الأعداد" menu
-  // so the user has somewhere to go from here.
-  useEffect(() => {
-    if (!finished) return;
-    const currentIndex = numbersOrder.indexOf(selectedNumber);
-    const isLastNumber = currentIndex === numbersOrder.length - 1;
-    if (isLastNumber || currentIndex < 0) return;
-    const nextNumber = numbersOrder[currentIndex + 1];
-    const timer = setTimeout(() => {
-      navigate(`/worksheet/${nextNumber}`);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [finished, selectedNumber, navigate]);
 
   if (!numberData || !page) {
     return <div>Number not found</div>;
@@ -172,9 +192,7 @@ const NumbersWorksheet: React.FC = () => {
 
   return (
     <div className="numbers-worksheet-container" dir="rtl">
-      {!finished && (
-        <>
-          <div className="numbers-worksheet-header">
+      <div className="numbers-worksheet-header">
             <button
               type="button"
               className="numbers-worksheet-home-btn"
@@ -250,46 +268,6 @@ const NumbersWorksheet: React.FC = () => {
               )}
             </button>
           </div>
-        </>
-      )}
-
-      {finished && (() => {
-        const currentIndex = numbersOrder.indexOf(selectedNumber);
-        const isLastNumber = currentIndex === numbersOrder.length - 1;
-        const nextNumber = isLastNumber ? null : numbersOrder[currentIndex + 1];
-        return (
-          <div className="numbers-worksheet-finished">
-            <div className="numbers-worksheet-finished-emoji" aria-hidden="true">
-              🏆
-            </div>
-            <h2 className="numbers-worksheet-finished-heading">
-              {isLastNumber
-                ? 'أحسنت! أتقنت كل الأعداد'
-                : `أحسنت! أتقنتَ العدد ${numberData.value}`}
-            </h2>
-            {!isLastNumber && (
-              <p className="numbers-worksheet-finished-hint">
-                الانتقال إلى العدد {nextNumber}…
-              </p>
-            )}
-            <div className="numbers-worksheet-finished-actions">
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={() => {
-                  restartAll();
-                }}
-              >
-                <RotateCcwIcon /> إعادة
-              </button>
-              <button type="button" className="outline-btn" onClick={goHome}>
-                <HomeIcon />
-                {isLastNumber ? ' العودة إلى القائمة' : ' القائمة'}
-              </button>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 };

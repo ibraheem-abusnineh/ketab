@@ -4,7 +4,7 @@ import './CoursePickerModal.css';
 interface Props {
   open: boolean;
   userName?: string;
-  onPick: (course: 'letters' | 'numbers') => void;
+  onPick: (course: 'letters' | 'numbers' | 'awareness') => void;
 }
 
 const CoursePickerModal: React.FC<Props> = ({ open, userName, onPick }) => {
@@ -35,6 +35,25 @@ const CoursePickerModal: React.FC<Props> = ({ open, userName, onPick }) => {
             <span className="course-picker-label">الحروف</span>
           </button>
 
+          <button
+            type="button"
+            className="course-picker-btn"
+            onClick={() => onPick('awareness')}
+            aria-label="توعية"
+          >
+            <span className="course-picker-icon" aria-hidden="true">📢</span>
+            <span className="course-picker-label">توعية</span>
+          </button>
+
+          <button
+            type="button"
+            className="course-picker-btn"
+            onClick={() => onPick('numbers')}
+            aria-label="الأعداد"
+          >
+            <span className="course-picker-icon" aria-hidden="true">1 2 3</span>
+            <span className="course-picker-label">الأعداد</span>
+          </button>
         </div>
       </div>
     </div>

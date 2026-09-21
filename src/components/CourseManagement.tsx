@@ -6,13 +6,15 @@ import { CourseType } from '../utils/courseState';
 const DISPLAY_NAMES: Record<CourseType, string> = {
   arabic: 'Arabic Language',
   english: 'English Language',
-  math: 'Math'
+  math: 'Math',
+  awareness: 'Awareness'
 };
 
 const DESCRIPTIONS: Record<CourseType, string> = {
   arabic: 'Available to all users.',
   english: 'Unlock to allow learners to access the English sign language materials.',
-  math: 'Unlock to allow learners to access the numbers (math) worksheets.'
+  math: 'Unlock to allow learners to access the numbers (math) worksheets.',
+  awareness: 'Unlock to allow learners to access the awareness videos.'
 };
 
 const CourseManagement: React.FC = () => {
@@ -71,32 +73,23 @@ const CourseManagement: React.FC = () => {
                 </div>
                 <p className="course-description">{DESCRIPTIONS[course]}</p>
                 <div className="course-actions">
-                  {course === 'math' && status.locked ? (
-                    <div className="course-locked-message" data-testid="math-locked-message">
-                      <strong>Locked</strong>
-                      <p>This course is currently locked. Use the developer endpoint or an admin with dev privileges to unlock it.</p>
-                    </div>
-                  ) : (
-                    <button
-                      className={`toggle-button ${status.locked ? 'unlock' : 'lock'}`}
-                      disabled={loading || isSaving || course === 'arabic'}
-                      onClick={() => handleToggle(course)}
-                    >
-                      {isSaving
-                        ? 'Saving...'
-                        : course === 'arabic'
-                          ? 'Always Available'
-                          : status.locked ? 'Unlock Course' : 'Lock Course'}
-                    </button>
-                  )}
+                  <button
+                    className={`toggle-button ${status.locked ? 'unlock' : 'lock'}`}
+                    disabled={loading || isSaving || course === 'arabic'}
+                    onClick={() => handleToggle(course)}
+                  >
+                    {isSaving
+                      ? 'Saving...'
+                      : course === 'arabic'
+                        ? 'Always Available'
+                        : status.locked ? 'Unlock Course' : 'Lock Course'}
+                  </button>
                   <span className="hint-text">
                     {course === 'arabic'
                       ? 'The primary Arabic course is always enabled.'
-                      : course === 'math' && status.locked
-                        ? 'The math card has no admin toggle in this build. Unlock via the API or a dev account.'
-                        : status.locked
-                          ? 'Students will not see this course while it is locked.'
-                          : 'Students can now access this course from their dashboards.'}
+                      : status.locked
+                        ? 'Students will not see this course while it is locked.'
+                        : 'Students can now access this course from their dashboards.'}
                   </span>
                 </div>
               </div>
@@ -110,4 +103,3 @@ const CourseManagement: React.FC = () => {
 };
 
 export default CourseManagement;
-
