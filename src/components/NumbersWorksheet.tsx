@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { numbersData, numbersOrder } from '../data/numbersData';
@@ -51,6 +51,7 @@ const RotateCcwIcon: React.FC<IconProps> = ({ size = 16 }) => (
     <path d="M3 4v5h5" />
   </svg>
 );
+void RotateCcwIcon; // kept for potential future use
 const PartyPopperIcon: React.FC<IconProps> = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5.8 11.3 2 22l10.7-3.79" />
@@ -82,7 +83,6 @@ const NumbersWorksheet: React.FC = () => {
   const [pageIdx, setPageIdx] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [drawn, setDrawn] = useState(false);
-  const [finished, setFinished] = useState(false);
 
   // Sync URL → state when the user navigates /worksheet/:n directly.
   useEffect(() => {
@@ -91,20 +91,14 @@ const NumbersWorksheet: React.FC = () => {
       setPageIdx(0);
       setCompleted(false);
       setDrawn(false);
-      setFinished(false);
     }
   }, [parsed, selectedNumber]);
 
-  const restartAll = useCallback(() => {
+  useEffect(() => {
     setPageIdx(0);
     setCompleted(false);
     setDrawn(false);
-    setFinished(false);
-  }, []);
-
-  useEffect(() => {
-    restartAll();
-  }, [selectedNumber, restartAll]);
+  }, [selectedNumber]);
   useEffect(() => {
     const titleBeforePrint = document.title;
     const onBeforePrint = () => {
@@ -121,21 +115,6 @@ const NumbersWorksheet: React.FC = () => {
     };
   }, []);
 
-  // After the user finishes a number's last page, wait briefly so they
-  // see the celebratory screen, then auto-advance to the next number.
-  // On the last number (10) we keep the existing "أتقنت كل الأعداد" menu
-  // so the user has somewhere to go from here.
-  useEffect(() => {
-    if (!finished) return;
-    const currentIndex = numbersOrder.indexOf(selectedNumber);
-    const isLastNumber = currentIndex === numbersOrder.length - 1;
-    if (isLastNumber || currentIndex < 0) return;
-    const nextNumber = numbersOrder[currentIndex + 1];
-    const timer = setTimeout(() => {
-      navigate(`/worksheet/${nextNumber}`);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [finished, selectedNumber, navigate]);
   const numberData: NumberData | undefined = numbersData[selectedNumber];
   const pageKey = useMemo(() => PAGE_ORDER[pageIdx], [pageIdx]);
   const page = numberData?.pages[pageKey];
@@ -181,12 +160,20 @@ const NumbersWorksheet: React.FC = () => {
     }
   };
 
+  // Finishing the last page advances straight to the next number — no
+  // intermediate congratulation screen. After the final number (10) we
+  // return to the numbers menu.
   const goNext = () => {
     if (pageIdx < PAGE_ORDER.length - 1) {
       setPageIdx(pageIdx + 1);
       resetStepState();
+      return;
+    }
+    const currentIndex = numbersOrder.indexOf(selectedNumber);
+    if (currentIndex < 0 || currentIndex === numbersOrder.length - 1) {
+      navigate('/numbers');
     } else {
-      setFinished(true);
+      navigate(`/worksheet/${numbersOrder[currentIndex + 1]}`);
     }
   };
 
@@ -205,9 +192,7 @@ const NumbersWorksheet: React.FC = () => {
 
   return (
     <div className="numbers-worksheet-container" dir="rtl">
-      {!finished && (
-        <>
-          <div className="numbers-worksheet-header">
+      <div className="numbers-worksheet-header">
             <button
               type="button"
               className="numbers-worksheet-home-btn"
@@ -283,46 +268,6 @@ const NumbersWorksheet: React.FC = () => {
               )}
             </button>
           </div>
-        </>
-      )}
-
-      {finished && (() => {
-        const currentIndex = numbersOrder.indexOf(selectedNumber);
-        const isLastNumber = currentIndex === numbersOrder.length - 1;
-        const nextNumber = isLastNumber ? null : numbersOrder[currentIndex + 1];
-        return (
-          <div className="numbers-worksheet-finished">
-            <div className="numbers-worksheet-finished-emoji" aria-hidden="true">
-              🏆
-            </div>
-            <h2 className="numbers-worksheet-finished-heading">
-              {isLastNumber
-                ? 'أحسنت! أتقنت كل الأعداد'
-                : `أحسنت! أتقنتَ العدد ${numberData.value}`}
-            </h2>
-            {!isLastNumber && (
-              <p className="numbers-worksheet-finished-hint">
-                الانتقال إلى العدد {nextNumber}…
-              </p>
-            )}
-            <div className="numbers-worksheet-finished-actions">
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={() => {
-                  restartAll();
-                }}
-              >
-                <RotateCcwIcon /> إعادة
-              </button>
-              <button type="button" className="outline-btn" onClick={goHome}>
-                <HomeIcon />
-                {isLastNumber ? ' العودة إلى القائمة' : ' القائمة'}
-              </button>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 };
