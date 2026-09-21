@@ -51,7 +51,7 @@ const CoursePickerModal: React.FC<Props> = ({ open, userName, onPick }) => {
             onClick={() => onPick('numbers')}
             aria-label="الأعداد"
           >
-            <span className="course-picker-icon" aria-hidden="true">١ ٢ ٣</span>
+            <span className="course-picker-icon" aria-hidden="true">1 2 3</span>
             <span className="course-picker-label">الأعداد</span>
           </button>
         </div>
