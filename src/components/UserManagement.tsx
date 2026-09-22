@@ -320,9 +320,10 @@ const UserManagement: React.FC = (): React.ReactElement => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.nationalNumber.includes(searchTerm) ||
-                         user.school.toLowerCase().includes(searchTerm.toLowerCase());
+    // Some imported users have no `school` field — guard so search can't crash the render.
+    const matchesSearch = (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.nationalNumber || '').includes(searchTerm) ||
+                         (user.school || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });

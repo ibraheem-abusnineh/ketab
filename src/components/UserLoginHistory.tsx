@@ -47,9 +47,9 @@ const UserLoginHistory: React.FC = () => {
   }, []);
 
   const filteredUsers = userHistory.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.nationalNumber.includes(searchTerm) ||
-                         user.school.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.nationalNumber || '').includes(searchTerm) ||
+                         (user.school || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
