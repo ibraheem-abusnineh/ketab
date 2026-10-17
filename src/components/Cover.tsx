@@ -114,7 +114,7 @@ const Cover: React.FC = () => {
           />
         </div>
         
-        <div className="flex items-center justify-center w-full max-w-[400px] lg:min-w-[300px]">
+        <div className="flex flex-col items-center justify-center gap-4 w-full max-w-[400px] lg:min-w-[300px]">
           {!showLogin ? (
             <button 
               className="bg-[#84333c] text-white border-none rounded-lg py-[18px] px-[48px] text-[1.3em] font-bold cursor-pointer shadow-[0_4px_16px_rgba(132,51,60,0.12)] transition-all duration-300 w-full hover:bg-[#a45a64] hover:scale-105" 
@@ -189,6 +189,15 @@ const Cover: React.FC = () => {
               </form>
             </div>
           )}
+
+          <a
+            href="https://qra.jo/partners/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center w-full bg-white text-[#84333c] border-2 border-[#84333c] rounded-lg py-[12px] px-[32px] text-[1.1em] font-bold cursor-pointer no-underline transition-all duration-300 hover:bg-[#84333c] hover:text-white"
+          >
+            الشركاء
+          </a>
         </div>
       </div>
 
