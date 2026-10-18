@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { CourseType, useCourseState } from '../utils/courseState';
 import { useCourseAvailability } from '../context/CourseAvailabilityContext';
 import { getAuthState } from '../utils/auth';
@@ -23,10 +23,12 @@ interface CourseTabRowProps {
   onCourseChange?: (course: CourseType) => void;
   /** Fires when the user clicks a locked arabic/english tab on the letters page; the page shows its lock modal. */
   onLockedClick?: (course: CourseType) => void;
+  /** Forces Arabic labels regardless of the app-wide course (Arabic-only pages). */
+  forceArabic?: boolean;
 }
 
 const BTN_BASE =
-  'py-[15px] px-[20px] min-w-[200px] lg:min-w-[250px] text-center border-2 border-[#84333c] rounded-lg text-base cursor-pointer transition-all duration-200 active:translate-y-px';
+  'py-[15px] px-[12px] min-w-[220px] text-center border-2 border-[#84333c] rounded-lg text-sm cursor-pointer transition-all duration-200 active:translate-y-px';
 const BTN_ACTIVE = 'bg-[#84333c] text-white';
 const BTN_INACTIVE = 'bg-white text-[#333] hover:bg-[#84333c] hover:text-white';
 const BTN_LOCKED =
@@ -46,13 +48,13 @@ const BTN_LOCKED =
  *   via onLockedClick; other pages just don't navigate. Locked math/awareness
  *   still navigate — their pages render the lock screen themselves.
  */
-const CourseTabRow: React.FC<CourseTabRowProps> = ({ activeOverride, onCourseChange, onLockedClick }) => {
+const CourseTabRow: React.FC<CourseTabRowProps> = ({ activeOverride, onCourseChange, onLockedClick, forceArabic }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [course, setCourse] = useCourseState();
   const { courses: availability } = useCourseAvailability();
   const isDev = getAuthState().user?.role === 'developer';
-  const isEnglish = course === 'english';
+  const isEnglish = !forceArabic && course === 'english';
   // Trailing slash tolerant: '/awareness/' must match '/awareness'.
   const path = location.pathname.replace(/\/+$/, '') || '/';
 
@@ -89,7 +91,7 @@ const CourseTabRow: React.FC<CourseTabRowProps> = ({ activeOverride, onCourseCha
   };
 
   return (
-    <div className="flex justify-center gap-5 mb-[30px] flex-wrap">
+    <div className="flex flex-wrap justify-center gap-[24px] mb-[30px] max-w-[760px] mx-auto">
       {COURSE_TABS.map((tab) => {
         const locked = availability[tab.course]?.locked;
         const classes = [BTN_BASE, isActive(tab) ? BTN_ACTIVE : BTN_INACTIVE];
@@ -105,6 +107,12 @@ const CourseTabRow: React.FC<CourseTabRowProps> = ({ activeOverride, onCourseCha
           </button>
         );
       })}
+      <Link
+        to="/contributors"
+        className={[BTN_BASE, path === '/contributors' ? BTN_ACTIVE : BTN_INACTIVE, 'no-underline inline-flex items-center justify-center'].join(' ')}
+      >
+        {isEnglish ? 'Contributors & Partners' : 'المساهمون والشركاء'}
+      </Link>
     </div>
   );
 };

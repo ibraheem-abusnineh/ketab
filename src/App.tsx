@@ -6,6 +6,7 @@ import LettersIndex from './components/LettersIndex';
 import WorksheetRouter from './components/WorksheetRouter';
 import NumbersIndex from './components/NumbersIndex';
 import AwarenessIndex from './components/AwarenessIndex';
+import ContributorsIndex from './components/ContributorsIndex';
 import Profile from './components/Profile';
 import FeedbackButton from './components/FeedbackButton';
 import AdminLogin from './components/AdminLogin';
@@ -44,6 +45,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthed, adminSession, handleAdm
         <Route path="/worksheet/:letter" element={isAuthed ? <WorksheetRouter /> : <Navigate to="/" replace />} />
         <Route path="/numbers" element={isAuthed ? <NumbersIndex /> : <Navigate to="/" replace />} />
         <Route path="/awareness" element={isAuthed ? <AwarenessIndex /> : <Navigate to="/" replace />} />
+        <Route path="/contributors" element={isAuthed ? <ContributorsIndex /> : <Navigate to="/" replace />} />
         <Route path="/profile" element={isAuthed ? <Profile /> : <Navigate to="/" replace />} />
         <Route path="/admin" element={<AdminLogin onLoginSuccess={handleAdminLogin} />} />
         <Route path="/admin/dashboard" element={
