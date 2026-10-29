@@ -9,6 +9,8 @@ React frontend (TypeScript) + Express backend (CommonJS). Frontend in `src/`, ba
 - `npm start` / `npm run server` — start one side only
 - `npm run build` — production build
 - `npm run server:setup` — create admin credentials (default: admin/admin123)
+- `npm run data:export` / `npm run data:import` — write/restore SQL seeds in `server/data/seeds/` (gitignored)
+- Admin → **Backup & restore** — download a portable JSON backup and restore it after a re-clone
 - `cd server && npm run migrate` — one-off user migration
 - `npm test -- --watchAll=false` — CI-style test run
 

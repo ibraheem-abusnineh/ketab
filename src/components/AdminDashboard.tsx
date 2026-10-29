@@ -1,46 +1,88 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import UserManagement from './UserManagement';
-import Statistics from './Statistics';
-import UserLoginHistory from './UserLoginHistory';
-import ProfileRequests from './ProfileRequests';
-import Reports from './Reports';
-import CourseManagement from './CourseManagement';
-import './AdminDashboard.css';
+import './admin/admin.css';
 import { apiFetch } from '../utils/api';
-
-interface Notification {
-  id: string;
-  type: 'profile_update' | 'profile_edit_request';
-  userId: string;
-  userName: string;
-  timestamp: string;
-  changes: {
-    field: string;
-    oldValue: string;
-    newValue: string;
-  }[];
-  read: boolean;
-  status?: 'pending' | 'approved' | 'rejected';
-  approvedAt?: string;
-  rejectedAt?: string;
-}
+import Icon, { IconName } from './admin/Icons';
+import { AdminTab } from './admin/types';
+import { useNotifications } from './admin/useNotifications';
+import OverviewPage from './admin/pages/OverviewPage';
+import StatisticsPage from './admin/pages/StatisticsPage';
+import ReportsPage from './admin/pages/ReportsPage';
+import UsersPage from './admin/pages/UsersPage';
+import LoginHistoryPage from './admin/pages/LoginHistoryPage';
+import ProfileRequestsPage from './admin/pages/ProfileRequestsPage';
+import NotificationsPage from './admin/pages/NotificationsPage';
+import CoursesPage from './admin/pages/CoursesPage';
+import DataPage from './admin/pages/DataPage';
 
 interface Props {
   sessionToken: string;
 }
 
+interface NavItem {
+  id: AdminTab;
+  label: string;
+  icon: IconName;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Monitor',
+    items: [
+      { id: 'overview', label: 'Overview', icon: 'grid' },
+      { id: 'statistics', label: 'Statistics', icon: 'chart' },
+      { id: 'reports', label: 'Reports', icon: 'document' },
+      { id: 'history', label: 'Login history', icon: 'clock' },
+    ],
+  },
+  {
+    label: 'Manage',
+    items: [
+      { id: 'users', label: 'Users', icon: 'users' },
+      { id: 'requests', label: 'Profile requests', icon: 'inbox' },
+      { id: 'notifications', label: 'Inbox', icon: 'bell' },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { id: 'courses', label: 'Courses', icon: 'layers' },
+      { id: 'data', label: 'Backup & restore', icon: 'database' },
+    ],
+  },
+];
+
+const TAB_TITLES: Record<AdminTab, string> = {
+  overview: 'Overview',
+  statistics: 'Statistics',
+  reports: 'Reports',
+  history: 'Login history',
+  users: 'Users',
+  requests: 'Profile requests',
+  notifications: 'Inbox',
+  courses: 'Courses',
+  data: 'Backup & restore',
+};
+
+const TAB_META: Record<AdminTab, string> = {
+  overview: 'The state of the platform today',
+  statistics: 'Traffic, schools, and activity patterns',
+  reports: 'Build, export, and print a period report',
+  history: 'Every user, every login, on one ledger',
+  users: 'The directory of parents, teachers, and staff',
+  requests: 'Review profile changes before they go live',
+  notifications: 'Profile updates and pending requests',
+  courses: 'Control which courses learners can open',
+  data: 'Download a backup, restore it after a re-clone',
+};
+
 const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [visitCount, setVisitCount] = useState<number>(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [activeTab, setActiveTab] = useState<'statistics' | 'users' | 'history' | 'notifications' | 'requests' | 'reports' | 'courses'>('statistics');
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -50,152 +92,7 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
   const [passwordError, setPasswordError] = useState('');
   const navigate = useNavigate();
 
-  const fetchVisitCount = async () => {
-    try {
-      const response = await apiFetch('/api/visit-count');
-      const data = await response.json();
-      setVisitCount(data.totalVisits);
-      setLastUpdated(new Date());
-      setError('');
-    } catch (error: any) {
-      setError(error.message || 'Failed to fetch visit count');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      const response = await apiFetch('/api/admin/notifications');
-      const data = await response.json();
-      setNotifications(data.notifications || []);
-      // Count unread and pending requests
-      setUnreadCount((data.notifications || []).filter((n: Notification) => 
-        !n.read || (n.type === 'profile_edit_request' && n.status === 'pending')
-      ).length);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
-
-  const markNotificationAsRead = async (notificationId: string) => {
-    try {
-      await apiFetch(`/api/admin/notifications/${notificationId}/read`, {
-        method: 'POST'
-      });
-      setNotifications(notifications.map(n => 
-        n.id === notificationId ? { ...n, read: true } : n
-      ));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-
-  const deleteNotification = async (notificationId: string) => {
-    const notification = notifications.find(n => n.id === notificationId);
-    
-    // Don't allow deleting profile edit requests
-    if (notification && notification.type === 'profile_edit_request') {
-      alert('Profile edit requests cannot be deleted. Please approve or reject them instead.');
-      return;
-    }
-    
-    if (!window.confirm('Are you sure you want to delete this notification?')) {
-      return;
-    }
-    try {
-      await apiFetch(`/api/admin/notifications/${notificationId}`, {
-        method: 'DELETE'
-      });
-      await fetchNotifications();
-    } catch (error: any) {
-      console.error('Error deleting notification:', error);
-      alert(error.message || 'Failed to delete notification');
-    }
-  };
-
-  const clearAllNotifications = async () => {
-    const regularNotifications = notifications.filter(n => n.type !== 'profile_edit_request');
-    const pendingRequests = notifications.filter(n => n.type === 'profile_edit_request' && n.status === 'pending');
-    
-    if (regularNotifications.length === 0) {
-      alert('No notifications to clear. Profile edit requests are preserved.');
-      return;
-    }
-    
-    const message = `Are you sure you want to clear ${regularNotifications.length} notification(s)?\n\n` +
-      `Note: Profile edit requests (${pendingRequests.length} pending) will be preserved and cannot be cleared.`;
-    
-    if (!window.confirm(message)) {
-      return;
-    }
-    try {
-      const response = await apiFetch('/api/admin/notifications', {
-        method: 'DELETE'
-      });
-      const data = await response.json();
-      await fetchNotifications();
-      if (data.remainingRequests > 0) {
-        alert(`Cleared ${data.clearedCount} notification(s). ${data.remainingRequests} profile edit request(s) preserved.`);
-      }
-    } catch (error: any) {
-      console.error('Error clearing notifications:', error);
-      alert(error.message || 'Failed to clear notifications');
-    }
-  };
-
-  useEffect(() => {
-    // Initial fetch
-    fetchVisitCount();
-    fetchNotifications();
-    
-    // Set up polling every 10 seconds
-    const interval = setInterval(() => {
-      fetchVisitCount();
-      fetchNotifications();
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleLogout = () => {
-    // Clear any admin session data
-    localStorage.removeItem('adminToken');
-    navigate('/admin');
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', { timeZone: 'Asia/Amman' });
-  };
-
-  const handleApproveRequest = async (requestId: string) => {
-    try {
-      await apiFetch(`/api/admin/profile-requests/${requestId}/approve`, {
-        method: 'POST'
-      });
-      await fetchNotifications();
-      await fetchVisitCount(); // Refresh data
-    } catch (error: any) {
-      console.error('Error approving request:', error);
-      alert(error.message || 'Failed to approve request');
-    }
-  };
-
-  const handleRejectRequest = async (requestId: string) => {
-    if (!window.confirm('Are you sure you want to reject this profile edit request?')) {
-      return;
-    }
-    try {
-      await apiFetch(`/api/admin/profile-requests/${requestId}/reject`, {
-        method: 'POST'
-      });
-      await fetchNotifications();
-    } catch (error: any) {
-      console.error('Error rejecting request:', error);
-      alert(error.message || 'Failed to reject request');
-    }
-  };
+  const inbox = useNotifications(15000);
 
   const resetPasswordForm = () => {
     setCurrentPassword('');
@@ -205,8 +102,13 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
     setPasswordMessage('');
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const closePasswordForm = () => {
+    setShowPasswordForm(false);
+    resetPasswordForm();
+  };
+
+  const handleChangePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
     setPasswordError('');
     setPasswordMessage('');
 
@@ -214,14 +116,12 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       setPasswordError('All password fields are required.');
       return;
     }
-
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters.');
+      setPasswordError('The new password must be at least 6 characters.');
       return;
     }
-
     if (newPassword !== confirmPassword) {
-      setPasswordError('New password and confirmation do not match.');
+      setPasswordError('The new password and confirmation do not match.');
       return;
     }
 
@@ -229,271 +129,215 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       setPasswordLoading(true);
       const response = await apiFetch('/api/admin/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
       const data = await response.json();
-      setPasswordMessage(data.message || 'Password changed successfully.');
+      setPasswordMessage(data.message || 'Password changed.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
-      setPasswordError(error.message || 'Failed to change password.');
+      setPasswordError(error.message || 'Could not change the password.');
     } finally {
       setPasswordLoading(false);
     }
   };
 
-  const renderNotifications = () => (
-    <div className="notifications-container">
-      <div className="notifications-header">
-        <h2>Notifications {unreadCount > 0 && <span className="badge">{unreadCount}</span>}</h2>
-        {notifications.length > 0 && (
-          <button 
-            className="clear-all-btn" 
-            onClick={clearAllNotifications}
-            title="Clear all notifications"
-          >
-            🗑️ Clear All
-          </button>
-        )}
-      </div>
-      {notifications.length === 0 ? (
-        <div className="no-notifications">
-          <p>No notifications available</p>
-        </div>
-      ) : (
-        <div className="notifications-list">
-          {notifications.map(notification => {
-            const isRequest = notification.type === 'profile_edit_request';
-            const isPending = isRequest && notification.status === 'pending';
-            
-            return (
-              <div 
-                key={notification.id} 
-                className={`notification-item ${!notification.read || isPending ? 'unread' : ''} ${isPending ? 'pending-request' : ''}`}
-                onClick={() => !notification.read && !isPending && markNotificationAsRead(notification.id)}
-              >
-                <div className="notification-header">
-                  <span className="notification-user">{notification.userName}</span>
-                  <span className="notification-time">{formatDate(notification.timestamp)}</span>
-                </div>
-                <div className="notification-content">
-                  <p>
-                    {isRequest 
-                      ? notification.status === 'pending' 
-                        ? 'Requested to update their profile:' 
-                        : notification.status === 'approved'
-                        ? 'Profile update approved:'
-                        : 'Profile update rejected:'
-                      : 'Updated their profile:'}
-                  </p>
-                  <ul className="changes-list">
-                    {notification.changes.map((change, index) => (
-                      <li key={index}>
-                        <strong>{change.field}</strong>: "{change.oldValue || 'empty'}" → "{change.newValue}"
-                      </li>
-                    ))}
-                  </ul>
-                  {isPending && (
-                    <div className="request-actions" onClick={(e) => e.stopPropagation()}>
-                      <button 
-                        className="approve-btn" 
-                        onClick={() => handleApproveRequest(notification.id)}
-                      >
-                        ✓ Approve
-                      </button>
-                      <button 
-                        className="reject-btn" 
-                        onClick={() => handleRejectRequest(notification.id)}
-                      >
-                        ✗ Reject
-                      </button>
-                    </div>
-                  )}
-                  {isRequest && notification.status === 'approved' && notification.approvedAt && (
-                    <div className="request-status approved">
-                      Approved on {formatDate(notification.approvedAt)}
-                    </div>
-                  )}
-                  {isRequest && notification.status === 'rejected' && notification.rejectedAt && (
-                    <div className="request-status rejected">
-                      Rejected on {formatDate(notification.rejectedAt)}
-                    </div>
-                  )}
-                </div>
-                {/* Don't show delete button for profile edit requests */}
-                {notification.type !== 'profile_edit_request' && (
-                  <button 
-                    className="delete-notification-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNotification(notification.id);
-                    }}
-                    title="Delete notification"
-                  >
-                    ×
-                  </button>
-                )}
-                {(!notification.read || isPending) && (
-                  <div className="notification-badge">
-                    {isPending ? 'Pending' : 'New'}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    navigate('/admin');
+  };
+
+  const todayLabel = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
-    <div className="admin-dashboard">
-      <div className="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <div className="header-actions">
-          <button
-            onClick={() => {
-              setShowPasswordForm(prev => !prev);
-              resetPasswordForm();
-            }}
-            className="admin-password-btn"
-          >
-            Change Password
-          </button>
-          <button onClick={() => navigate('/')} className="admin-home-btn">
-            View Site
-          </button>
-          <button onClick={handleLogout} className="admin-logout-btn">
-            Logout
-          </button>
+    <div className="admin-shell" data-session={sessionToken ? 'active' : 'none'}>
+      <aside className="admin-sidebar">
+        <div className="admin-brand">
+          <div className="admin-brand__row">
+            <div className="admin-brand__glyph" aria-hidden="true">ك</div>
+            <div>
+              <div className="admin-brand__name">KETAB</div>
+              <div className="admin-brand__sub">ADMIN DESK</div>
+            </div>
+          </div>
+          <p className="admin-brand__note">سجلّ المدرسة الرقمي</p>
         </div>
-      </div>
 
-      <div className="dashboard-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'statistics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('statistics')}
-        >
-          📊 Statistics
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          👥 User Management
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          📋 Login History
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'notifications' ? 'active' : ''}`}
-          onClick={() => setActiveTab('notifications')}
-        >
-          🔔 Notifications {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'requests' ? 'active' : ''}`}
-          onClick={() => setActiveTab('requests')}
-        >
-          📝 Profile Requests
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'reports' ? 'active' : ''}`}
-          onClick={() => setActiveTab('reports')}
-        >
-          📊 Reports
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'courses' ? 'active' : ''}`}
-          onClick={() => setActiveTab('courses')}
-        >
-          🎓 Courses
-        </button>
-      </div>
-
-      <div className="dashboard-content">
-        {showPasswordForm && (
-          <div className="password-card">
-            <h2>Change Admin Password</h2>
-            <form className="password-form" onSubmit={handleChangePassword}>
-              <label>
-                Current Password
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
-              </label>
-              <label>
-                New Password
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                />
-              </label>
-              <label>
-                Confirm New Password
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                />
-              </label>
-              <div className="password-actions">
-                <button type="submit" className="save-password-btn" disabled={passwordLoading}>
-                  {passwordLoading ? 'Saving...' : 'Save Password'}
-                </button>
+        <nav className="admin-nav" aria-label="Admin sections">
+          {NAV_GROUPS.map((group) => (
+            <div className="admin-nav__group" key={group.label}>
+              <div className="admin-nav__label">{group.label}</div>
+              {group.items.map((item) => (
                 <button
                   type="button"
-                  className="cancel-password-btn"
-                  onClick={() => {
-                    setShowPasswordForm(false);
-                    resetPasswordForm();
-                  }}
-                  disabled={passwordLoading}
+                  key={item.id}
+                  className={`admin-nav__item ${activeTab === item.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(item.id)}
+                  aria-current={activeTab === item.id ? 'page' : undefined}
                 >
+                  <Icon name={item.icon} className="admin-nav__icon" />
+                  <span>{item.label}</span>
+                  {item.id === 'notifications' && inbox.unreadCount > 0 && (
+                    <span className="admin-nav__badge">{inbox.unreadCount}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="admin-sidebar__foot">
+          <button type="button" onClick={() => setShowPasswordForm(true)}>
+            <Icon name="key" size={14} />
+            <span>Change password</span>
+          </button>
+          <button type="button" onClick={() => navigate('/')}>
+            <Icon name="home" size={14} />
+            <span>View site</span>
+          </button>
+          <button type="button" onClick={handleLogout}>
+            <Icon name="logout" size={14} />
+            <span>Log out</span>
+          </button>
+        </div>
+      </aside>
+
+      <main className="admin-main">
+        <header className="admin-topbar">
+          <div>
+            <h1 className="admin-topbar__title">{TAB_TITLES[activeTab]}</h1>
+            <div className="admin-topbar__meta">
+              {todayLabel} · {TAB_META[activeTab]}
+            </div>
+          </div>
+          <div className="admin-topbar__actions">
+            <span className="admin-live">
+              <span className="admin-live__dot" />
+              Live data
+            </span>
+            <button
+              type="button"
+              className="btn btn--sm btn--ghost"
+              onClick={() => navigate('/')}
+            >
+              View site
+            </button>
+          </div>
+        </header>
+
+        <div className="admin-content">
+          {activeTab === 'overview' && (
+            <OverviewPage
+              onNavigate={setActiveTab}
+              notifications={inbox.notifications}
+              unreadCount={inbox.unreadCount}
+              pendingCount={inbox.pendingCount}
+              onRefreshInbox={inbox.refresh}
+            />
+          )}
+          {activeTab === 'statistics' && <StatisticsPage />}
+          {activeTab === 'reports' && <ReportsPage />}
+          {activeTab === 'history' && <LoginHistoryPage />}
+          {activeTab === 'users' && <UsersPage />}
+          {activeTab === 'requests' && <ProfileRequestsPage />}
+          {activeTab === 'notifications' && (
+            <NotificationsPage
+              notifications={inbox.notifications}
+              loading={inbox.loading}
+              error={inbox.error}
+              unreadCount={inbox.unreadCount}
+              onRefresh={inbox.refresh}
+              onMarkRead={inbox.markRead}
+              onRemove={inbox.remove}
+              onClearAll={inbox.clearAll}
+              onApprove={inbox.approve}
+              onReject={inbox.reject}
+              onOpenRequests={() => setActiveTab('requests')}
+            />
+          )}
+          {activeTab === 'courses' && <CoursesPage />}
+          {activeTab === 'data' && <DataPage />}
+        </div>
+      </main>
+
+      {showPasswordForm && (
+        <div className="modal-backdrop" onClick={closePasswordForm}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-card__head">
+              <h3>Change admin password</h3>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closePasswordForm}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleChangePassword}>
+              <div className="modal-card__body">
+                <div className="password-form">
+                  <div className="field">
+                    <label htmlFor="current-password">Current password</label>
+                    <input
+                      id="current-password"
+                      className="input"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(event) => setCurrentPassword(event.target.value)}
+                      autoComplete="current-password"
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="new-password">New password</label>
+                    <input
+                      id="new-password"
+                      className="input"
+                      type="password"
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      autoComplete="new-password"
+                      minLength={6}
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="confirm-password">Confirm new password</label>
+                    <input
+                      id="confirm-password"
+                      className="input"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                      autoComplete="new-password"
+                      minLength={6}
+                      required
+                    />
+                  </div>
+                </div>
+                {passwordError && <div className="banner banner--error" style={{ marginTop: 14 }}>{passwordError}</div>}
+                {passwordMessage && <div className="banner banner--success" style={{ marginTop: 14 }}>{passwordMessage}</div>}
+              </div>
+              <div className="modal-card__foot">
+                <button type="button" className="btn" onClick={closePasswordForm} disabled={passwordLoading}>
                   Cancel
+                </button>
+                <button type="submit" className="btn btn--primary" disabled={passwordLoading}>
+                  {passwordLoading ? 'Saving…' : 'Save password'}
                 </button>
               </div>
             </form>
-            {passwordError && <p className="password-error">{passwordError}</p>}
-            {passwordMessage && <p className="password-success">{passwordMessage}</p>}
           </div>
-        )}
-
-        {error && (
-          <div className="error-message">
-            <p>{error}</p>
-          </div>
-        )}
-
-        {activeTab === 'statistics' && <Statistics />}
-        {activeTab === 'users' && <UserManagement />}
-        {activeTab === 'history' && <UserLoginHistory />}
-        {activeTab === 'notifications' && renderNotifications()}
-        {activeTab === 'requests' && <ProfileRequests />}
-        {activeTab === 'reports' && <Reports />}
-        {activeTab === 'courses' && <CourseManagement />}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

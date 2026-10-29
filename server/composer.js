@@ -41,6 +41,7 @@ const { createProfileRouter } = require('./routes/profile');
 const { createNotificationsRouter } = require('./routes/notifications');
 const { createStatsRouter } = require('./routes/stats');
 const { createReportsRouter } = require('./routes/reports');
+const { createDataRouter } = require('./routes/data');
 const { createDevRouter } = require('./routes/dev');
 
 // Strict-mode error middleware (ticket #11). Mounted AFTER every router so
@@ -94,6 +95,7 @@ function buildApp(store, uploadsDir) {
   app.use(createNotificationsRouter(store));
   app.use(createStatsRouter(store));
   app.use(createReportsRouter(store));
+  app.use(createDataRouter(store));
   app.use(createDevRouter(store));
 
   // Strict-mode 502 translator (ticket #11). Mounted last so it sees
