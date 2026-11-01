@@ -8,7 +8,7 @@ interface HeatmapProps {
 
 const DAY_LABELS = ['إث', '', 'أر', '', 'جم', '', 'أح'];
 
-const Heatmap: React.FC<HeatmapProps> = ({ data, emptyLabel = 'No data for this range' }) => {
+const Heatmap: React.FC<HeatmapProps> = ({ data, emptyLabel = 'لا توجد بيانات في هذه الفترة' }) => {
   const { weeks, max } = buildHeatWeeks(data);
 
   if (weeks.length === 0) {

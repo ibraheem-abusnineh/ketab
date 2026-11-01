@@ -19,7 +19,7 @@ const LineChart: React.FC<LineChartProps> = ({
   height = 240,
   area = true,
   valueLabel = 'logins',
-  emptyLabel = 'No data for this range',
+  emptyLabel = 'لا توجد بيانات في هذه الفترة',
 }) => {
   if (data.length === 0) {
     return <div className="chart-empty">{emptyLabel}</div>;

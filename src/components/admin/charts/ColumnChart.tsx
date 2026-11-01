@@ -19,7 +19,7 @@ const ColumnChart: React.FC<ColumnChartProps> = ({
   color = 'var(--admin-maroon)',
   highlightColor = 'var(--admin-brass)',
   valueLabel = 'logins',
-  emptyLabel = 'No data for this range',
+  emptyLabel = 'لا توجد بيانات في هذه الفترة',
 }) => {
   if (data.length === 0) {
     return <div className="chart-empty">{emptyLabel}</div>;

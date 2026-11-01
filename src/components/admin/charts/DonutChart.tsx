@@ -35,7 +35,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
   centerLabel = 'Total',
   valueLabel = 'logins',
   colors = DEFAULT_COLORS,
-  emptyLabel = 'No data for this range',
+  emptyLabel = 'لا توجد بيانات في هذه الفترة',
 }) => {
   const visible = data.filter((slice) => slice.value > 0);
   const total = visible.reduce((sum, slice) => sum + slice.value, 0);

@@ -22,7 +22,7 @@ interface BarChartProps {
 const BarChart: React.FC<BarChartProps> = ({
   data,
   valueLabel = 'logins',
-  emptyLabel = 'No data for this range',
+  emptyLabel = 'لا توجد بيانات في هذه الفترة',
   highlightTop = true,
 }) => {
   if (data.length === 0) {

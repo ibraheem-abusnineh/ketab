@@ -203,7 +203,10 @@ const Kpi: React.FC<{ label: string; value: string; hint?: string }> = ({ label,
   </div>
 );
 
-const Bars: React.FC<{ rows: Array<[string, number, string?]>; max?: number }> = ({ rows, max }) => {
+const Bars: React.FC<{ rows: Array<[string, number, string?]>; max?: number; empty?: string }> = ({ rows, max, empty }) => {
+  if (rows.length === 0) {
+    return <p className="note">{empty || 'لا توجد بيانات في هذه الفترة.'}</p>;
+  }
   const peak = max || Math.max(...rows.map((row) => row[1]), 1);
   return (
     <>
@@ -253,6 +256,9 @@ const Table: React.FC<{ head: string[]; rows: React.ReactNode[][]; empty?: strin
 
 /* two-series line, same shape as the template's `line()` helper */
 const DualLine: React.FC<{ a: number[]; b: number[]; labels: string[] }> = ({ a, b, labels }) => {
+  if (labels.length === 0) {
+    return <p className="note">لا توجد بيانات في هذه الفترة.</p>;
+  }
   const W = 520;
   const H = 170;
   const max = Math.max(...a, ...b, 1) * 1.1;
@@ -293,40 +299,66 @@ const DualLine: React.FC<{ a: number[]; b: number[]; labels: string[] }> = ({ a,
 
 const Donut: React.FC<{ data: Array<[string, number]> }> = ({ data }) => {
   const total = data.reduce((sum, row) => sum + row[1], 0);
+  if (total === 0) return <p className="note">لا توجد بيانات في هذه الفترة.</p>;
+
+  // Hide slices smaller than 1% so a 2-of-808 role does not show up as "0%".
+  const kept = data.filter((row) => (row[1] / total) * 100 >= 1);
+  const hidden = data.length - kept.length;
+  const shown = kept.length > 0 ? kept : [data[0]];
+
+  // Largest-remainder rounding so the legend sums to exactly 100%.
+  const ringTotal = shown.reduce((sum, row) => sum + row[1], 0);
+  const rawShares = shown.map((row) => (row[1] / ringTotal) * 100);
+  const percents = rawShares.map((value) => Math.floor(value));
+  let remainder = 100 - percents.reduce((sum, value) => sum + value, 0);
+  rawShares
+    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((a, b) => b.fraction - a.fraction)
+    .forEach((entry) => {
+      if (remainder > 0) {
+        percents[entry.index] += 1;
+        remainder -= 1;
+      }
+    });
+
   let offset = 0;
   return (
     <>
       <svg viewBox="0 0 42 42" width="170" style={{ display: 'block', margin: 'auto' }}>
         <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--b)" strokeWidth="6" />
-        {total > 0 &&
-          data.map((row, index) => {
-            const dash = (row[1] / total) * 100;
-            const segment = (
-              <circle
-                key={row[0]}
-                cx="21"
-                cy="21"
-                r="15.9"
-                fill="none"
-                stroke={DONUT_COLORS[index % DONUT_COLORS.length]}
-                strokeWidth="6"
-                strokeDasharray={`${dash} ${100 - dash}`}
-                strokeDashoffset={-offset}
-                transform="rotate(-90 21 21)"
-              />
-            );
-            offset += dash;
-            return segment;
-          })}
+        {shown.map((row, index) => {
+          const dash = (row[1] / ringTotal) * 100;
+          const segment = (
+            <circle
+              key={row[0]}
+              cx="21"
+              cy="21"
+              r="15.9"
+              fill="none"
+              stroke={DONUT_COLORS[index % DONUT_COLORS.length]}
+              strokeWidth="6"
+              strokeDasharray={`${dash} ${100 - dash}`}
+              strokeDashoffset={-offset}
+              transform="rotate(-90 21 21)"
+            />
+          );
+          offset += dash;
+          return segment;
+        })}
       </svg>
       <div className="dot">
-        {data.map((row, index) => (
+        {shown.map((row, index) => (
           <span key={row[0]}>
             <i style={{ background: DONUT_COLORS[index % DONUT_COLORS.length] }} />
-            {row[0]} {total > 0 ? Math.round((row[1] / total) * 100) : 0}%
+            {row[0]} {percents[index]}%
           </span>
         ))}
       </div>
+      {hidden > 0 && (
+        <p className="note" style={{ marginTop: 4 }}>
+          {hidden === 1 ? 'مجموعة واحدة أصغر من 1% غير معروضة.' : `${hidden} مجموعات أصغر من 1% غير معروضة.`}
+        </p>
+      )}
     </>
   );
 };
@@ -415,6 +447,9 @@ const ReportsPage: React.FC = () => {
     () => (daily.length > 0 ? daily.reduce((best, point) => (point.count > best.count ? point : best), daily[0]) : null),
     [daily]
   );
+
+  const periodFrom = range.startDate || daily[0]?.day;
+  const periodTo = range.endDate || daily[daily.length - 1]?.day;
 
   const loginsByDay = useMemo(() => {
     const map = new Map<string, number>();
@@ -533,8 +568,8 @@ const ReportsPage: React.FC = () => {
           )} <em>${n(school.loginCount)}</em></li>`
       )
       .join('');
-    const from = range.startDate || daily[0]?.day;
-    const to = range.endDate || daily[daily.length - 1]?.day;
+    const from = periodFrom;
+    const to = periodTo;
 
     const html = `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -1068,7 +1103,7 @@ const ReportsPage: React.FC = () => {
       </header>
 
       <div className="demo">
-        الفترة المعروضة: {formatArabicDate(range.startDate || daily[0]?.day)} — {formatArabicDate(range.endDate || daily[daily.length - 1]?.day)} · {n(totalLogins)} عملية دخول
+        الفترة المعروضة: {periodFrom && periodTo ? `${formatArabicDate(periodFrom)} — ${formatArabicDate(periodTo)}` : 'كل الفترات'} · {n(totalLogins)} عملية دخول
       </div>
 
       <div className="tabs" id="tabs">
