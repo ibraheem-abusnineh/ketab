@@ -20,12 +20,19 @@ interface RequestRecord extends AdminNotification {
 }
 
 const FIELD_LABELS: Record<string, string> = {
-  name: 'Full name',
-  phone: 'Phone',
-  school: 'School',
-  directorate: 'Directorate',
-  role: 'Role',
-  nationalNumber: 'National number',
+  name: 'الاسم الكامل',
+  phone: 'الهاتف',
+  school: 'المدرسة',
+  directorate: 'المديرية',
+  role: 'النوع',
+  nationalNumber: 'الرقم الوطني',
+};
+
+const STATUS_LABELS: Record<StatusFilter, string> = {
+  all: 'الكل',
+  pending: 'قيد الانتظار',
+  approved: 'موافق عليه',
+  rejected: 'مرفوض',
 };
 
 const ProfileRequestsPage: React.FC = () => {
@@ -56,7 +63,7 @@ const ProfileRequestsPage: React.FC = () => {
       setUsers(userData.users || []);
       setError('');
     } catch (err: any) {
-      setError(err.message || 'Could not read profile requests.');
+      setError(err.message || 'تعذّر قراءة طلبات تعديل الملف.');
     } finally {
       setLoading(false);
     }
@@ -107,7 +114,7 @@ const ProfileRequestsPage: React.FC = () => {
     if (!selected) return;
     if (
       decision === 'reject' &&
-      !window.confirm(`Reject the profile change requested by ${selected.userName}?`)
+      !window.confirm(`رفض تعديل الملف الذي طلبه ${selected.userName}؟`)
     ) {
       return;
     }
@@ -119,25 +126,28 @@ const ProfileRequestsPage: React.FC = () => {
       });
       await fetchAll();
     } catch (err: any) {
-      setActionError(err.message || `Could not ${decision} the request.`);
+      setActionError(
+        err.message ||
+          (decision === 'approve' ? 'تعذّرت الموافقة على الطلب.' : 'تعذّر رفض الطلب.')
+      );
     } finally {
       setBusy(null);
     }
   };
 
   if (loading && requests.length === 0) {
-    return <Loading label="Opening profile requests" />;
+    return <Loading label="جارٍ فتح طلبات تعديل الملف" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Profile requests"
-        description="Changes submitted by users wait here. Read the old and new value side by side, then approve or reject."
+        title="طلبات تعديل الملف"
+        description="تُعرض هنا التعديلات التي يرسلها المستخدمون للمراجعة. اقرأ القيمة القديمة والجديدة جنبًا إلى جنب ثم وافق أو ارفض."
         actions={
           <button type="button" className="btn" onClick={fetchAll} disabled={loading}>
             <Icon name="refresh" size={14} />
-            {loading ? 'Refreshing…' : 'Refresh'}
+            {loading ? 'جارٍ التحديث…' : 'تحديث'}
           </button>
         }
       />
@@ -147,7 +157,7 @@ const ProfileRequestsPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={fetchAll}>
-              Retry
+              إعادة المحاولة
             </button>
           }
         >
@@ -160,7 +170,7 @@ const ProfileRequestsPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={() => setActionError('')}>
-              Dismiss
+              إغلاق
             </button>
           }
         >
@@ -169,7 +179,7 @@ const ProfileRequestsPage: React.FC = () => {
       )}
 
       <div className="period-bar">
-        <span className="period-bar__label">Status</span>
+        <span className="period-bar__label">الحالة</span>
         <div className="chip-row">
           {(['all', 'pending', 'approved', 'rejected'] as StatusFilter[]).map((status) => (
             <button
@@ -178,14 +188,14 @@ const ProfileRequestsPage: React.FC = () => {
               className={`chip ${statusFilter === status ? 'active' : ''}`}
               onClick={() => setStatusFilter(status)}
             >
-              {status === 'all' ? 'All' : status[0].toUpperCase() + status.slice(1)}
+              {STATUS_LABELS[status]}
               <span className="chip__count">{counts[status]}</span>
             </button>
           ))}
         </div>
         <span className="period-bar__spacer" />
         <span className="report-note">
-          {formatNumber(counts.pending)} awaiting a decision · {formatNumber(counts.all)} total
+          {formatNumber(counts.pending)} بانتظار قرار · {formatNumber(counts.all)} الإجمالي
         </span>
       </div>
 
@@ -193,18 +203,18 @@ const ProfileRequestsPage: React.FC = () => {
         <section className="requests-list-panel">
           <div className="requests-list-panel__head">
             <h3 className="requests-list-panel__title">
-              {statusFilter === 'all' ? 'All requests' : `${statusFilter[0].toUpperCase()}${statusFilter.slice(1)}`}
+              {statusFilter === 'all' ? 'كل الطلبات' : STATUS_LABELS[statusFilter]}
             </h3>
-            <p className="panel__sub">{formatNumber(sorted.length)} shown</p>
+            <p className="panel__sub">{formatNumber(sorted.length)} معروض</p>
           </div>
           <div className="request-list">
             {sorted.length === 0 ? (
               <EmptyState
-                title="No requests here"
+                title="لا توجد طلبات"
                 body={
                   statusFilter === 'pending'
-                    ? 'Nothing is waiting for a decision right now.'
-                    : 'Try another status filter.'
+                    ? 'لا يوجد شيء بانتظار قرار الآن.'
+                    : 'جرّب تصفية حالة أخرى.'
                 }
               />
             ) : (
@@ -216,14 +226,14 @@ const ProfileRequestsPage: React.FC = () => {
                   onClick={() => setSelectedId(request.id)}
                 >
                   <div className="request-list__top">
-                    <span className="request-list__name">{request.userName || 'Unknown'}</span>
+                    <span className="request-list__name">{request.userName || 'غير معروف'}</span>
                     <StatusStamp status={request.status} />
                   </div>
                   <div className="request-list__time">{formatDateTime(request.timestamp)}</div>
                   <div className="request-list__summary">
                     {request.changes
                       .map((change) => FIELD_LABELS[change.field] || change.field)
-                      .join(' · ') || 'No fields listed'}
+                      .join(' · ') || 'لا توجد حقول مدرجة'}
                   </div>
                 </button>
               ))
@@ -234,21 +244,21 @@ const ProfileRequestsPage: React.FC = () => {
         <section className="request-detail">
           {!selected ? (
             <EmptyState
-              title="Pick a request"
-              body="Select a request from the list to compare the current and requested profile."
+              title="اختر طلبًا"
+              body="اختر طلبًا من القائمة لمقارنة الملف الحالي والملف المطلوب."
             />
           ) : (
             <>
               <div className="request-detail__head">
                 <div>
-                  <h3 className="request-detail__name">{selected.userName || 'Unknown user'}</h3>
+                  <h3 className="request-detail__name">{selected.userName || 'مستخدم غير معروف'}</h3>
                   <div className="request-detail__meta">
-                    {selected.userId} · submitted {formatDateTime(selected.timestamp)}
+                    {selected.userId} · أُرسل {formatDateTime(selected.timestamp)}
                     {selected.status === 'approved' && selected.approvedAt
-                      ? ` · approved ${formatDateTime(selected.approvedAt)}`
+                      ? ` · تمت الموافقة ${formatDateTime(selected.approvedAt)}`
                       : ''}
                     {selected.status === 'rejected' && selected.rejectedAt
-                      ? ` · rejected ${formatDateTime(selected.rejectedAt)}`
+                      ? ` · تم الرفض ${formatDateTime(selected.rejectedAt)}`
                       : ''}
                   </div>
                 </div>
@@ -257,49 +267,49 @@ const ProfileRequestsPage: React.FC = () => {
 
               <div className="request-detail__body">
                 <div className="request-detail__section">
-                  <h4>Current profile</h4>
+                  <h4>الملف الحالي</h4>
                   {selectedUser ? (
                     <div className="profile-grid">
                       <div>
-                        <div className="profile-grid__label">Name</div>
+                        <div className="profile-grid__label">الاسم</div>
                         <div className="profile-grid__value">{selectedUser.name}</div>
                       </div>
                       <div>
-                        <div className="profile-grid__label">Role</div>
+                        <div className="profile-grid__label">النوع</div>
                         <div className="profile-grid__value">
                           <RoleStamp role={selectedUser.role} />
                         </div>
                       </div>
                       <div>
-                        <div className="profile-grid__label">National number</div>
+                        <div className="profile-grid__label">الرقم الوطني</div>
                         <div className="profile-grid__value num">{selectedUser.nationalNumber}</div>
                       </div>
                       <div>
-                        <div className="profile-grid__label">School</div>
+                        <div className="profile-grid__label">المدرسة</div>
                         <div className="profile-grid__value">{selectedUser.school || '—'}</div>
                       </div>
                       <div>
-                        <div className="profile-grid__label">Phone</div>
+                        <div className="profile-grid__label">الهاتف</div>
                         <div className="profile-grid__value num">{selectedUser.phone || '—'}</div>
                       </div>
                       <div>
-                        <div className="profile-grid__label">Directorate</div>
+                        <div className="profile-grid__label">المديرية</div>
                         <div className="profile-grid__value">{selectedUser.directorate || '—'}</div>
                       </div>
                     </div>
                   ) : (
-                    <div className="chart-empty">This account is not in the current directory.</div>
+                    <div className="chart-empty">هذا الحساب غير موجود في الدليل الحالي.</div>
                   )}
                 </div>
 
                 <div className="request-detail__section">
-                  <h4>Requested changes</h4>
+                  <h4>التعديلات المطلوبة</h4>
                   <table className="compare-table">
                     <thead>
                       <tr>
-                        <th>Field</th>
-                        <th>Current value</th>
-                        <th>Requested value</th>
+                        <th>الحقل</th>
+                        <th>القيمة الحالية</th>
+                        <th>القيمة المطلوبة</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -314,7 +324,7 @@ const ProfileRequestsPage: React.FC = () => {
                   </table>
                   {selected.changes.length === 0 && (
                     <div className="chart-empty" style={{ minHeight: 90 }}>
-                      This request lists no field changes.
+                      هذا الطلب لا يدرج أي تغييرات على الحقول.
                     </div>
                   )}
                 </div>
@@ -330,7 +340,7 @@ const ProfileRequestsPage: React.FC = () => {
                       disabled={busy !== null}
                     >
                       <Icon name="check" size={14} />
-                      {busy === 'approve' ? 'Approving…' : 'Approve changes'}
+                      {busy === 'approve' ? 'جارٍ الموافقة…' : 'الموافقة على التعديلات'}
                     </button>
                     <button
                       type="button"
@@ -338,13 +348,13 @@ const ProfileRequestsPage: React.FC = () => {
                       onClick={() => handleDecision('reject')}
                       disabled={busy !== null}
                     >
-                      {busy === 'reject' ? 'Rejecting…' : 'Reject request'}
+                      {busy === 'reject' ? 'جارٍ الرفض…' : 'رفض الطلب'}
                     </button>
                   </>
                 ) : (
                   <span className="report-note">
-                    This request was {selected.status}. Approving or rejecting it again is not
-                    possible.
+                    هذا الطلب {STATUS_LABELS[selected.status]}. لا يمكن الموافقة عليه أو رفضه مرة
+                    أخرى.
                   </span>
                 )}
               </div>

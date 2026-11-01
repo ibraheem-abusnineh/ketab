@@ -32,11 +32,11 @@ import Icon from '../Icons';
 type PeriodType = 'all' | 'day' | 'week' | 'month' | 'custom';
 
 const PERIODS: Array<{ id: PeriodType; label: string }> = [
-  { id: 'all', label: 'All time' },
-  { id: 'day', label: 'Today' },
-  { id: 'week', label: 'Last 7 days' },
-  { id: 'month', label: 'Last 30 days' },
-  { id: 'custom', label: 'Custom range' },
+  { id: 'all', label: 'كل الفترات' },
+  { id: 'day', label: 'اليوم' },
+  { id: 'week', label: 'آخر 7 أيام' },
+  { id: 'month', label: 'آخر 30 يومًا' },
+  { id: 'custom', label: 'فترة مخصصة' },
 ];
 
 function toDayString(date: Date): string {
@@ -107,7 +107,7 @@ const StatisticsPage: React.FC = () => {
       setDirectory(directoryData.users || []);
       setError('');
     } catch (err: any) {
-      setError(err.message || 'Could not read statistics.');
+      setError(err.message || 'تعذّرت قراءة الإحصاءات.');
     } finally {
       setLoading(false);
     }
@@ -153,7 +153,7 @@ const StatisticsPage: React.FC = () => {
   );
 
   const periodLabel =
-    PERIODS.find((item) => item.id === period)?.label || 'All time';
+    PERIODS.find((item) => item.id === period)?.label || 'كل الفترات';
 
   const handleReset = async () => {
     try {
@@ -164,30 +164,30 @@ const StatisticsPage: React.FC = () => {
         body: JSON.stringify({ confirmed: true }),
       });
       const data = await response.json();
-      setResetMessage({ tone: 'success', text: data.message || 'Visit data reset.' });
+      setResetMessage({ tone: 'success', text: data.message || 'تمت إعادة تعيين بيانات الزيارات.' });
       setResetOpen(false);
       await fetchStatistics();
       setTimeout(() => setResetMessage(null), 5000);
     } catch (err: any) {
-      setResetMessage({ tone: 'error', text: err.message || 'Could not reset the counter.' });
+      setResetMessage({ tone: 'error', text: err.message || 'تعذّرت إعادة تعيين العدّاد.' });
     } finally {
       setResetting(false);
     }
   };
 
   if (loading && totalVisits === 0 && daily.length === 0) {
-    return <Loading label="Counting the logins" />;
+    return <Loading label="جارٍ عدّ عمليات الدخول" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Statistics"
-        description="Traffic, schools, and the hours people actually use. Every chart follows the period you pick."
+        title="الإحصاءات"
+        description="الزيارات والمدارس والساعات التي يستخدم فيها المستخدمون المنصة فعليًا. يتبع كل مخطط الفترة التي تختارها."
         actions={
           <button type="button" className="btn" onClick={fetchStatistics} disabled={loading}>
             <Icon name="refresh" size={14} />
-            {loading ? 'Refreshing…' : 'Refresh'}
+            {loading ? 'جارٍ التحديث…' : 'تحديث'}
           </button>
         }
       />
@@ -197,7 +197,7 @@ const StatisticsPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={fetchStatistics}>
-              Retry
+              إعادة المحاولة
             </button>
           }
         >
@@ -208,7 +208,7 @@ const StatisticsPage: React.FC = () => {
       {resetMessage && <Banner tone={resetMessage.tone}>{resetMessage.text}</Banner>}
 
       <div className="period-bar">
-        <span className="period-bar__label">Period</span>
+        <span className="period-bar__label">الفترة</span>
         <div className="chip-row">
           {PERIODS.map((item) => (
             <button
@@ -228,44 +228,44 @@ const StatisticsPage: React.FC = () => {
               type="date"
               value={customStart}
               onChange={(event) => setCustomStart(event.target.value)}
-              aria-label="Start date"
+              aria-label="تاريخ البدء"
             />
-            <span className="date-pair__sep">to</span>
+            <span className="date-pair__sep">إلى</span>
             <input
               className="input"
               type="date"
               value={customEnd}
               onChange={(event) => setCustomEnd(event.target.value)}
-              aria-label="End date"
+              aria-label="تاريخ الانتهاء"
             />
           </div>
         )}
         <span className="period-bar__spacer" />
         <span className="report-note">
-          {period === 'all' ? `${daily.length} recorded days` : `Showing ${periodLabel.toLowerCase()}`}
+          {period === 'all' ? `${daily.length} يومًا مسجّلًا` : `عرض ${periodLabel}`}
         </span>
       </div>
 
       <div className="kpi-grid">
         <Kpi
-          label={`Logins · ${periodLabel}`}
+          label={`عمليات الدخول · ${periodLabel}`}
           value={formatNumber(filteredCount)}
-          hint={`${formatNumber(totalVisits)} all time`}
+          hint={`${formatNumber(totalVisits)} في كل الفترات`}
         />
         <Kpi
-          label="Schools in range"
+          label="المدارس في الفترة"
           value={formatNumber(schools.length)}
-          hint={schools[0] ? `Top: ${schools[0].school}` : 'No school activity'}
+          hint={schools[0] ? `الأكثر نشاطًا: ${schools[0].school}` : 'لا يوجد نشاط مدرسي'}
         />
         <Kpi
-          label="Active people"
+          label="المستخدمون النشطون"
           value={formatNumber(userHistory.length)}
-          hint={userHistory[0] ? `Most active: ${userHistory[0].name}` : 'No activity'}
+          hint={userHistory[0] ? `الأكثر نشاطًا: ${userHistory[0].name}` : 'لا يوجد نشاط'}
         />
         <Kpi
-          label="Average logins / day"
+          label="متوسط الدخول اليومي"
           value={formatNumber(avgPerDay)}
-          hint={`Across ${daily.length} days`}
+          hint={`خلال ${daily.length} يومًا`}
           spark={<Sparkline values={sparkValues} width={106} height={30} />}
         />
       </div>
@@ -273,103 +273,103 @@ const StatisticsPage: React.FC = () => {
       <div className="chart-grid">
         <ChartFrame
           className="a-col-8"
-          title="Daily logins"
-          subtitle="Every calendar day in the selected period"
+          title="الدخول اليومي"
+          subtitle="كل يوم في الفترة المحددة"
         >
-          <LineChart data={lineData} height={250} valueLabel="logins" />
+          <LineChart data={lineData} height={250} valueLabel="عمليات الدخول" />
         </ChartFrame>
 
         <ChartFrame
           className="a-col-4"
-          title="School share"
-          subtitle="Percentage of all logins in range"
+          title="نسبة المدارس"
+          subtitle="نسبة كل عمليات الدخول في الفترة"
         >
           <DonutChart
             data={schools.slice(0, 8).map((school) => ({
               label: school.school,
               value: school.visitCount,
             }))}
-            centerLabel="logins"
-            valueLabel="logins"
+            centerLabel="عمليات الدخول"
+            valueLabel="عمليات الدخول"
           />
         </ChartFrame>
 
         <ChartFrame
           className="a-col-5"
-          title="Activity by hour"
-          subtitle="When the platform is busiest"
+          title="النشاط حسب الساعة"
+          subtitle="أوقات ذروة استخدام المنصة"
         >
-          <ColumnChart data={fullDay} height={220} valueLabel="logins" />
+          <ColumnChart data={fullDay} height={220} valueLabel="عمليات الدخول" />
         </ChartFrame>
 
         <ChartFrame
           className="a-col-7"
-          title="Schools ranked"
-          subtitle="Logins per school, largest first"
+          title="ترتيب المدارس"
+          subtitle="عمليات الدخول لكل مدرسة، الأكثر أولًا"
         >
           <BarChart
             data={schools.slice(0, 9).map((school) => ({
-              label: school.school || 'Unknown',
+              label: school.school || 'غير معروف',
               value: school.visitCount,
-              meta: `${school.uniqueUsers} unique users`,
+              meta: `${school.uniqueUsers} مستخدمون فريدون`,
             }))}
-            valueLabel="logins"
+            valueLabel="عمليات الدخول"
           />
         </ChartFrame>
 
         <ChartFrame
           className="a-col-7"
-          title="Weekly rhythm"
-          subtitle="A calendar view of daily login volume"
+          title="الإيقاع الأسبوعي"
+          subtitle="عرض تقويمي لحجم الدخول اليومي"
         >
           <Heatmap data={daily} />
         </ChartFrame>
 
         <ChartFrame
           className="a-col-5"
-          title="Users by role"
-          subtitle={`The full directory · ${formatNumber(directory.length)} accounts`}
+          title="المستخدمون حسب النوع"
+          subtitle={`الدليل الكامل · ${formatNumber(directory.length)} حسابات`}
         >
-          <BarChart data={roleCounts} valueLabel="accounts" highlightTop={false} />
+          <BarChart data={roleCounts} valueLabel="حسابات" highlightTop={false} />
         </ChartFrame>
 
         <ChartFrame
           className="a-col-6"
-          title="Most active people"
-          subtitle="Top users by logins in range"
+          title="الأكثر نشاطًا"
+          subtitle="أكثر المستخدمين دخولًا في الفترة"
         >
           <BarChart
             data={userHistory.slice(0, 10).map((user) => ({
-              label: user.name || 'Unknown',
+              label: user.name || 'غير معروف',
               value: user.loginCount,
-              meta: user.school || 'No school',
+              meta: user.school || 'لا توجد مدرسة',
             }))}
-            valueLabel="logins"
+            valueLabel="عمليات الدخول"
           />
         </ChartFrame>
 
         <ChartFrame
           className="a-col-6"
-          title="Recent visits"
-          subtitle="The latest login events, newest first"
+          title="أحدث الزيارات"
+          subtitle="أحدث عمليات الدخول، الأحدث أولًا"
         >
           {recent.length === 0 ? (
-            <div className="chart-empty">No visits in this period</div>
+            <div className="chart-empty">لا توجد زيارات في هذه الفترة</div>
           ) : (
             <div className="table-wrap" style={{ border: 0 }}>
               <table className="ledger">
                 <thead>
                   <tr>
-                    <th>When</th>
-                    <th>Person</th>
-                    <th>School</th>
+                    <th>الوقت</th>
+                    <th>الشخص</th>
+                    <th>المدرسة</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recent.map((event, index) => (
                     <tr key={`${event.nationalNumber}-${index}`}>
                       <td className="num">{formatDateTime(event.timestamp)}</td>
-                      <td>{event.name || 'Unknown'}</td>
+                      <td>{event.name || 'غير معروف'}</td>
                       <td className="muted">{event.school || '—'}</td>
                     </tr>
                   ))}
@@ -381,19 +381,19 @@ const StatisticsPage: React.FC = () => {
       </div>
 
       <div className="section-rule">
-        <span className="section-rule__label">Maintenance</span>
+        <span className="section-rule__label">الصيانة</span>
         <span className="section-rule__line" />
       </div>
 
       <div className="danger-zone">
         <div>
-          <div className="danger-zone__title">Reset the visit counter</div>
+          <div className="danger-zone__title">إعادة تعيين عدّاد الزيارات</div>
           <div className="danger-zone__body">
-            Clears every recorded login and the all-time counter. This cannot be undone.
+            يمسح كل عمليات الدخول المسجّلة والعدّاد الكلي. لا يمكن التراجع عن هذا الإجراء.
           </div>
         </div>
         <button type="button" className="btn btn--danger" onClick={() => setResetOpen(true)} disabled={resetting}>
-          {resetting ? 'Resetting…' : 'Reset visit data'}
+          {resetting ? 'جارٍ إعادة التعيين…' : 'إعادة تعيين بيانات الزيارات'}
         </button>
       </div>
 
@@ -401,26 +401,26 @@ const StatisticsPage: React.FC = () => {
         <div className="modal-backdrop" onClick={() => setResetOpen(false)}>
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-card__head">
-              <h3>Reset visit data</h3>
-              <button type="button" className="modal-close" onClick={() => setResetOpen(false)} aria-label="Close">
+              <h3>إعادة تعيين بيانات الزيارات</h3>
+              <button type="button" className="modal-close" onClick={() => setResetOpen(false)} aria-label="إغلاق">
                 ×
               </button>
             </div>
             <div className="modal-card__body">
               <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6 }}>
-                This clears the visit counter and every login record. Schools, users, and courses are not
-                affected.
+                يمسح هذا عدّاد الزيارات وكل سجل عمليات الدخول. لا تتأثر المدارس والمستخدمون
+                والمقررات.
               </p>
               <div className="banner banner--error" style={{ marginTop: 14, marginBottom: 0 }}>
-                This action cannot be undone.
+                لا يمكن التراجع عن هذا الإجراء.
               </div>
             </div>
             <div className="modal-card__foot">
               <button type="button" className="btn" onClick={() => setResetOpen(false)} disabled={resetting}>
-                Cancel
+                إلغاء
               </button>
               <button type="button" className="btn btn--danger" onClick={handleReset} disabled={resetting}>
-                {resetting ? 'Resetting…' : 'Yes, reset everything'}
+                {resetting ? 'جارٍ إعادة التعيين…' : 'نعم، أعد تعيين كل شيء'}
               </button>
             </div>
           </div>

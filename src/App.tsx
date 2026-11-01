@@ -25,17 +25,17 @@ interface AppRoutesProps {
 const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthed, adminSession, handleAdminLogin }) => {
   const location = useLocation();
   const [course] = useCourseState();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   React.useEffect(() => {
-    const isAdminRoute = location.pathname.startsWith('/admin');
     const isEnglishLearnerRoute = !isAdminRoute && course === 'english';
-    const dir = isAdminRoute || isEnglishLearnerRoute ? 'ltr' : 'rtl';
-    const lang = isAdminRoute || isEnglishLearnerRoute ? 'en' : 'ar';
+    const dir = isEnglishLearnerRoute ? 'ltr' : 'rtl';
+    const lang = isEnglishLearnerRoute ? 'en' : 'ar';
 
     document.documentElement.setAttribute('dir', dir);
     document.documentElement.setAttribute('lang', lang);
     document.body.setAttribute('dir', dir);
-  }, [location.pathname, course]);
+  }, [isAdminRoute, course]);
 
   return (
     <div className="App">
@@ -54,7 +54,9 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ isAuthed, adminSession, handleAdm
         <Route path="/dev" element={<DevLogin onLoginSuccess={handleAdminLogin} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <FeedbackButton toEmail={process.env.REACT_APP_FEEDBACK_EMAIL || 'visiblevoices@qra.jo'} />
+      {!isAdminRoute && (
+        <FeedbackButton toEmail={process.env.REACT_APP_FEEDBACK_EMAIL || 'visiblevoices@qra.jo'} />
+      )}
     </div>
   );
 };

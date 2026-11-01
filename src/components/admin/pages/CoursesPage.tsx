@@ -5,17 +5,17 @@ import { Banner, Loading, PageHeader, formatNumber } from '../ui';
 import Icon from '../Icons';
 
 const DISPLAY_NAMES: Record<CourseType, string> = {
-  arabic: 'Arabic Language',
-  english: 'English Language',
-  math: 'Math',
-  awareness: 'Awareness',
+  arabic: 'اللغة العربية',
+  english: 'اللغة الإنجليزية',
+  math: 'الرياضيات',
+  awareness: 'التوعية',
 };
 
 const DESCRIPTIONS: Record<CourseType, string> = {
-  arabic: 'Available to all users.',
-  english: 'Unlock to allow learners to access the English sign language materials.',
-  math: 'Unlock to allow learners to access the numbers (math) worksheets.',
-  awareness: 'Unlock to allow learners to access the awareness videos.',
+  arabic: 'متاح لجميع المستخدمين.',
+  english: 'افتح المقرر ليتيح للمتعلمين الوصول إلى مواد لغة الإشارة الإنجليزية.',
+  math: 'افتح المقرر ليتيح للمتعلمين الوصول إلى أوراق الأعداد (الرياضيات).',
+  awareness: 'افتح المقرر ليتيح للمتعلمين الوصول إلى فيديوهات التوعية.',
 };
 
 const GLYPHS: Record<CourseType, string> = {
@@ -38,7 +38,7 @@ const CoursesPage: React.FC = () => {
 
   const handleToggle = async (course: CourseType) => {
     if (course === 'arabic') {
-      alert('The Arabic course is always available and cannot be locked.');
+      alert('مقرر اللغة العربية متاح دائمًا ولا يمكن إغلاقه.');
       return;
     }
 
@@ -51,25 +51,25 @@ const CoursesPage: React.FC = () => {
       await updateCourseLock(course, !current.locked);
     } catch (err) {
       console.error('Failed to update course lock:', err);
-      setRequestError(err instanceof Error ? err.message : 'Failed to update course status');
+      setRequestError(err instanceof Error ? err.message : 'تعذّر تحديث حالة المقرر');
     } finally {
       setSavingCourse(null);
     }
   };
 
   if (loading && keys.length === 0) {
-    return <Loading label="Reading course availability" />;
+    return <Loading label="جارٍ قراءة حالة المقررات" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Course availability"
-        description="Unlock a course to make it visible to learners. Locking hides it again for everyone, immediately."
+        title="توفّر المقررات"
+        description="افتح المقرر ليتيح للمتعلمين رؤيته. الإغلاق يخفيه عن الجميع فورًا."
         actions={
           <button type="button" className="btn" onClick={refresh} disabled={loading}>
             <Icon name="refresh" size={14} />
-            {loading ? 'Refreshing…' : 'Refresh'}
+            {loading ? 'جارٍ التحديث…' : 'تحديث'}
           </button>
         }
       />
@@ -79,7 +79,7 @@ const CoursesPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={() => setRequestError(null)}>
-              Dismiss
+              إغلاق
             </button>
           }
         >
@@ -100,9 +100,9 @@ const CoursesPage: React.FC = () => {
               </div>
               <div className="course-card__main">
                 <div className="course-card__title-row">
-                  <h3>{status.label || DISPLAY_NAMES[course]}</h3>
+                  <h3>{DISPLAY_NAMES[course]}</h3>
                   <span className={`course-status ${status.locked ? 'locked' : 'unlocked'}`}>
-                    {status.locked ? 'Locked' : 'Unlocked'}
+                    {status.locked ? 'مغلق' : 'مفتوح'}
                   </span>
                 </div>
                 <p className="course-description">{DESCRIPTIONS[course]}</p>
@@ -115,19 +115,19 @@ const CoursesPage: React.FC = () => {
                   onClick={() => handleToggle(course)}
                 >
                   {isSaving
-                    ? 'Saving...'
+                    ? 'جارٍ الحفظ...'
                     : isArabic
-                    ? 'Always Available'
+                    ? 'متاح دائمًا'
                     : status.locked
-                    ? 'Unlock Course'
-                    : 'Lock Course'}
+                    ? 'فتح المقرر'
+                    : 'إغلاق المقرر'}
                 </button>
                 <span className="hint-text">
                   {isArabic
-                    ? 'The primary Arabic course is always enabled.'
+                    ? 'مقرر اللغة العربية الأساسي متاح دائمًا.'
                     : status.locked
-                    ? 'Students will not see this course while it is locked.'
-                    : 'Students can now access this course from their dashboards.'}
+                    ? 'لن يرى الطلاب هذا المقرر ما دام مغلقًا.'
+                    : 'يمكن للطلاب الآن الوصول إلى هذا المقرر من لوحاتهم.'}
                 </span>
               </div>
             </div>
@@ -139,18 +139,18 @@ const CoursesPage: React.FC = () => {
         <div className="course-board__legend">
           <span>
             <span className="course-board__dot" style={{ background: 'var(--admin-sage)' }} />
-            {formatNumber(openCount)} open
+            {formatNumber(openCount)} مفتوح
           </span>
           <span>
             <span className="course-board__dot" style={{ background: 'var(--admin-brass)' }} />
-            {formatNumber(lockedCount)} locked
+            {formatNumber(lockedCount)} مغلق
           </span>
           <span>
             <span className="course-board__dot" style={{ background: 'var(--admin-line-2)' }} />
-            {formatNumber(keys.length)} total courses
+            {formatNumber(keys.length)} مقرر إجمالًا
           </span>
         </div>
-        <span>Changes apply to every learner on their next page load.</span>
+        <span>تُطبَّق التغييرات على كل متعلم عند تحميل الصفحة التالية.</span>
       </div>
     </div>
   );

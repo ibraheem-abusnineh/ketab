@@ -53,7 +53,7 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
       setVisits(visitRows.visits || []);
       setError('');
     } catch (err: any) {
-      setError(err.message || 'Could not read the overview.');
+      setError(err.message || 'تعذّرت قراءة النظرة العامة.');
     } finally {
       setLoading(false);
     }
@@ -103,22 +103,22 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
   );
 
   if (loading && totalVisits === 0 && daily.length === 0) {
-    return <Loading label="Opening the register" />;
+    return <Loading label="جارٍ فتح السجل" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Today at a glance"
-        description="A single page for the health of the platform: logins, schools, people, and the inbox items waiting on you."
+        title="اليوم في لمحة"
+        description="صفحة واحدة لحالة المنصة: عمليات الدخول والمدارس والمستخدمون وعناصر الإشعارات التي تنتظرك."
         actions={
           <>
             <button type="button" className="btn" onClick={fetchOverview} disabled={loading}>
               <Icon name="refresh" size={14} />
-              {loading ? 'Refreshing…' : 'Refresh'}
+              {loading ? 'جارٍ التحديث…' : 'تحديث'}
             </button>
             <button type="button" className="btn btn--primary" onClick={() => onNavigate('reports')}>
-              Open reports
+              فتح التقارير
             </button>
           </>
         }
@@ -129,7 +129,7 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={fetchOverview}>
-              Retry
+              إعادة المحاولة
             </button>
           }
         >
@@ -141,47 +141,47 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
         <section className="hero-logins">
           <div className="hero-logins__top">
             <div>
-              <div className="hero-logins__label">Total logins recorded</div>
+              <div className="hero-logins__label">إجمالي عمليات الدخول المسجّلة</div>
               <div className="hero-logins__number">{formatNumber(totalVisits)}</div>
               <div className="hero-logins__meta">
-                {schools.length} schools · {users.length} active people · since{' '}
+                {schools.length} مدرسة · {users.length} مستخدمًا نشطًا · منذ{' '}
                 {daily.length > 0 ? daily[0].day : '—'}
               </div>
             </div>
             <div className="admin-live">
               <span className="admin-live__dot" />
-              auto-refresh
+              تحديث تلقائي
             </div>
           </div>
           <div className="hero-logins__chart">
             <div className="hero-logins__label" style={{ padding: '0 18px 4px' }}>
-              Daily logins · last {last14.length} days
+              الدخول اليومي · آخر {last14.length} يومًا
             </div>
-            <LineChart data={last14} height={150} valueLabel="logins" />
+            <LineChart data={last14} height={150} valueLabel="عمليات الدخول" />
           </div>
         </section>
 
         <section className="hero-today">
           <div>
-            <div className="hero-today__label">Today</div>
+            <div className="hero-today__label">اليوم</div>
             <div className="hero-today__number">{formatNumber(todayCount)}</div>
             <div className="hero-today__hint">
               {delta === null
-                ? 'No comparison for yesterday'
-                : `${delta >= 0 ? '+' : ''}${delta}% against yesterday`}
+                ? 'لا توجد مقارنة مع الأمس'
+                : `${delta >= 0 ? '+' : ''}${delta}% مقابل الأمس`}
             </div>
           </div>
           <div className="hero-today__divider" />
           <div className="hero-today__row">
-            <span>Peak day</span>
+            <span>أعلى يوم</span>
             <strong>{peak.day ? `${formatNumber(peak.count)}` : '—'}</strong>
           </div>
           <div className="hero-today__row">
-            <span>Average per day</span>
+            <span>المتوسط اليومي</span>
             <strong>{formatNumber(avgPerDay)}</strong>
           </div>
           <div className="hero-today__row">
-            <span>Top school</span>
+            <span>أكثر مدرسة نشاطًا</span>
             <strong style={{ fontFamily: 'inherit', fontSize: 11 }}>
               {schools[0]?.school || '—'}
             </strong>
@@ -191,25 +191,25 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
 
       <div className="kpi-grid">
         <Kpi
-          label="Schools with activity"
+          label="المدارس ذات النشاط"
           value={formatNumber(schools.length)}
-          hint={schools[0] ? `Largest: ${schools[0].school}` : 'No school data yet'}
+          hint={schools[0] ? `الأكبر: ${schools[0].school}` : 'لا توجد بيانات مدرسية بعد'}
         />
         <Kpi
-          label="Active people"
+          label="المستخدمون النشطون"
           value={formatNumber(users.length)}
-          hint={users[0] ? `Most active: ${users[0].name}` : 'No user activity yet'}
+          hint={users[0] ? `الأكثر نشاطًا: ${users[0].name}` : 'لا يوجد نشاط للمستخدمين بعد'}
         />
         <Kpi
-          label="Average logins / day"
+          label="متوسط الدخول اليومي"
           value={formatNumber(avgPerDay)}
-          hint={`Across ${daily.length} recorded days`}
+          hint={`خلال ${daily.length} يومًا مسجّلًا`}
           spark={<Sparkline values={sparkValues} width={108} height={30} />}
         />
         <Kpi
-          label="Waiting in the inbox"
+          label="بانتظار في الإشعارات"
           value={formatNumber(unreadCount)}
-          hint={`${pendingCount} profile request${pendingCount === 1 ? '' : 's'} pending`}
+          hint={`عدد طلبات تعديل الملف: ${pendingCount}`}
         />
       </div>
 
@@ -217,15 +217,15 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
         <section className="panel">
           <div className="panel__head">
             <div>
-              <h3 className="panel__title">Recent activity</h3>
-              <p className="panel__sub">The latest login events recorded across the network.</p>
+              <h3 className="panel__title">النشاط الأخير</h3>
+              <p className="panel__sub">أحدث عمليات الدخول المسجّلة عبر الشبكة.</p>
             </div>
             <button type="button" className="btn btn--sm" onClick={() => onNavigate('history')}>
-              Full logbook
+              سجل الدخول الكامل
             </button>
           </div>
           {recent.length === 0 ? (
-            <EmptyState title="No logins recorded" body="Activity will appear here as learners sign in." />
+            <EmptyState title="لا توجد عمليات دخول مسجّلة" body="سيظهر النشاط هنا عند تسجيل المستخدمين لدخولهم." />
           ) : (
             <div className="activity-list">
               {recent.map((event, index) => (
@@ -234,8 +234,8 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
                     {event.timestamp ? formatDateTime(event.timestamp).split(', ').slice(-1)[0] : '—'}
                   </span>
                   <div>
-                    <div className="activity-item__name">{event.name || 'Unknown user'}</div>
-                    <span className="activity-item__school">{event.school || 'No school'}</span>
+                    <div className="activity-item__name">{event.name || 'مستخدم غير معروف'}</div>
+                    <span className="activity-item__school">{event.school || 'لا توجد مدرسة'}</span>
                   </div>
                   <span className="activity-item__mark" />
                 </div>
@@ -247,8 +247,8 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
         <section className="panel">
           <div className="panel__head">
             <div>
-              <h3 className="panel__title">Needs attention</h3>
-              <p className="panel__sub">Unread updates and profile requests.</p>
+              <h3 className="panel__title">يتطلب الانتباه</h3>
+              <p className="panel__sub">التحديثات غير المقروءة وطلبات تعديل الملف.</p>
             </div>
             <button
               type="button"
@@ -258,11 +258,11 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
                 onNavigate('notifications');
               }}
             >
-              Open inbox
+              فتح الإشعارات
             </button>
           </div>
           {attention.length === 0 ? (
-            <EmptyState title="Inbox is clear" body="New profile updates and requests will land here." />
+            <EmptyState title="لا توجد إشعارات جديدة" body="ستظهر هنا تحديثات الملف والطلبات الجديدة." />
           ) : (
             <div className="notif-preview">
               {attention.map((item) => (
@@ -272,11 +272,9 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
                     <div className="notif-preview__body">
                       {item.type === 'profile_edit_request'
                         ? item.status === 'pending'
-                          ? 'Requested a profile change'
-                          : `Profile request ${item.status}`
-                        : `Updated ${item.changes.length} profile field${
-                            item.changes.length === 1 ? '' : 's'
-                          }`}
+                          ? 'طلب تعديل الملف'
+                          : `طلب تعديل الملف: ${item.status}`
+                        : `تحديث ${item.changes.length} حقلًا في الملف`}
                     </div>
                   </div>
                   <div className="notif-preview__time">{formatDateTime(item.timestamp)}</div>
@@ -288,30 +286,30 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
       </div>
 
       <div className="section-rule">
-        <span className="section-rule__label">Jump to</span>
+        <span className="section-rule__label">الانتقال إلى</span>
         <span className="section-rule__line" />
       </div>
 
       <div className="quick-actions">
         <button type="button" className="quick-action" onClick={() => onNavigate('statistics')}>
           <Icon name="chart" size={18} />
-          <span className="quick-action__title">Statistics</span>
-          <span className="quick-action__hint">Traffic and activity patterns</span>
+          <span className="quick-action__title">الإحصاءات</span>
+          <span className="quick-action__hint">أنماط الزيارات والنشاط</span>
         </button>
         <button type="button" className="quick-action" onClick={() => onNavigate('users')}>
           <Icon name="users" size={18} />
-          <span className="quick-action__title">Add or edit a user</span>
-          <span className="quick-action__hint">Open the directory register</span>
+          <span className="quick-action__title">إضافة مستخدم أو تعديله</span>
+          <span className="quick-action__hint">فتح سجل المستخدمين</span>
         </button>
         <button type="button" className="quick-action" onClick={() => onNavigate('requests')}>
           <Icon name="inbox" size={18} />
-          <span className="quick-action__title">Review requests</span>
-          <span className="quick-action__hint">{pendingCount} waiting for a decision</span>
+          <span className="quick-action__title">مراجعة الطلبات</span>
+          <span className="quick-action__hint">{pendingCount} بانتظار قرار</span>
         </button>
         <button type="button" className="quick-action" onClick={() => onNavigate('courses')}>
           <Icon name="layers" size={18} />
-          <span className="quick-action__title">Course access</span>
-          <span className="quick-action__hint">Lock or unlock a course</span>
+          <span className="quick-action__title">الوصول إلى المقررات</span>
+          <span className="quick-action__hint">قفل مقرر أو إلغاء قفله</span>
         </button>
       </div>
     </div>

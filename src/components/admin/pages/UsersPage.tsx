@@ -74,7 +74,7 @@ const UsersPage: React.FC = () => {
       setUsers(data.users || []);
       setError('');
     } catch (err: any) {
-      setError(err.message || 'Could not read the user directory.');
+      setError(err.message || 'تعذّر قراءة دليل المستخدمين.');
     } finally {
       setLoading(false);
     }
@@ -129,10 +129,10 @@ const UsersPage: React.FC = () => {
         setShowAddForm(false);
         setError('');
       } else {
-        setError(data.error || 'Could not add the user.');
+        setError(data.error || 'تعذّر إضافة المستخدم.');
       }
     } catch (err: any) {
-      setError(err.message || 'Network error.');
+      setError(err.message || 'حدث خطأ في الشبكة.');
     } finally {
       setLoading(false);
     }
@@ -159,20 +159,20 @@ const UsersPage: React.FC = () => {
 
   const handleUpdateUser = async (user: DirectoryUser) => {
     if (!editingUser) {
-      setError('No user is being edited.');
+      setError('لا يوجد مستخدم قيد التعديل.');
       return;
     }
     const originalNumber = editingUser;
     const trimmedNewNumber = editNationalNumber.trim();
     if (!trimmedNewNumber) {
-      setError('National number is required.');
+      setError('الرقم الوطني مطلوب.');
       return;
     }
 
     setLoading(true);
     try {
       if (!user.name || !user.role) {
-        throw new Error('Name and role are required.');
+        throw new Error('الاسم والنوع مطلوبان.');
       }
 
       const response = await apiFetch(`/api/users/${originalNumber.trim()}`, {
@@ -187,7 +187,7 @@ const UsersPage: React.FC = () => {
         }),
       });
       const data = await response.json();
-      if (!data.success) throw new Error(data.error || 'Could not update the user.');
+      if (!data.success) throw new Error(data.error || 'تعذّر تحديث المستخدم.');
 
       if (trimmedNewNumber !== originalNumber.trim()) {
         const renameResponse = await apiFetch(
@@ -200,7 +200,7 @@ const UsersPage: React.FC = () => {
         );
         const renameData = await renameResponse.json();
         if (!renameData.success) {
-          throw new Error(renameData.error || 'Could not change the national number.');
+          throw new Error(renameData.error || 'تعذّر تغيير الرقم الوطني.');
         }
       }
 
@@ -209,7 +209,7 @@ const UsersPage: React.FC = () => {
       setError('');
       await fetchUsers();
     } catch (err: any) {
-      setError(err.message || 'Network error while updating the user.');
+      setError(err.message || 'حدث خطأ في الشبكة أثناء تحديث المستخدم.');
     } finally {
       setLoading(false);
     }
@@ -227,10 +227,10 @@ const UsersPage: React.FC = () => {
         setUserToDelete(null);
         setError('');
       } else {
-        setError(data.error || 'Could not delete the user.');
+        setError(data.error || 'تعذّر حذف المستخدم.');
       }
     } catch (err: any) {
-      setError(err.message || 'Network error.');
+      setError(err.message || 'حدث خطأ في الشبكة.');
     } finally {
       setLoading(false);
     }
@@ -240,11 +240,11 @@ const UsersPage: React.FC = () => {
     if (!userToChangeNumber) return;
     const trimmed = newNationalNumberInput.trim();
     if (!trimmed) {
-      setChangeNumberError('The new national number is required.');
+      setChangeNumberError('الرقم الوطني الجديد مطلوب.');
       return;
     }
     if (trimmed === userToChangeNumber.nationalNumber) {
-      setChangeNumberError('The new number must differ from the current one.');
+      setChangeNumberError('يجب أن يكون الرقم الجديد مختلفًا عن الرقم الحالي.');
       return;
     }
 
@@ -266,10 +266,10 @@ const UsersPage: React.FC = () => {
         setError('');
         await fetchUsers();
       } else {
-        setChangeNumberError(data.error || 'Could not change the national number.');
+        setChangeNumberError(data.error || 'تعذّر تغيير الرقم الوطني.');
       }
     } catch (err: any) {
-      setChangeNumberError(err.message || 'Network error.');
+      setChangeNumberError(err.message || 'حدث خطأ في الشبكة.');
     } finally {
       setLoading(false);
     }
@@ -305,30 +305,30 @@ const UsersPage: React.FC = () => {
         setError('');
       }
     } catch (err: any) {
-      setError(err.message || 'Network error.');
+      setError(err.message || 'حدث خطأ في الشبكة.');
     } finally {
       setLoading(false);
     }
   };
 
   if (loading && users.length === 0) {
-    return <Loading label="Opening the directory" />;
+    return <Loading label="جارٍ فتح الدليل" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Users"
-        description="The directory behind every login. Search, edit, import, or change a national number without leaving the register."
+        title="المستخدمون"
+        description="الدليل الذي يقف خلف كل عملية دخول. ابحث وعدّل واستورد وغيّر الرقم الوطني دون مغادرة السجل."
         actions={
           <>
             <button type="button" className="btn" onClick={() => setShowImportForm(true)}>
               <Icon name="upload" size={14} />
-              Import CSV
+              استيراد CSV
             </button>
             <button type="button" className="btn btn--primary" onClick={() => setShowAddForm(true)}>
               <Icon name="plus" size={14} />
-              Add user
+              إضافة مستخدم
             </button>
           </>
         }
@@ -339,7 +339,7 @@ const UsersPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={() => setError('')}>
-              Dismiss
+              إغلاق
             </button>
           }
         >
@@ -352,13 +352,13 @@ const UsersPage: React.FC = () => {
           tone="success"
           action={
             <button type="button" className="btn btn--sm" onClick={() => setImportResult(null)}>
-              Close
+              إغلاق
             </button>
           }
         >
-          Import finished · added {importResult.added}, updated {importResult.updated}, skipped{' '}
+          اكتمل الاستيراد · أُضيف {importResult.added}، وحُدِّث {importResult.updated}، وتُخطّي{' '}
           {importResult.skipped}
-          {importResult.errors.length > 0 ? ` · ${importResult.errors.length} row errors` : ''}
+          {importResult.errors.length > 0 ? ` · ${importResult.errors.length} خطأ في الصفوف` : ''}
         </Banner>
       )}
 
@@ -367,11 +367,11 @@ const UsersPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={() => setImportError(null)}>
-              Close
+              إغلاق
             </button>
           }
         >
-          Import failed: {importError.error}
+          فشل الاستيراد: {importError.error}
           {importError.details ? ` · ${importError.details.suggestion}` : ''}
         </Banner>
       )}
@@ -379,7 +379,7 @@ const UsersPage: React.FC = () => {
       <div className="users-layout">
         <aside className="register-summary">
           <div className="register-summary__total">{formatNumber(users.length)}</div>
-          <div className="register-summary__label">accounts in the register</div>
+          <div className="register-summary__label">حساب في السجل</div>
           <div className="register-summary__list">
             {Object.entries(roleCounts)
               .filter(([role]) => role !== 'all')
@@ -392,7 +392,7 @@ const UsersPage: React.FC = () => {
               ))}
           </div>
           <p className="register-summary__note">
-            Showing {formatNumber(filteredUsers.length)} of {formatNumber(users.length)} accounts
+            عرض {formatNumber(filteredUsers.length)} من {formatNumber(users.length)} حساب
             {roleFilter !== 'all' ? ` · ${roleLabel(roleFilter)}` : ''}.
           </p>
         </aside>
@@ -403,14 +403,14 @@ const UsersPage: React.FC = () => {
               <input
                 className="input input--search"
                 type="search"
-                placeholder="Search by name, national number, or school"
+                placeholder="ابحث بالاسم أو الرقم الوطني أو المدرسة"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
             <button type="button" className="btn btn--sm" onClick={fetchUsers} disabled={loading}>
               <Icon name="refresh" size={13} />
-              Refresh
+              تحديث
             </button>
           </div>
 
@@ -420,12 +420,12 @@ const UsersPage: React.FC = () => {
             <table className="ledger">
               <thead>
                 <tr>
-                  <th>National number</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>School</th>
-                  <th>Phone</th>
-                  <th>Actions</th>
+                  <th>الرقم الوطني</th>
+                  <th>الاسم</th>
+                  <th>النوع</th>
+                  <th>المدرسة</th>
+                  <th>الهاتف</th>
+                  <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody>
@@ -440,7 +440,7 @@ const UsersPage: React.FC = () => {
                             style={{ minWidth: 130 }}
                             value={editNationalNumber}
                             onChange={(event) => setEditNationalNumber(event.target.value)}
-                            title="Changing this changes the user's login"
+                            title="تغيير هذا يغيّر تسجيل دخول المستخدم"
                           />
                         ) : (
                           <span className="num">{user.nationalNumber}</span>
@@ -473,13 +473,13 @@ const UsersPage: React.FC = () => {
                               )
                             }
                           >
-                            <option value="parent">Parent</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="qra-employ">QRA employ</option>
-                            <option value="supervisor">Supervisor</option>
-                            <option value="student">Student</option>
-                            <option value="developer">Developer</option>
-                            <option value="guest">Guest</option>
+                            <option value="parent">ولي أمر</option>
+                            <option value="teacher">معلّم</option>
+                            <option value="qra-employ">موظف الجمعية</option>
+                            <option value="supervisor">مشرف</option>
+                            <option value="student">طالب</option>
+                            <option value="developer">مطوّر</option>
+                            <option value="guest">زائر</option>
                           </select>
                         ) : (
                           <RoleStamp role={user.role} />
@@ -528,7 +528,7 @@ const UsersPage: React.FC = () => {
                                 onClick={() => handleUpdateUser(user)}
                                 disabled={loading}
                               >
-                                Save
+                                حفظ
                               </button>
                               <button
                                 type="button"
@@ -536,7 +536,7 @@ const UsersPage: React.FC = () => {
                                 onClick={handleCancelEdit}
                                 disabled={loading}
                               >
-                                Cancel
+                                إلغاء
                               </button>
                             </>
                           ) : (
@@ -546,7 +546,7 @@ const UsersPage: React.FC = () => {
                                 className="btn btn--sm"
                                 onClick={() => handleEditClick(user.nationalNumber)}
                               >
-                                Edit
+                                تعديل
                               </button>
                               <button
                                 type="button"
@@ -557,14 +557,14 @@ const UsersPage: React.FC = () => {
                                   setChangeNumberError('');
                                 }}
                               >
-                                Number
+                                الرقم
                               </button>
                               <button
                                 type="button"
                                 className="btn btn--sm btn--danger"
                                 onClick={() => setUserToDelete(user)}
                               >
-                                Delete
+                                حذف
                               </button>
                             </>
                           )}
@@ -578,8 +578,8 @@ const UsersPage: React.FC = () => {
             {pageRows.length === 0 && (
               <div className="ledger-empty">
                 <EmptyState
-                  title="No accounts match"
-                  body="Try a different search or clear the role filter."
+                  title="لا توجد حسابات مطابقة"
+                  body="جرّب بحثًا آخر أو امسح تصفية النوع."
                   action={
                     <button
                       type="button"
@@ -589,7 +589,7 @@ const UsersPage: React.FC = () => {
                         setRoleFilter('all');
                       }}
                     >
-                      Clear filters
+                      مسح التصفية
                     </button>
                   }
                 />
@@ -600,7 +600,7 @@ const UsersPage: React.FC = () => {
           {filteredUsers.length > PAGE_SIZE && (
             <div className="pagination">
               <span className="pagination__info">
-                Page {safePage} of {totalPages} · {formatNumber(filteredUsers.length)} accounts
+                صفحة {safePage} من {totalPages} · {formatNumber(filteredUsers.length)} حساب
               </span>
               <div className="pagination__buttons">
                 <button
@@ -610,7 +610,7 @@ const UsersPage: React.FC = () => {
                   disabled={safePage === 1}
                 >
                   <Icon name="chevron-left" size={13} />
-                  Previous
+                  السابق
                 </button>
                 <button
                   type="button"
@@ -618,7 +618,7 @@ const UsersPage: React.FC = () => {
                   onClick={() => setPage(Math.min(totalPages, safePage + 1))}
                   disabled={safePage === totalPages}
                 >
-                  Next
+                  التالي
                   <Icon name="chevron-right" size={13} />
                 </button>
               </div>
@@ -631,8 +631,8 @@ const UsersPage: React.FC = () => {
         <div className="modal-backdrop" onClick={() => setShowAddForm(false)}>
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-card__head">
-              <h3>Add a user</h3>
-              <button type="button" className="modal-close" onClick={() => setShowAddForm(false)} aria-label="Close">
+              <h3>إضافة مستخدم</h3>
+              <button type="button" className="modal-close" onClick={() => setShowAddForm(false)} aria-label="إغلاق">
                 ×
               </button>
             </div>
@@ -640,7 +640,7 @@ const UsersPage: React.FC = () => {
               <div className="modal-card__body">
                 <div className="form-grid">
                   <div className="field">
-                    <label htmlFor="new-number">National number *</label>
+                    <label htmlFor="new-number">الرقم الوطني *</label>
                     <input
                       id="new-number"
                       className="input"
@@ -652,7 +652,7 @@ const UsersPage: React.FC = () => {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="new-name">Name *</label>
+                    <label htmlFor="new-name">الاسم *</label>
                     <input
                       id="new-name"
                       className="input"
@@ -662,7 +662,7 @@ const UsersPage: React.FC = () => {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="new-role">Role *</label>
+                    <label htmlFor="new-role">النوع *</label>
                     <select
                       id="new-role"
                       className="select"
@@ -675,17 +675,17 @@ const UsersPage: React.FC = () => {
                       }
                       required
                     >
-                      <option value="parent">Parent</option>
-                      <option value="teacher">Teacher</option>
-                      <option value="qra-employ">QRA employ</option>
-                      <option value="supervisor">Supervisor</option>
-                      <option value="student">Student</option>
-                      <option value="developer">Developer</option>
-                      <option value="guest">Guest</option>
+                      <option value="parent">ولي أمر</option>
+                      <option value="teacher">معلّم</option>
+                      <option value="qra-employ">موظف الجمعية</option>
+                      <option value="supervisor">مشرف</option>
+                      <option value="student">طالب</option>
+                      <option value="developer">مطوّر</option>
+                      <option value="guest">زائر</option>
                     </select>
                   </div>
                   <div className="field">
-                    <label htmlFor="new-school">School *</label>
+                    <label htmlFor="new-school">المدرسة *</label>
                     <input
                       id="new-school"
                       className="input"
@@ -695,7 +695,7 @@ const UsersPage: React.FC = () => {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="new-phone">Phone (10 digits)</label>
+                    <label htmlFor="new-phone">الهاتف (10 أرقام)</label>
                     <input
                       id="new-phone"
                       className="input"
@@ -710,7 +710,7 @@ const UsersPage: React.FC = () => {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="new-directorate">Directorate</label>
+                    <label htmlFor="new-directorate">المديرية</label>
                     <input
                       id="new-directorate"
                       className="input"
@@ -724,10 +724,10 @@ const UsersPage: React.FC = () => {
               </div>
               <div className="modal-card__foot">
                 <button type="button" className="btn" onClick={() => setShowAddForm(false)}>
-                  Cancel
+                  إلغاء
                 </button>
                 <button type="submit" className="btn btn--primary" disabled={loading}>
-                  {loading ? 'Adding…' : 'Add user'}
+                  {loading ? 'جارٍ الإضافة…' : 'إضافة مستخدم'}
                 </button>
               </div>
             </form>
@@ -739,12 +739,12 @@ const UsersPage: React.FC = () => {
         <div className="modal-backdrop" onClick={() => setShowImportForm(false)}>
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-card__head">
-              <h3>Import users from CSV</h3>
+              <h3>استيراد المستخدمين من CSV</h3>
               <button
                 type="button"
                 className="modal-close"
                 onClick={() => setShowImportForm(false)}
-                aria-label="Close"
+                aria-label="إغلاق"
               >
                 ×
               </button>
@@ -752,7 +752,7 @@ const UsersPage: React.FC = () => {
             <form onSubmit={handleImportCSV}>
               <div className="modal-card__body">
                 <div className="field" style={{ marginBottom: 13 }}>
-                  <label htmlFor="csv-file">CSV file *</label>
+                  <label htmlFor="csv-file">ملف CSV *</label>
                   <input
                     id="csv-file"
                     className="input"
@@ -763,20 +763,20 @@ const UsersPage: React.FC = () => {
                   />
                 </div>
                 <div className="field" style={{ marginBottom: 13 }}>
-                  <label htmlFor="import-role">User role *</label>
+                  <label htmlFor="import-role">نوع المستخدم *</label>
                   <select
                     id="import-role"
                     className="select"
                     value={importRole}
                     onChange={(event) => setImportRole(event.target.value)}
                   >
-                    <option value="parent">Parents</option>
-                    <option value="teacher">Teachers</option>
-                    <option value="qra-employ">QRA employ</option>
+                    <option value="parent">أولياء الأمور</option>
+                    <option value="teacher">المعلّمون</option>
+                    <option value="qra-employ">موظف الجمعية</option>
                   </select>
                 </div>
                 <div className="field">
-                  <label>Import strategy *</label>
+                  <label>طريقة الاستيراد *</label>
                   <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <input
                       type="radio"
@@ -784,7 +784,7 @@ const UsersPage: React.FC = () => {
                       checked={importStrategy === 'add'}
                       onChange={(event) => setImportStrategy(event.target.value)}
                     />
-                    <span style={{ fontSize: 12 }}>Add new only (skip existing)</span>
+                    <span style={{ fontSize: 12 }}>إضافة الجديد فقط (تخطّي الموجود)</span>
                   </label>
                   <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <input
@@ -793,7 +793,7 @@ const UsersPage: React.FC = () => {
                       checked={importStrategy === 'upsert'}
                       onChange={(event) => setImportStrategy(event.target.value)}
                     />
-                    <span style={{ fontSize: 12 }}>Update existing and add new</span>
+                    <span style={{ fontSize: 12 }}>تحديث الموجود وإضافة الجديد</span>
                   </label>
                   <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <input
@@ -802,16 +802,16 @@ const UsersPage: React.FC = () => {
                       checked={importStrategy === 'replace'}
                       onChange={(event) => setImportStrategy(event.target.value)}
                     />
-                    <span style={{ fontSize: 12 }}>Replace all users</span>
+                    <span style={{ fontSize: 12 }}>استبدال كل المستخدمين</span>
                   </label>
                 </div>
               </div>
               <div className="modal-card__foot">
                 <button type="button" className="btn" onClick={() => setShowImportForm(false)}>
-                  Cancel
+                  إلغاء
                 </button>
                 <button type="submit" className="btn btn--primary" disabled={loading || !csvFile}>
-                  {loading ? 'Importing…' : 'Import CSV'}
+                  {loading ? 'جارٍ الاستيراد…' : 'استيراد CSV'}
                 </button>
               </div>
             </form>
@@ -823,20 +823,20 @@ const UsersPage: React.FC = () => {
         <div className="modal-backdrop" onClick={() => setUserToDelete(null)}>
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-card__head">
-              <h3>Delete user</h3>
-              <button type="button" className="modal-close" onClick={() => setUserToDelete(null)} aria-label="Close">
+              <h3>حذف المستخدم</h3>
+              <button type="button" className="modal-close" onClick={() => setUserToDelete(null)} aria-label="إغلاق">
                 ×
               </button>
             </div>
             <div className="modal-card__body">
               <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6 }}>
-                Delete <strong>{userToDelete.name}</strong>? This removes the account from the
-                directory and cannot be undone.
+                حذف <strong>{userToDelete.name}</strong>؟ سيؤدّي هذا إلى إزالة الحساب من
+                الدليل ولا يمكن التراجع عنه.
               </p>
             </div>
             <div className="modal-card__foot">
               <button type="button" className="btn" onClick={() => setUserToDelete(null)}>
-                Cancel
+                إلغاء
               </button>
               <button
                 type="button"
@@ -844,7 +844,7 @@ const UsersPage: React.FC = () => {
                 onClick={() => handleDeleteUser(userToDelete)}
                 disabled={loading}
               >
-                {loading ? 'Deleting…' : 'Delete user'}
+                {loading ? 'جارٍ الحذف…' : 'حذف المستخدم'}
               </button>
             </div>
           </div>
@@ -855,23 +855,23 @@ const UsersPage: React.FC = () => {
         <div className="modal-backdrop" onClick={() => setUserToChangeNumber(null)}>
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-card__head">
-              <h3>Change national number</h3>
+              <h3>تغيير الرقم الوطني</h3>
               <button
                 type="button"
                 className="modal-close"
                 onClick={() => setUserToChangeNumber(null)}
-                aria-label="Close"
+                aria-label="إغلاق"
               >
                 ×
               </button>
             </div>
             <div className="modal-card__body">
               <p style={{ margin: '0 0 12px', fontSize: 13, lineHeight: 1.6 }}>
-                This changes the login for <strong>{userToChangeNumber.name}</strong> (currently{' '}
+                يؤدّي هذا إلى تغيير تسجيل الدخول لـ <strong>{userToChangeNumber.name}</strong> (حاليًا{' '}
                 <span className="num">{userToChangeNumber.nationalNumber}</span>).
               </p>
               <div className="field">
-                <label htmlFor="changed-number">New national number</label>
+                <label htmlFor="changed-number">الرقم الوطني الجديد</label>
                 <input
                   id="changed-number"
                   className="input"
@@ -888,7 +888,7 @@ const UsersPage: React.FC = () => {
             </div>
             <div className="modal-card__foot">
               <button type="button" className="btn" onClick={() => setUserToChangeNumber(null)}>
-                Cancel
+                إلغاء
               </button>
               <button
                 type="button"
@@ -896,7 +896,7 @@ const UsersPage: React.FC = () => {
                 onClick={handleChangeNationalNumber}
                 disabled={loading}
               >
-                {loading ? 'Saving…' : 'Change number'}
+                {loading ? 'جارٍ الحفظ…' : 'تغيير الرقم'}
               </button>
             </div>
           </div>

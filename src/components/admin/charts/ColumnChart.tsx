@@ -43,7 +43,7 @@ const ColumnChart: React.FC<ColumnChartProps> = ({
       className="column-chart"
       viewBox={`0 0 ${WIDTH} ${height}`}
       role="img"
-      aria-label={`Column chart of ${valueLabel}`}
+      aria-label={`مخطط أعمدة لـ${valueLabel}`}
     >
       {ticks.map((tick) => {
         const y = yFor(tick);

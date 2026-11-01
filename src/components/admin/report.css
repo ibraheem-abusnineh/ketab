@@ -1,0 +1,79 @@
+/*
+ * Reports stylesheet — ported from the «أصواتٌ تُرى — نموذج تقارير الإدارة»
+ * template. Every selector is scoped under `.rt` so the report page renders
+ * with the template's exact layout and components inside the admin shell.
+ */
+
+.rt{--m:#8B2F3C;--y:#F4D000;--bg:#F6F1EE;--c:#fff;--t:#2a1d20;--s:#7a6a6d;--b:#e6dcd8;--ok:#2e7d4f;--wn:#b7791f;--er:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){
+.rt:not([data-theme=light]){--bg:#1c1416;--c:#2a1d20;--t:#f3e9e6;--s:#b9a8ab;--b:#44343a;--m:#d36a79}
+}
+.rt[data-theme=dark]{--bg:#1c1416;--c:#2a1d20;--t:#f3e9e6;--s:#b9a8ab;--b:#44343a;--m:#d36a79}
+.rt *{box-sizing:border-box}
+.rt{scroll-padding-top:env(safe-area-inset-top,0px)}
+.rt{margin:0;background:var(--bg);color:var(--t);font:15px/1.6 Tahoma,"Segoe UI",Arial,sans-serif}
+.rt header{background:#8B2F3C;color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.rt header h1{font-size:17px;margin:0}
+.rt header small{opacity:.85}
+.rt .seg button,.rt .tabs button,.rt select,.rt input{font:inherit}
+.rt .seg{display:flex;background:rgba(255,255,255,.18);border-radius:10px;padding:3px}
+.rt .seg button{border:0;background:none;color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer}
+.rt .seg .on{background:var(--y);color:#3a1218;font-weight:700}
+.rt .demo{background:#fff7cc;color:#5c4a00;text-align:center;padding:5px;font-size:13px}
+.rt .tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 0}
+.rt .tabs button{border:1px solid var(--b);background:var(--c);color:var(--t);padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.rt .tabs .on{background:var(--m);color:#fff;border-color:var(--m)}
+.rt main{padding:14px 16px 30px;max-width:1200px;margin:auto}
+.rt .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.rt .bar select,.rt .bar input{padding:7px 10px;border:1px solid var(--b);border-radius:8px;background:var(--c);color:var(--t)}
+.rt .btn{border:1px solid var(--m);background:var(--c);color:var(--m);padding:6px 12px;border-radius:8px;cursor:pointer}
+.rt .btn.p{background:var(--m);color:#fff}
+.rt .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.rt .g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.rt .card{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:14px;min-width:0}
+.rt .card h3{margin:0 0 10px;font-size:15px}
+.rt .k{border-top:4px solid var(--y)}
+.rt .k b{font-size:26px;color:var(--m);display:block}
+.rt .k span{color:var(--s);font-size:13px}
+.rt .k i{font-style:normal;font-size:12px;color:var(--ok)}
+.rt .row{display:grid;grid-template-columns:110px 1fr 60px;gap:8px;align-items:center;margin:7px 0;font-size:13px}
+.rt .tr{background:var(--b);height:12px;border-radius:6px;overflow:hidden}
+.rt .tr div{height:100%;border-radius:6px;background:var(--m)}
+.rt .tw{overflow-x:auto}
+.rt table{width:100%;border-collapse:collapse;font-size:13px}
+.rt th,.rt td{padding:8px;text-align:right;border-bottom:1px solid var(--b);white-space:nowrap}
+.rt th{color:var(--s);font-weight:600}
+.rt .bd{padding:2px 9px;border-radius:20px;font-size:12px;color:#fff;display:inline-block}
+.rt .ok{background:var(--ok)}
+.rt .wn{background:var(--wn)}
+.rt .er{background:var(--er)}
+.rt .gr{background:#7a6a6d}
+.rt .note{font-size:13px;color:var(--s);margin:6px 0 12px}
+.rt .hide{display:none}
+.rt #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none}
+.rt #toast.s{opacity:1}
+.rt .dot{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;margin-top:6px}
+.rt .dot i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:5px}
+@media print{
+.rt header,.rt .demo,.rt .tabs,.rt .bar,.rt .np{display:none!important}
+.rt{background:#fff}
+}
+.rt .md{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
+.rt .md.s{display:flex}
+.rt .md .card{width:min(420px,100%)}
+.rt .md input,.rt .md select{width:100%;margin:4px 0 10px;padding:8px;border:1px solid var(--b);border-radius:8px;background:var(--c);color:var(--t)}
+.rt .hm{display:grid;grid-template-columns:50px repeat(8,1fr);gap:3px;font-size:11px;text-align:center}
+.rt .hm div{padding:6px 0;border-radius:4px}
+.rt .sn{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.rt .sn button{border:1px solid var(--b);background:var(--c);color:var(--t);padding:6px 11px;border-radius:20px;cursor:pointer;font:inherit;font-size:13px}
+.rt .sn .on{background:var(--y);color:#3a1218;border-color:var(--y);font-weight:700}
+.rt .pl{display:inline-block;width:10px;height:10px;border-radius:50%;background:#2e9e5b;margin-left:6px;animation:pu 1.4s infinite}
+@keyframes pu{50%{opacity:.25}}
+.rt .big{font-size:56px;font-weight:700;color:var(--m);line-height:1}
+
+/* keep the template's typography inside the admin shell */
+.rt h1, .rt h2, .rt h3, .rt h4, .rt h5 { font-family: inherit; color: inherit; }
+.rt { border: 1px solid var(--rt-line); border-radius: 16px; overflow: hidden; }
+.rt main { min-height: 320px; }
+.rt .kpi b, .rt .k b { font-family: inherit; }
+.rt .btn, .rt .seg button, .rt .tabs button, .rt .sn button { font-family: inherit; }

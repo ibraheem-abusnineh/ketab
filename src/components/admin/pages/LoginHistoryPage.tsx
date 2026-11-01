@@ -64,7 +64,7 @@ const LoginHistoryPage: React.FC = () => {
       setHourly(timeData.data?.hourly || []);
       setError('');
     } catch (err: any) {
-      setError(err.message || 'Could not read the login history.');
+      setError(err.message || 'تعذّر قراءة سجل الدخول.');
     } finally {
       setLoading(false);
     }
@@ -132,18 +132,18 @@ const LoginHistoryPage: React.FC = () => {
   }, [hourly]);
 
   if (loading && rows.length === 0) {
-    return <Loading label="Opening the logbook" />;
+    return <Loading label="جارٍ فتح السجل" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Login history"
-        description="Who signed in, how often, and when they were last seen. Sorted by the people who use the platform most."
+        title="سجل الدخول"
+        description="مَن سجّل الدخول، وكم مرة، ومتى ظهر آخر مرة. مرتّب حسب الأكثر استخدامًا للمنصة."
         actions={
           <button type="button" className="btn" onClick={fetchHistory} disabled={loading}>
             <Icon name="refresh" size={14} />
-            {loading ? 'Refreshing…' : 'Refresh'}
+            {loading ? 'جارٍ التحديث…' : 'تحديث'}
           </button>
         }
       />
@@ -153,7 +153,7 @@ const LoginHistoryPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={fetchHistory}>
-              Retry
+              إعادة المحاولة
             </button>
           }
         >
@@ -163,43 +163,43 @@ const LoginHistoryPage: React.FC = () => {
 
       <div className="history-kpis">
         <div className="history-kpi">
-          <div className="history-kpi__label">People with activity</div>
+          <div className="history-kpi__label">أشخاص لديهم نشاط</div>
           <div className="history-kpi__value">{formatNumber(rows.length)}</div>
-          <div className="history-kpi__hint">Across all recorded days</div>
+          <div className="history-kpi__hint">خلال كل الأيام المسجّلة</div>
         </div>
         <div className="history-kpi">
-          <div className="history-kpi__label">Total logins</div>
+          <div className="history-kpi__label">إجمالي عمليات الدخول</div>
           <div className="history-kpi__value">{formatNumber(totalLogins)}</div>
-          <div className="history-kpi__hint">{formatNumber(daily.length)} recorded days</div>
+          <div className="history-kpi__hint">{formatNumber(daily.length)} يومًا مسجّلًا</div>
         </div>
         <div className="history-kpi">
-          <div className="history-kpi__label">Average per person</div>
+          <div className="history-kpi__label">المتوسط لكل شخص</div>
           <div className="history-kpi__value">
             {formatNumber(rows.length > 0 ? Math.round(totalLogins / rows.length) : 0)}
           </div>
-          <div className="history-kpi__hint">Logins per active person</div>
+          <div className="history-kpi__hint">دخول لكل شخص نشط</div>
         </div>
         <div className="history-kpi">
-          <div className="history-kpi__label">Last activity</div>
+          <div className="history-kpi__label">آخر نشاط</div>
           <div className="history-kpi__value" style={{ fontSize: 17 }}>
             {lastActivity ? formatDate(lastActivity) : '—'}
           </div>
           <div className="history-kpi__hint">
-            {lastActivity ? formatTime(lastActivity) : 'No activity yet'}
+            {lastActivity ? formatTime(lastActivity) : 'لا يوجد نشاط بعد'}
           </div>
         </div>
       </div>
 
       <div className="chart-grid">
-        <ChartFrame className="a-col-7" title="Logins by day" subtitle="The whole recorded period">
+        <ChartFrame className="a-col-7" title="الدخولات حسب اليوم" subtitle="كل الفترة المسجّلة">
           <LineChart
             data={daily.map((point) => ({ label: point.day, value: point.count }))}
             height={210}
-            valueLabel="logins"
+            valueLabel="دخول"
           />
         </ChartFrame>
-        <ChartFrame className="a-col-5" title="Logins by hour" subtitle="When the day gets busy">
-          <ColumnChart data={fullDay} height={210} valueLabel="logins" />
+        <ChartFrame className="a-col-5" title="الدخولات حسب الساعة" subtitle="أكثر أوقات انشغال اليوم">
+          <ColumnChart data={fullDay} height={210} valueLabel="دخول" />
         </ChartFrame>
       </div>
 
@@ -208,7 +208,7 @@ const LoginHistoryPage: React.FC = () => {
           <input
             className="input input--search"
             type="search"
-            placeholder="Search by name, national number, or school"
+            placeholder="ابحث بالاسم أو الرقم الوطني أو المدرسة"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -218,10 +218,10 @@ const LoginHistoryPage: React.FC = () => {
           style={{ width: 'auto' }}
           value={sortBy}
           onChange={(event) => setSortBy(event.target.value as 'loginCount' | 'lastLogin')}
-          aria-label="Sort order"
+          aria-label="ترتيب الفرز"
         >
-          <option value="loginCount">Sort by login count</option>
-          <option value="lastLogin">Sort by last login</option>
+          <option value="loginCount">الفرز حسب عدد الدخولات</option>
+          <option value="lastLogin">الفرز حسب آخر دخول</option>
         </select>
       </div>
 
@@ -231,11 +231,11 @@ const LoginHistoryPage: React.FC = () => {
         <table className="ledger">
           <thead>
             <tr>
-              <th>Person</th>
-              <th>School</th>
-              <th>Logins</th>
-              <th>Last login</th>
-              <th>Details</th>
+              <th>الشخص</th>
+              <th>المدرسة</th>
+              <th>عدد الدخولات</th>
+              <th>آخر دخول</th>
+              <th>التفاصيل</th>
             </tr>
           </thead>
           <tbody>
@@ -246,7 +246,7 @@ const LoginHistoryPage: React.FC = () => {
                 <React.Fragment key={row.nationalNumber}>
                   <tr>
                     <td>
-                      <span className="ledger__name">{row.name || 'Unknown'}</span>
+                      <span className="ledger__name">{row.name || 'غير معروف'}</span>
                       <span className="ledger__sub">{row.nationalNumber}</span>
                       <div style={{ marginTop: 4 }}>
                         <RoleStamp role={row.role} />
@@ -261,7 +261,7 @@ const LoginHistoryPage: React.FC = () => {
                           style={{ width: `${share}%`, background: 'var(--admin-brass)' }}
                         />
                       </div>
-                      <span className="ledger__sub">{share}% of logins</span>
+                      <span className="ledger__sub">{share}% من إجمالي الدخول</span>
                     </td>
                     <td>
                       <span className="num">{formatDate(row.lastLogin)}</span>
@@ -274,7 +274,7 @@ const LoginHistoryPage: React.FC = () => {
                         onClick={() => setExpanded(isOpen ? null : row.nationalNumber)}
                         aria-expanded={isOpen}
                       >
-                        {isOpen ? 'Hide' : 'View'}
+                        {isOpen ? 'إخفاء' : 'عرض'}
                       </button>
                     </td>
                   </tr>
@@ -283,34 +283,33 @@ const LoginHistoryPage: React.FC = () => {
                       <td colSpan={5}>
                         <div className="detail-grid">
                           <div>
-                            <div className="detail-grid__label">Role</div>
+                            <div className="detail-grid__label">النوع</div>
                             <div className="detail-grid__value">{roleLabel(row.role)}</div>
                           </div>
                           <div>
-                            <div className="detail-grid__label">School</div>
+                            <div className="detail-grid__label">المدرسة</div>
                             <div className="detail-grid__value">{row.school || '—'}</div>
                           </div>
                           <div>
-                            <div className="detail-grid__label">Last seen</div>
+                            <div className="detail-grid__label">آخر ظهور</div>
                             <div className="detail-grid__value">{formatDateTime(row.lastLogin)}</div>
                           </div>
                           <div>
-                            <div className="detail-grid__label">Login count</div>
+                            <div className="detail-grid__label">عدد الدخولات</div>
                             <div className="detail-grid__value">{formatNumber(row.loginCount)}</div>
                           </div>
                           <div>
-                            <div className="detail-grid__label">Share of all logins</div>
+                            <div className="detail-grid__label">الحصة من إجمالي الدخول</div>
                             <div className="detail-grid__value">{share}%</div>
                           </div>
                           <div>
-                            <div className="detail-grid__label">National number</div>
+                            <div className="detail-grid__label">الرقم الوطني</div>
                             <div className="detail-grid__value num">{row.nationalNumber}</div>
                           </div>
                         </div>
                         <p className="detail-note">
-                          Login data is stored as a daily aggregate, so the exact time of every
-                          individual login is not retained — only the last time the person was seen
-                          that day.
+                          تُخزَّن بيانات الدخول كمجموع يومي، لذا لا يُحتفظ بالوقت الدقيق لكل
+                          عملية دخول فردية — فقط آخر مرة ظهر فيها الشخص في ذلك اليوم.
                         </p>
                       </td>
                     </tr>
@@ -323,8 +322,8 @@ const LoginHistoryPage: React.FC = () => {
         {pageRows.length === 0 && (
           <div className="ledger-empty">
             <EmptyState
-              title="No people match"
-              body="Try a different search or clear the role filter."
+              title="لا يوجد أشخاص مطابقون"
+              body="جرّب بحثًا آخر أو امسح تصفية النوع."
               action={
                 <button
                   type="button"
@@ -334,7 +333,7 @@ const LoginHistoryPage: React.FC = () => {
                     setRoleFilter('all');
                   }}
                 >
-                  Clear filters
+                  مسح التصفية
                 </button>
               }
             />
@@ -345,7 +344,7 @@ const LoginHistoryPage: React.FC = () => {
       {sorted.length > PAGE_SIZE && (
         <div className="pagination">
           <span className="pagination__info">
-            Page {safePage} of {totalPages} · {formatNumber(sorted.length)} people
+            صفحة {safePage} من {totalPages} · {formatNumber(sorted.length)} أشخاص
           </span>
           <div className="pagination__buttons">
             <button
@@ -355,7 +354,7 @@ const LoginHistoryPage: React.FC = () => {
               disabled={safePage === 1}
             >
               <Icon name="chevron-left" size={13} />
-              Previous
+              السابق
             </button>
             <button
               type="button"
@@ -363,7 +362,7 @@ const LoginHistoryPage: React.FC = () => {
               onClick={() => setPage(Math.min(totalPages, safePage + 1))}
               disabled={safePage === totalPages}
             >
-              Next
+              التالي
               <Icon name="chevron-right" size={13} />
             </button>
           </div>

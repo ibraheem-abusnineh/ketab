@@ -50,26 +50,26 @@ describe('CourseManagement', () => {
   test('renders an Unlock Course button on a locked Math card', () => {
     renderCourses(makeCourses({ math: { locked: true, label: 'Math' } }));
 
-    const mathCard = cardFor('Math');
-    expect(within(mathCard).getByRole('button', { name: 'Unlock Course' })).toBeEnabled();
-    expect(within(mathCard).getByText('Students will not see this course while it is locked.')).toBeInTheDocument();
+    const mathCard = cardFor('الرياضيات');
+    expect(within(mathCard).getByRole('button', { name: 'فتح المقرر' })).toBeEnabled();
+    expect(within(mathCard).getByText('لن يرى الطلاب هذا المقرر ما دام مغلقًا.')).toBeInTheDocument();
     expect(within(mathCard).queryByText(/no admin toggle/i)).not.toBeInTheDocument();
   });
 
   test('renders an Unlock Course button on a locked Awareness card', () => {
     renderCourses(makeCourses({ awareness: { locked: true, label: 'Awareness' } }));
 
-    const awarenessCard = cardFor('Awareness');
-    expect(within(awarenessCard).getByRole('button', { name: 'Unlock Course' })).toBeEnabled();
+    const awarenessCard = cardFor('التوعية');
+    expect(within(awarenessCard).getByRole('button', { name: 'فتح المقرر' })).toBeEnabled();
     expect(within(awarenessCard).queryByText(/no admin toggle/i)).not.toBeInTheDocument();
   });
 
   test('clicking Unlock Course on a locked Math card toggles the lock off', async () => {
     renderCourses(makeCourses({ math: { locked: true, label: 'Math' } }));
 
-    const mathCard = cardFor('Math');
+    const mathCard = cardFor('الرياضيات');
     await act(async () => {
-      fireEvent.click(within(mathCard).getByRole('button', { name: 'Unlock Course' }));
+      fireEvent.click(within(mathCard).getByRole('button', { name: 'فتح المقرر' }));
     });
 
     expect(mockUseCourseAvailability().updateCourseLock).toHaveBeenCalledTimes(1);
@@ -79,9 +79,9 @@ describe('CourseManagement', () => {
   test('clicking Unlock Course on a locked Awareness card toggles the lock off', async () => {
     renderCourses(makeCourses({ awareness: { locked: true, label: 'Awareness' } }));
 
-    const awarenessCard = cardFor('Awareness');
+    const awarenessCard = cardFor('التوعية');
     await act(async () => {
-      fireEvent.click(within(awarenessCard).getByRole('button', { name: 'Unlock Course' }));
+      fireEvent.click(within(awarenessCard).getByRole('button', { name: 'فتح المقرر' }));
     });
 
     expect(mockUseCourseAvailability().updateCourseLock).toHaveBeenCalledTimes(1);
@@ -91,11 +91,11 @@ describe('CourseManagement', () => {
   test('unlocked cards show Lock Course and clicking toggles the lock on', async () => {
     renderCourses(makeCourses());
 
-    const mathCard = cardFor('Math');
-    expect(within(mathCard).getByRole('button', { name: 'Lock Course' })).toBeEnabled();
+    const mathCard = cardFor('الرياضيات');
+    expect(within(mathCard).getByRole('button', { name: 'إغلاق المقرر' })).toBeEnabled();
 
     await act(async () => {
-      fireEvent.click(within(mathCard).getByRole('button', { name: 'Lock Course' }));
+      fireEvent.click(within(mathCard).getByRole('button', { name: 'إغلاق المقرر' }));
     });
     expect(mockUseCourseAvailability().updateCourseLock).toHaveBeenCalledWith('math', true);
   });
@@ -103,8 +103,8 @@ describe('CourseManagement', () => {
   test('the Arabic card keeps its disabled Always Available button', () => {
     renderCourses(makeCourses());
 
-    const arabicCard = cardFor('Arabic Language');
-    const button = within(arabicCard).getByRole('button', { name: 'Always Available' });
+    const arabicCard = cardFor('اللغة العربية');
+    const button = within(arabicCard).getByRole('button', { name: 'متاح دائمًا' });
     expect(button).toBeDisabled();
   });
 });

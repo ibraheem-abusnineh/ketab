@@ -32,7 +32,7 @@ const BarChart: React.FC<BarChartProps> = ({
   const max = Math.max(...data.map((row) => row.value), 1);
 
   return (
-    <div className="hbar" role="img" aria-label={`Bar chart of ${valueLabel}`}>
+    <div className="hbar" role="img" aria-label={`مخطط أشرطة لـ${valueLabel}`}>
       {data.map((row, index) => {
         const width = Math.max(row.value > 0 ? 2 : 0, (row.value / max) * 100);
         const background =

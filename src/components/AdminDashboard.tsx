@@ -32,53 +32,53 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'Monitor',
+    label: 'المتابعة',
     items: [
-      { id: 'overview', label: 'Overview', icon: 'grid' },
-      { id: 'statistics', label: 'Statistics', icon: 'chart' },
-      { id: 'reports', label: 'Reports', icon: 'document' },
-      { id: 'history', label: 'Login history', icon: 'clock' },
+      { id: 'overview', label: 'نظرة عامة', icon: 'grid' },
+      { id: 'statistics', label: 'الإحصاءات', icon: 'chart' },
+      { id: 'reports', label: 'التقارير', icon: 'document' },
+      { id: 'history', label: 'سجل الدخول', icon: 'clock' },
     ],
   },
   {
-    label: 'Manage',
+    label: 'الإدارة',
     items: [
-      { id: 'users', label: 'Users', icon: 'users' },
-      { id: 'requests', label: 'Profile requests', icon: 'inbox' },
-      { id: 'notifications', label: 'Inbox', icon: 'bell' },
+      { id: 'users', label: 'المستخدمون', icon: 'users' },
+      { id: 'requests', label: 'طلبات تعديل الملف', icon: 'inbox' },
+      { id: 'notifications', label: 'الإشعارات', icon: 'bell' },
     ],
   },
   {
-    label: 'System',
+    label: 'النظام',
     items: [
-      { id: 'courses', label: 'Courses', icon: 'layers' },
-      { id: 'data', label: 'Backup & restore', icon: 'database' },
+      { id: 'courses', label: 'المقررات', icon: 'layers' },
+      { id: 'data', label: 'النسخ الاحتياطي والاستعادة', icon: 'database' },
     ],
   },
 ];
 
 const TAB_TITLES: Record<AdminTab, string> = {
-  overview: 'Overview',
-  statistics: 'Statistics',
-  reports: 'Reports',
-  history: 'Login history',
-  users: 'Users',
-  requests: 'Profile requests',
-  notifications: 'Inbox',
-  courses: 'Courses',
-  data: 'Backup & restore',
+  overview: 'نظرة عامة',
+  statistics: 'الإحصاءات',
+  reports: 'التقارير',
+  history: 'سجل الدخول',
+  users: 'المستخدمون',
+  requests: 'طلبات تعديل الملف',
+  notifications: 'الإشعارات',
+  courses: 'المقررات',
+  data: 'النسخ الاحتياطي والاستعادة',
 };
 
 const TAB_META: Record<AdminTab, string> = {
-  overview: 'The state of the platform today',
-  statistics: 'Traffic, schools, and activity patterns',
-  reports: 'Build, export, and print a period report',
-  history: 'Every user, every login, on one ledger',
-  users: 'The directory of parents, teachers, and staff',
-  requests: 'Review profile changes before they go live',
-  notifications: 'Profile updates and pending requests',
-  courses: 'Control which courses learners can open',
-  data: 'Download a backup, restore it after a re-clone',
+  overview: 'حالة المنصة اليوم',
+  statistics: 'الزيارات والمدارس وأنماط النشاط',
+  reports: 'بناء التقرير وتصديره وطباعته',
+  history: 'كل مستخدم وكل دخول في سجل واحد',
+  users: 'دليل أولياء الأمور والمعلمين والموظفين',
+  requests: 'مراجعة تعديلات الملف قبل اعتمادها',
+  notifications: 'تحديثات الملف والطلبات المعلّقة',
+  courses: 'التحكم في المقررات المتاحة للمتعلمين',
+  data: 'تنزيل نسخة احتياطية واستعادتها',
 };
 
 const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
@@ -113,15 +113,15 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
     setPasswordMessage('');
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError('All password fields are required.');
+      setPasswordError('جميع حقول كلمة المرور مطلوبة.');
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError('The new password must be at least 6 characters.');
+      setPasswordError('يجب أن تتكوّن كلمة المرور الجديدة من 6 أحرف على الأقل.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError('The new password and confirmation do not match.');
+      setPasswordError('كلمة المرور الجديدة وتأكيدها غير متطابقين.');
       return;
     }
 
@@ -133,12 +133,12 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
       const data = await response.json();
-      setPasswordMessage(data.message || 'Password changed.');
+      setPasswordMessage(data.message || 'تم تغيير كلمة المرور.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
-      setPasswordError(error.message || 'Could not change the password.');
+      setPasswordError(error.message || 'تعذّر تغيير كلمة المرور.');
     } finally {
       setPasswordLoading(false);
     }
@@ -149,7 +149,7 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
     navigate('/admin');
   };
 
-  const todayLabel = new Date().toLocaleDateString('en-US', {
+  const todayLabel = new Date().toLocaleDateString('ar-JO-u-nu-latn', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -161,16 +161,16 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       <aside className="admin-sidebar">
         <div className="admin-brand">
           <div className="admin-brand__row">
-            <div className="admin-brand__glyph" aria-hidden="true">ك</div>
+            <img className="admin-brand__logo" src="/admin-logo.png" alt="أصواتٌ تُرى" />
             <div>
-              <div className="admin-brand__name">KETAB</div>
-              <div className="admin-brand__sub">ADMIN DESK</div>
+              <div className="admin-brand__name">أصواتٌ تُرى</div>
+              <div className="admin-brand__sub">لوحة الإدارة</div>
             </div>
           </div>
-          <p className="admin-brand__note">سجلّ المدرسة الرقمي</p>
+          <p className="admin-brand__note">سجلّ المنصة الرقمي</p>
         </div>
 
-        <nav className="admin-nav" aria-label="Admin sections">
+        <nav className="admin-nav" aria-label="أقسام الإدارة">
           {NAV_GROUPS.map((group) => (
             <div className="admin-nav__group" key={group.label}>
               <div className="admin-nav__label">{group.label}</div>
@@ -196,15 +196,15 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
         <div className="admin-sidebar__foot">
           <button type="button" onClick={() => setShowPasswordForm(true)}>
             <Icon name="key" size={14} />
-            <span>Change password</span>
+            <span>تغيير كلمة المرور</span>
           </button>
           <button type="button" onClick={() => navigate('/')}>
             <Icon name="home" size={14} />
-            <span>View site</span>
+            <span>عرض الموقع</span>
           </button>
           <button type="button" onClick={handleLogout}>
             <Icon name="logout" size={14} />
-            <span>Log out</span>
+            <span>تسجيل الخروج</span>
           </button>
         </div>
       </aside>
@@ -220,14 +220,14 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
           <div className="admin-topbar__actions">
             <span className="admin-live">
               <span className="admin-live__dot" />
-              Live data
+              بيانات مباشرة
             </span>
             <button
               type="button"
               className="btn btn--sm btn--ghost"
               onClick={() => navigate('/')}
             >
-              View site
+              عرض الموقع
             </button>
           </div>
         </header>
@@ -271,12 +271,12 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
         <div className="modal-backdrop" onClick={closePasswordForm}>
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-card__head">
-              <h3>Change admin password</h3>
+              <h3>تغيير كلمة مرور المدير</h3>
               <button
                 type="button"
                 className="modal-close"
                 onClick={closePasswordForm}
-                aria-label="Close"
+                aria-label="إغلاق"
               >
                 ×
               </button>
@@ -285,7 +285,7 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
               <div className="modal-card__body">
                 <div className="password-form">
                   <div className="field">
-                    <label htmlFor="current-password">Current password</label>
+                    <label htmlFor="current-password">كلمة المرور الحالية</label>
                     <input
                       id="current-password"
                       className="input"
@@ -297,7 +297,7 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="new-password">New password</label>
+                    <label htmlFor="new-password">كلمة المرور الجديدة</label>
                     <input
                       id="new-password"
                       className="input"
@@ -310,7 +310,7 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="confirm-password">Confirm new password</label>
+                    <label htmlFor="confirm-password">تأكيد كلمة المرور الجديدة</label>
                     <input
                       id="confirm-password"
                       className="input"
@@ -328,10 +328,10 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
               </div>
               <div className="modal-card__foot">
                 <button type="button" className="btn" onClick={closePasswordForm} disabled={passwordLoading}>
-                  Cancel
+                  إلغاء
                 </button>
                 <button type="submit" className="btn btn--primary" disabled={passwordLoading}>
-                  {passwordLoading ? 'Saving…' : 'Save password'}
+                  {passwordLoading ? 'جارٍ الحفظ…' : 'حفظ كلمة المرور'}
                 </button>
               </div>
             </form>

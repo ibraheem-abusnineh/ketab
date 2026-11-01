@@ -6,7 +6,7 @@ interface HeatmapProps {
   emptyLabel?: string;
 }
 
-const DAY_LABELS = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
+const DAY_LABELS = ['إث', '', 'أر', '', 'جم', '', 'أح'];
 
 const Heatmap: React.FC<HeatmapProps> = ({ data, emptyLabel = 'No data for this range' }) => {
   const { weeks, max } = buildHeatWeeks(data);
@@ -27,7 +27,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ data, emptyLabel = 'No data for this 
           className="heatmap__grid"
           style={{ gridTemplateColumns: `repeat(${weeks.length}, 16px)` }}
           role="img"
-          aria-label="Calendar heatmap of daily logins"
+          aria-label="خريطة حرارية تقويمية لعمليات الدخول اليومية"
         >
           {weeks.map((week, weekIndex) =>
             week.cells.map((cell, dayIndex) => {
@@ -45,7 +45,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ data, emptyLabel = 'No data for this 
                 <span
                   className="heatmap__cell"
                   key={cell.day}
-                  title={`${shortDayLong(cell.day)}: ${cell.count} logins`}
+                  title={`${shortDayLong(cell.day)}: ${cell.count} عملية دخول`}
                   style={{ background: `rgba(132, 51, 60, ${alpha.toFixed(2)})` }}
                 />
               );
@@ -53,7 +53,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ data, emptyLabel = 'No data for this 
           )}
         </div>
         <div className="heatmap__legend">
-          <span>Less</span>
+          <span>أقل</span>
           {[0.08, 0.28, 0.5, 0.72, 0.95].map((alpha) => (
             <span
               className="heatmap__swatch"
@@ -61,8 +61,8 @@ const Heatmap: React.FC<HeatmapProps> = ({ data, emptyLabel = 'No data for this 
               style={{ background: `rgba(132, 51, 60, ${alpha})` }}
             />
           ))}
-          <span>More</span>
-          <span className="heatmap__max">Peak day: {max}</span>
+          <span>أكثر</span>
+          <span className="heatmap__max">أعلى يوم: {max}</span>
         </div>
       </div>
     </div>

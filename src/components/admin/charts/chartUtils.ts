@@ -45,13 +45,13 @@ export function formatCompact(value: number): string {
 export function shortDay(day: string): string {
   const date = new Date(`${day}T12:00:00`);
   if (Number.isNaN(date.getTime())) return day;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('ar-JO-u-nu-latn', { month: 'short', day: 'numeric' });
 }
 
 export function shortDayLong(day: string): string {
   const date = new Date(`${day}T12:00:00`);
   if (Number.isNaN(date.getTime())) return day;
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('ar-JO-u-nu-latn', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 /** Evenly spaced indexes for x-axis labels, always including first and last. */

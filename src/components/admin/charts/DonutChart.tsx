@@ -65,7 +65,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
         className="donut-chart"
         viewBox="0 0 200 200"
         role="img"
-        aria-label={`Donut chart of ${valueLabel} by category`}
+        aria-label={`مخطط دائري لـ${valueLabel} حسب الفئة`}
       >
         <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--admin-paper-2)" strokeWidth={STROKE} />
         {segments.map((segment) => (

@@ -34,10 +34,10 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
         onLoginSuccess(data.sessionToken);
         navigate('/admin/dashboard');
       } else {
-        setError(data.error || 'Login failed');
+        setError(data.error || 'تعذّر تسجيل الدخول');
       }
     } catch (err: any) {
-      setError(err.message || 'Network error. Please check if the server is running.');
+      setError(err.message || 'حدث خطأ في الشبكة. تأكد من تشغيل الخادم.');
     } finally {
       setLoading(false);
     }
@@ -47,45 +47,43 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
     <div className="admin-login">
       <aside className="admin-login__brand">
         <div className="admin-login__brand-top">
-          <div className="admin-login__glyph" aria-hidden="true">
-            ك
-          </div>
+          <img className="admin-login__logo" src="/admin-logo.png" alt="أصواتٌ تُرى" />
           <div>
-            <div className="admin-login__brand-name">KETAB</div>
-            <div className="admin-login__brand-sub">ADMIN DESK</div>
+            <div className="admin-login__brand-name">أصواتٌ تُرى</div>
+            <div className="admin-login__brand-sub">لوحة الإدارة</div>
           </div>
         </div>
 
         <div className="admin-login__statement">
-          <h1>سجلّ المدرسة الرقمي</h1>
+          <h1>سجلّ المنصّة الرقمي</h1>
           <p>
-            Every login, every school, every profile change — kept in one register. Sign in to read
-            the ledger and keep the platform in order.
+            كل عملية دخول، وكل مدرسة، وكل تعديل على الملف — في سجل واحد. سجّل الدخول لقراءة
+            السجل ومتابعة المنصّة.
           </p>
         </div>
 
         <div className="admin-login__brand-foot">
-          <span>KETAB · منصة تعليمية للصم</span>
-          <span>EST. 2024</span>
+          <span>أصواتٌ تُرى · منصّة تعليمية للصم</span>
+          <span>جمعية جائزة الملكة رانيا العبدالله</span>
         </div>
 
         <div className="admin-login__watermark" aria-hidden="true">
-          ك
+          ص
         </div>
       </aside>
 
       <main className="admin-login__panel">
         <div className="admin-login__form-wrap">
-          <div className="admin-login__kicker">RESTRICTED · STAFF ONLY</div>
-          <h2 className="admin-login__title">Open the register</h2>
+          <div className="admin-login__kicker">للمشرفين فقط</div>
+          <h2 className="admin-login__title">الدخول إلى السجل</h2>
           <p className="admin-login__lede">
-            Use the administrator credentials issued for this platform. Sessions expire when you
-            close the browser or log out.
+            استخدم بيانات مدير النظام الخاصة بهذه المنصّة. تنتهي الجلسة عند إغلاق المتصفح أو
+            تسجيل الخروج.
           </p>
 
           <form className="admin-login__form" onSubmit={handleSubmit}>
             <div className="admin-login__field">
-              <label htmlFor="admin-username">Username</label>
+              <label htmlFor="admin-username">اسم المستخدم</label>
               <input
                 id="admin-username"
                 className="admin-login__input"
@@ -101,7 +99,7 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
             </div>
 
             <div className="admin-login__field">
-              <label htmlFor="admin-password">Password</label>
+              <label htmlFor="admin-password">كلمة المرور</label>
               <div style={{ position: 'relative' }}>
                 <input
                   id="admin-password"
@@ -109,11 +107,11 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="أدخل كلمة المرور"
                   autoComplete="current-password"
                   required
                   disabled={loading}
-                  style={{ paddingRight: 64 }}
+                  style={{ paddingLeft: 68 }}
                 />
                 <button
                   type="button"
@@ -121,17 +119,17 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
                   style={{
                     position: 'absolute',
                     top: '50%',
-                    right: 10,
+                    left: 10,
                     transform: 'translateY(-50%)',
                     border: 0,
                     background: 'transparent',
                     color: 'var(--admin-muted)',
-                    fontFamily: 'var(--admin-mono)',
-                    fontSize: 9.5,
+                    fontFamily: 'var(--admin-body)',
+                    fontSize: 11,
                     cursor: 'pointer',
                   }}
                 >
-                  {showPassword ? 'HIDE' : 'SHOW'}
+                  {showPassword ? 'إخفاء' : 'إظهار'}
                 </button>
               </div>
             </div>
@@ -143,15 +141,15 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
             )}
 
             <button type="submit" className="admin-login__submit" disabled={loading}>
-              {loading ? 'Checking the register…' : 'Sign in'}
+              {loading ? 'جارٍ التحقق…' : 'تسجيل الدخول'}
             </button>
           </form>
 
           <div className="admin-login__foot">
             <button type="button" className="admin-login__back" onClick={() => navigate('/')}>
-              ← Back to the site
+              العودة إلى الموقع ←
             </button>
-            <span className="admin-login__note">SESSION · ENCRYPTED</span>
+            <span className="admin-login__note">جلسة آمنة</span>
           </div>
         </div>
       </main>

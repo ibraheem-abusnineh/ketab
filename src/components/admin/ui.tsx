@@ -7,9 +7,9 @@ export const formatDate = (value: string | Date | null | undefined): string => {
   if (!value) return '—';
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('ar-JO-u-nu-latn', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
     timeZone: 'Asia/Amman',
   });
@@ -19,9 +19,9 @@ export const formatDateTime = (value: string | Date | null | undefined): string 
   if (!value) return '—';
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleString('en-US', {
+  return date.toLocaleString('ar-JO-u-nu-latn', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -33,7 +33,7 @@ export const formatTime = (value: string | Date | null | undefined): string => {
   if (!value) return '—';
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString('ar-JO-u-nu-latn', {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Asia/Amman',
@@ -50,13 +50,13 @@ export const todayKey = (): string => {
 
 export const roleLabel = (role: string): string => {
   const labels: Record<string, string> = {
-    parent: 'Parent',
-    teacher: 'Teacher',
-    supervisor: 'Supervisor',
-    student: 'Student',
-    developer: 'Developer',
-    guest: 'Guest',
-    'qra-employ': 'QRA employ',
+    parent: 'ولي أمر',
+    teacher: 'معلّم',
+    supervisor: 'مشرف',
+    student: 'طالب',
+    developer: 'مطوّر',
+    guest: 'زائر',
+    'qra-employ': 'موظف الجمعية',
   };
   return labels[role] || role;
 };
@@ -107,7 +107,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, body, action }) =
   </div>
 );
 
-export const Loading: React.FC<{ label?: string }> = ({ label = 'Reading the register' }) => (
+export const Loading: React.FC<{ label?: string }> = ({ label = 'جارٍ قراءة السجل' }) => (
   <div className="loading" role="status" aria-live="polite">
     <span className="loading__bar" />
     <span>{label}…</span>
@@ -125,9 +125,14 @@ export const Banner: React.FC<{
   </div>
 );
 
-export const StatusStamp: React.FC<{ status: string }> = ({ status }) => (
-  <span className={`status status--${status}`}>{status}</span>
-);
+export const StatusStamp: React.FC<{ status: string }> = ({ status }) => {
+  const labels: Record<string, string> = {
+    pending: 'قيد الانتظار',
+    approved: 'موافق عليه',
+    rejected: 'مرفوض',
+  };
+  return <span className={`status status--${status}`}>{labels[status] || status}</span>;
+};
 
 export const RoleStamp: React.FC<{ role: string }> = ({ role }) => (
   <span className={`stamp stamp--${role.replace(/[^a-z-]/g, '')}`}>{roleLabel(role)}</span>
@@ -150,7 +155,7 @@ export const RoleFilterChips: React.FC<{
     'guest',
   ];
   return (
-    <div className="chip-row" role="group" aria-label="Filter by role">
+    <div className="chip-row" role="group" aria-label="تصفية حسب النوع">
       {list.map((role) => (
         <button
           type="button"
@@ -158,7 +163,7 @@ export const RoleFilterChips: React.FC<{
           className={`chip ${value === role ? 'active' : ''}`}
           onClick={() => onChange(role)}
         >
-          {role === 'all' ? 'All roles' : roleLabel(role)}
+          {role === 'all' ? 'كل الأنواع' : roleLabel(role)}
           {counts && counts[role] !== undefined && (
             <span className="chip__count">{counts[role]}</span>
           )}

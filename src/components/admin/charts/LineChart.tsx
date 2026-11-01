@@ -45,7 +45,7 @@ const LineChart: React.FC<LineChartProps> = ({
       className="line-chart"
       viewBox={`0 0 ${WIDTH} ${height}`}
       role="img"
-      aria-label={`Line chart of ${valueLabel} over time`}
+      aria-label={`مخطط خطي لـ${valueLabel} عبر الزمن`}
     >
       {ticks.map((tick) => {
         const y = yFor(tick);

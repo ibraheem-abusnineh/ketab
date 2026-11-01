@@ -28,20 +28,20 @@ interface NotificationsPageProps {
 type Filter = 'all' | 'unread' | 'requests' | 'updates' | 'resolved';
 
 const FIELD_LABELS: Record<string, string> = {
-  name: 'Full name',
-  phone: 'Phone',
-  school: 'School',
-  directorate: 'Directorate',
-  role: 'Role',
-  nationalNumber: 'National number',
+  name: 'الاسم الكامل',
+  phone: 'الهاتف',
+  school: 'المدرسة',
+  directorate: 'المديرية',
+  role: 'النوع',
+  nationalNumber: 'الرقم الوطني',
 };
 
 const FILTER_LABELS: Array<{ id: Filter; label: string }> = [
-  { id: 'all', label: 'Everything' },
-  { id: 'unread', label: 'Unread' },
-  { id: 'requests', label: 'Pending requests' },
-  { id: 'updates', label: 'Profile updates' },
-  { id: 'resolved', label: 'Resolved' },
+  { id: 'all', label: 'الكل' },
+  { id: 'unread', label: 'غير مقروء' },
+  { id: 'requests', label: 'طلبات قيد الانتظار' },
+  { id: 'updates', label: 'تحديثات الملف' },
+  { id: 'resolved', label: 'محسوم' },
 ];
 
 function isPendingRequest(item: AdminNotification): boolean {
@@ -104,14 +104,14 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
       setActionError('');
       await action();
     } catch (err: any) {
-      setActionError(err?.message || 'That action could not be completed.');
+      setActionError(err?.message || 'تعذّر إكمال هذا الإجراء.');
     } finally {
       setBusyId(null);
     }
   };
 
   const handleClearAll = async () => {
-    if (!window.confirm('Clear every profile update from the inbox? Pending requests are kept.')) {
+    if (!window.confirm('مسح كل تحديثات الملف من صندوق الإشعارات؟ تبقى الطلبات قيد الانتظار.')) {
       return;
     }
     try {
@@ -120,8 +120,10 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
       const cleared = result?.clearedCount ?? 0;
       const remaining = result?.remainingRequests ?? 0;
       setNotice(
-        `Cleared ${formatNumber(cleared)} update${cleared === 1 ? '' : 's'}${
-          remaining > 0 ? ` · ${formatNumber(remaining)} request${remaining === 1 ? '' : 's'} kept` : ''
+        `تم مسح عدد التحديثات: ${formatNumber(cleared)}${
+          remaining > 0
+            ? ` · تم حفظ طلبات قيد الانتظار: ${formatNumber(remaining)}`
+            : ''
         }.`
       );
       setTimeout(() => setNotice(''), 5000);
@@ -131,19 +133,19 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
   };
 
   if (loading && notifications.length === 0) {
-    return <Loading label="Opening the inbox" />;
+    return <Loading label="جارٍ فتح الإشعارات" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Inbox"
-        description="Profile updates land here for the record. Edit requests wait here until you approve or reject them."
+        title="الإشعارات"
+        description="تصل تحديثات الملف إلى هنا للسجل. تُبقى طلبات التعديل هنا حتى توافق عليها أو ترفضها."
         actions={
           <>
             <button type="button" className="btn" onClick={onRefresh} disabled={loading}>
               <Icon name="refresh" size={14} />
-              {loading ? 'Refreshing…' : 'Refresh'}
+              {loading ? 'جارٍ التحديث…' : 'تحديث'}
             </button>
             <button
               type="button"
@@ -152,7 +154,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
               disabled={clearing || counts.updates === 0}
             >
               <Icon name="trash" size={14} />
-              {clearing ? 'Clearing…' : 'Clear updates'}
+              {clearing ? 'جارٍ المسح…' : 'مسح التحديثات'}
             </button>
           </>
         }
@@ -163,7 +165,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={onRefresh}>
-              Retry
+              إعادة المحاولة
             </button>
           }
         >
@@ -178,7 +180,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={() => setActionError('')}>
-              Dismiss
+              إغلاق
             </button>
           }
         >
@@ -188,7 +190,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
 
       <div className="inbox-layout">
         <aside className="inbox-filters">
-          <div className="inbox-filters__label">Filter</div>
+          <div className="inbox-filters__label">تصفية</div>
           {FILTER_LABELS.map((item) => (
             <button
               type="button"
@@ -201,14 +203,14 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
             </button>
           ))}
           <div className="inbox-filters__label" style={{ marginTop: 16 }}>
-            Summary
+            ملخّص
           </div>
           <div className="register-summary__row">
-            <span>Unread</span>
+            <span>غير مقروء</span>
             <span className="register-summary__count">{formatNumber(unreadCount)}</span>
           </div>
           <div className="register-summary__row">
-            <span>Awaiting decision</span>
+            <span>بانتظار قرار</span>
             <span className="register-summary__count">{formatNumber(counts.requests)}</span>
           </div>
           {counts.requests > 0 && (
@@ -218,7 +220,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
               style={{ width: '100%', marginTop: 12 }}
               onClick={onOpenRequests}
             >
-              Review requests
+              مراجعة الطلبات
             </button>
           )}
         </aside>
@@ -226,16 +228,16 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
         <div>
           {visible.length === 0 ? (
             <EmptyState
-              title={filter === 'all' ? 'The inbox is empty' : 'Nothing in this filter'}
+              title={filter === 'all' ? 'صندوق الإشعارات فارغ' : 'لا شيء في هذه التصفية'}
               body={
                 filter === 'all'
-                  ? 'Profile updates and edit requests will appear here as they happen.'
-                  : 'Try another filter to see the rest of the inbox.'
+                  ? 'ستظهر هنا تحديثات الملف وطلبات التعديل فور حدوثها.'
+                  : 'جرّب تصفية أخرى لمشاهدة بقية الإشعارات.'
               }
               action={
                 filter !== 'all' ? (
                   <button type="button" className="btn btn--sm" onClick={() => setFilter('all')}>
-                    Show everything
+                    عرض الكل
                   </button>
                 ) : undefined
               }
@@ -258,7 +260,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                       <button
                         type="button"
                         className="inbox-item__delete"
-                        aria-label={`Delete notification from ${item.userName}`}
+                        aria-label={`حذف الإشعار من ${item.userName}`}
                         onClick={(event) => {
                           event.stopPropagation();
                           runAction(item.id, () => onRemove(item.id));
@@ -269,14 +271,14 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                     )}
 
                     <div className="inbox-item__top">
-                      <div className="inbox-item__name">{item.userName || 'Unknown user'}</div>
+                      <div className="inbox-item__name">{item.userName || 'مستخدم غير معروف'}</div>
                       <div className="inbox-item__time">{formatDateTime(item.timestamp)}</div>
                     </div>
 
                     <div className="inbox-item__body">
                       {item.type === 'profile_edit_request' ? (
                         <>
-                          Requested a profile change
+                          طلب تعديل الملف
                           {item.status && (
                             <>
                               {' '}
@@ -285,7 +287,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                           )}
                         </>
                       ) : (
-                        <>Updated {item.changes.length} profile field{item.changes.length === 1 ? '' : 's'}</>
+                        <>حدّث عدد حقول الملف: {item.changes.length}</>
                       )}
                     </div>
 
@@ -298,7 +300,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                           </span>
                         ))}
                         {item.changes.length > 4 && (
-                          <span className="inbox-change">+{item.changes.length - 4} more</span>
+                          <span className="inbox-change">+{item.changes.length - 4} أخرى</span>
                         )}
                       </div>
                     )}
@@ -316,7 +318,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                             }}
                           >
                             <Icon name="check" size={12} />
-                            {busy ? 'Working…' : 'Approve'}
+                            {busy ? 'جارٍ التنفيذ…' : 'موافقة'}
                           </button>
                           <button
                             type="button"
@@ -327,7 +329,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                               runAction(item.id, () => onReject(item.id));
                             }}
                           >
-                            Reject
+                            رفض
                           </button>
                         </>
                       ) : (
@@ -342,7 +344,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                 runAction(item.id, () => onMarkRead(item.id));
                               }}
                             >
-                              Mark read
+                              تحديد كمقروء
                             </button>
                           )}
                           {item.type === 'profile_update' ? (
@@ -355,11 +357,11 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                 runAction(item.id, () => onRemove(item.id));
                               }}
                             >
-                              Remove
+                              إزالة
                             </button>
                           ) : (
                             <span className="report-note">
-                              Resolved · kept for the record
+                              محسوم · محفوظ للسجل
                             </span>
                           )}
                         </>

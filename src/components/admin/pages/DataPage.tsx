@@ -40,11 +40,11 @@ interface ImportResult {
 }
 
 const ENTITY_LABELS: Record<string, string> = {
-  users: 'Users',
-  visits: 'Visits / logins',
-  notifications: 'Notifications',
-  courses: 'Courses',
-  admin: 'Admin credentials',
+  users: 'المستخدمون',
+  visits: 'الزيارات / الدخولات',
+  notifications: 'الإشعارات',
+  courses: 'المقررات',
+  admin: 'بيانات مدير النظام',
 };
 
 function todayStamp(): string {
@@ -78,7 +78,7 @@ const DataPage: React.FC = () => {
       setSummary(data.summary);
       setError('');
     } catch (err: any) {
-      setError(err.message || 'Could not read the data inventory.');
+      setError(err.message || 'تعذّرت قراءة جرد البيانات.');
     } finally {
       setLoading(false);
     }
@@ -108,13 +108,13 @@ const DataPage: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       setNotice(
-        `Backup downloaded · ${formatNumber(data.backup.counts.users)} users · ` +
-          `${formatNumber(data.backup.counts.totalVisits)} logins` +
-          (includeAdmin ? ' · admin credentials included' : '')
+        `تم تنزيل النسخة الاحتياطية · المستخدمون: ${formatNumber(data.backup.counts.users)} · ` +
+          `عمليات الدخول: ${formatNumber(data.backup.counts.totalVisits)}` +
+          (includeAdmin ? ' · بيانات مدير النظام مشمولة' : '')
       );
       setTimeout(() => setNotice(''), 6000);
     } catch (err: any) {
-      setError(err.message || 'Could not build the backup.');
+      setError(err.message || 'تعذّر إنشاء النسخة الاحتياطية.');
     } finally {
       setExporting(false);
     }
@@ -135,7 +135,7 @@ const DataPage: React.FC = () => {
 
   const runImport = async (dryRun: boolean) => {
     if (files.length === 0) {
-      setImportError('Choose at least one backup or data file first.');
+      setImportError('اختر ملف نسخة احتياطية أو ملف بيانات واحدًا على الأقل أولًا.');
       return;
     }
     try {
@@ -151,29 +151,29 @@ const DataPage: React.FC = () => {
       setResult(data as ImportResult);
       if (!dryRun) {
         await fetchSummary();
-        setNotice('Data restored from the uploaded files.');
+        setNotice('تمت استعادة البيانات من الملفات المرفوعة.');
         setTimeout(() => setNotice(''), 6000);
       }
     } catch (err: any) {
-      setImportError(err.message || 'Could not import those files.');
+      setImportError(err.message || 'تعذّر استيراد تلك الملفات.');
     } finally {
       setBusy(null);
     }
   };
 
   if (loading && !summary) {
-    return <Loading label="Reading the data inventory" />;
+    return <Loading label="جارٍ قراءة جرد البيانات" />;
   }
 
   return (
     <div>
       <PageHeader
-        title="Backup & restore"
-        description="The live data files (visits, notifications) are kept out of git on purpose. Download a backup now, and restore it here after a re-clone or a deploy."
+        title="النسخ الاحتياطي والاستعادة"
+        description="تُستثنى ملفات البيانات الحية (الزيارات والإشعارات) من git عن قصد. نزّل نسخة احتياطية الآن، واستعدها هنا بعد إعادة الاستنساخ أو النشر."
         actions={
           <button type="button" className="btn" onClick={fetchSummary} disabled={loading}>
             <Icon name="refresh" size={14} />
-            {loading ? 'Refreshing…' : 'Refresh'}
+            {loading ? 'جارٍ التحديث…' : 'تحديث'}
           </button>
         }
       />
@@ -183,7 +183,7 @@ const DataPage: React.FC = () => {
           tone="error"
           action={
             <button type="button" className="btn btn--sm" onClick={fetchSummary}>
-              Retry
+              إعادة المحاولة
             </button>
           }
         >
@@ -195,26 +195,26 @@ const DataPage: React.FC = () => {
 
       <div className="kpi-grid">
         <Kpi
-          label="Users in the directory"
+          label="المستخدمون في الدليل"
           value={formatNumber(summary?.users || 0)}
-          hint="Restored from a users.json backup"
+          hint="مُستعادة من نسخة users.json احتياطية"
         />
         <Kpi
-          label="Total logins"
+          label="إجمالي عمليات الدخول"
           value={formatNumber(summary?.totalVisits || 0)}
-          hint={`${formatNumber(summary?.daysRecorded || 0)} recorded days`}
+          hint={`${formatNumber(summary?.daysRecorded || 0)} يومًا مسجّلًا`}
         />
         <Kpi
-          label="Notifications"
+          label="الإشعارات"
           value={formatNumber(summary?.notifications || 0)}
-          hint={`${formatNumber(summary?.pendingRequests || 0)} pending requests`}
+          hint={`${formatNumber(summary?.pendingRequests || 0)} طلبات قيد الانتظار`}
         />
         <Kpi
-          label="Courses locked"
+          label="مقررات مغلقة"
           value={`${formatNumber(summary?.coursesLocked || 0)}/${formatNumber(
             summary?.coursesTotal || 0
           )}`}
-          hint={summary?.adminUsername ? `Admin account: ${summary.adminUsername}` : 'No admin account set'}
+          hint={summary?.adminUsername ? `حساب المدير: ${summary.adminUsername}` : 'لم يُضبط حساب مدير'}
         />
       </div>
 
@@ -222,10 +222,10 @@ const DataPage: React.FC = () => {
         <section className="data-card">
           <header className="data-card__head">
             <div>
-              <h3 className="data-card__title">1 · Download a backup</h3>
+              <h3 className="data-card__title">1 · تنزيل نسخة احتياطية</h3>
               <p className="data-card__sub">
-                One JSON file with users, visits, notifications, and course locks. Keep it somewhere
-                safe before pushing.
+                ملف JSON واحد يضم المستخدمين والزيارات والإشعارات وأقفال المقررات. احتفظ به في مكان
+                آمن قبل الدفع.
               </p>
             </div>
             <Icon name="database" size={22} />
@@ -238,14 +238,14 @@ const DataPage: React.FC = () => {
               onChange={(event) => setIncludeAdmin(event.target.checked)}
             />
             <span>
-              Include admin credentials <em>(the bcrypt hash from admin.json)</em>
+              تضمين بيانات مدير النظام <em>(تجزئة bcrypt من admin.json)</em>
             </span>
           </label>
 
           {includeAdmin && (
             <p className="data-note">
-              Restoring a backup that contains admin credentials replaces the admin password with the
-              hash in the file. The default local account is <code>admin / admin123</code>.
+              استعادة نسخة احتياطية تحتوي على بيانات مدير النظام تستبدل كلمة مرور المدير بالتجزئة
+              الموجودة في الملف. الحساب الافتراضي المحلي هو <code>admin / admin123</code>.
             </p>
           )}
 
@@ -257,24 +257,24 @@ const DataPage: React.FC = () => {
               disabled={exporting}
             >
               <Icon name="download" size={14} />
-              {exporting ? 'Preparing…' : 'Download backup JSON'}
+              {exporting ? 'جارٍ التحضير…' : 'تنزيل نسخة JSON احتياطية'}
             </button>
           </div>
 
           <p className="data-note">
-            Prefer the command line? <code>npm run data:export</code> writes SQL seed files to{' '}
-            <code>server/data/seeds/</code> (also gitignored), and <code>npm run data:import</code>{' '}
-            restores them. The button above downloads a single portable JSON instead.
+            تفضّل سطر الأوامر؟ يكتب <code>npm run data:export</code> ملفات SQL الأولية في{' '}
+            <code>server/data/seeds/</code> (مستثناة من git أيضًا)، ويعيد <code>npm run data:import</code>{' '}
+            استعادتها. أما الزر أعلاه فينزّل ملف JSON محمولًا واحدًا بدلًا من ذلك.
           </p>
         </section>
 
         <section className="data-card">
           <header className="data-card__head">
             <div>
-              <h3 className="data-card__title">2 · Restore from a backup</h3>
+              <h3 className="data-card__title">2 · الاستعادة من نسخة احتياطية</h3>
               <p className="data-card__sub">
-                Upload a KETAB backup JSON, individual <code>users.json</code> /{' '}
-                <code>visits.json</code> files, or legacy <code>seeds/*.sql</code> files.
+                ارفع نسخة احتياطية JSON من KETAB، أو ملفات <code>users.json</code> /{' '}
+                <code>visits.json</code> منفردة، أو ملفات <code>seeds/*.sql</code> القديمة.
               </p>
             </div>
             <Icon name="upload" size={22} />
@@ -295,8 +295,8 @@ const DataPage: React.FC = () => {
             }}
           >
             <Icon name="upload" size={20} />
-            <strong>Drop files here, or click to choose</strong>
-            <span>.json backup or .sql seed files · multiple allowed</span>
+            <strong>أفلِت الملفات هنا أو انقر للاختيار</strong>
+            <span>ملف نسخة احتياطية .json أو ملفات SQL أولية .sql · يُسمح بعدة ملفات</span>
             <input
               ref={inputRef}
               className="data-fileinput"
@@ -320,7 +320,7 @@ const DataPage: React.FC = () => {
                     type="button"
                     className="btn btn--sm btn--danger"
                     onClick={() => removeFile(index)}
-                    aria-label={`Remove ${file.name}`}
+                    aria-label={`إزالة ${file.name}`}
                   >
                     ×
                   </button>
@@ -330,7 +330,7 @@ const DataPage: React.FC = () => {
           )}
 
           <div className="data-options">
-            <span className="data-options__label">Mode</span>
+            <span className="data-options__label">النمط</span>
             <label className="data-radio">
               <input
                 type="radio"
@@ -339,7 +339,7 @@ const DataPage: React.FC = () => {
                 onChange={() => setMode('replace')}
               />
               <span>
-                <strong>Replace</strong> — overwrite each entity with the file
+                <strong>استبدال</strong> — استبدال كل كيان بالملف
               </span>
             </label>
             <label className="data-radio">
@@ -350,8 +350,8 @@ const DataPage: React.FC = () => {
                 onChange={() => setMode('merge')}
               />
               <span>
-                <strong>Merge</strong> — add or update users (by national number) and notifications
-                (by id)
+                <strong>دمج</strong> — إضافة أو تحديث المستخدمين (حسب الرقم الوطني) والإشعارات
+                (حسب المعرّف)
               </span>
             </label>
           </div>
@@ -364,7 +364,7 @@ const DataPage: React.FC = () => {
               disabled={busy !== null || files.length === 0}
             >
               <Icon name="check" size={14} />
-              {busy === 'preview' ? 'Checking…' : 'Preview (dry run)'}
+              {busy === 'preview' ? 'جارٍ الفحص…' : 'معاينة (بدون كتابة)'}
             </button>
             <button
               type="button"
@@ -373,7 +373,7 @@ const DataPage: React.FC = () => {
               disabled={busy !== null || files.length === 0}
             >
               <Icon name="database" size={14} />
-              {busy === 'apply' ? 'Restoring…' : 'Restore now'}
+              {busy === 'apply' ? 'جارٍ الاستعادة…' : 'استعادة الآن'}
             </button>
           </div>
 
@@ -386,30 +386,30 @@ const DataPage: React.FC = () => {
           <header className="data-card__head">
             <div>
               <h3 className="data-card__title">
-                {result.dryRun ? 'Dry run result' : 'Restore result'}
+                {result.dryRun ? 'نتيجة المعاينة' : 'نتيجة الاستعادة'}
               </h3>
               <p className="data-card__sub">
-                Mode: {result.mode} · {result.dryRun ? 'nothing was written' : 'files were written'}
+                النمط: {result.mode} · {result.dryRun ? 'لم تتم أي كتابة' : 'تمت كتابة الملفات'}
               </p>
             </div>
             <button type="button" className="btn btn--sm" onClick={() => setResult(null)}>
-              Dismiss
+              إغلاق
             </button>
           </header>
 
           {result.applied.length === 0 ? (
             <EmptyState
-              title="Nothing recognized"
-              body="The upload did not contain any entity this desk knows how to restore."
+              title="لا شيء معروف"
+              body="لم يحتوي الملف المرفوع على أي كيان يعرف هذا القسم كيفية استعادته."
             />
           ) : (
             <div className="table-wrap" style={{ border: 0 }}>
               <table className="ledger">
                 <thead>
                   <tr>
-                    <th>Entity</th>
-                    <th>Action</th>
-                    <th>Result</th>
+                    <th>الكيان</th>
+                    <th>الإجراء</th>
+                    <th>النتيجة</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -419,12 +419,12 @@ const DataPage: React.FC = () => {
                       <td className="muted">{row.action}</td>
                       <td className="num">
                         {row.entity === 'users' && row.added !== undefined
-                          ? `${formatNumber(row.added)} added · ${formatNumber(row.updated || 0)} updated · ${formatNumber(row.total || 0)} total`
+                          ? `أُضيف: ${formatNumber(row.added)} · حُدّث: ${formatNumber(row.updated || 0)} · الإجمالي: ${formatNumber(row.total || 0)}`
                           : row.entity === 'notifications' && row.added !== undefined
-                          ? `${formatNumber(row.added)} added · ${formatNumber(row.updated || 0)} updated · ${formatNumber(row.total || 0)} total`
+                          ? `أُضيف: ${formatNumber(row.added)} · حُدّث: ${formatNumber(row.updated || 0)} · الإجمالي: ${formatNumber(row.total || 0)}`
                           : row.entity === 'visits'
-                          ? `${formatNumber(row.total || 0)} logins · ${formatNumber(row.records || 0)} day records`
-                          : `${formatNumber(row.total || 0)} record${(row.total || 0) === 1 ? '' : 's'}`}
+                          ? `عمليات الدخول: ${formatNumber(row.total || 0)} · سجلات يومية: ${formatNumber(row.records || 0)}`
+                          : `${formatNumber(row.total || 0)} سجلات`}
                       </td>
                     </tr>
                   ))}
@@ -435,7 +435,7 @@ const DataPage: React.FC = () => {
 
           {result.skipped.length > 0 && (
             <p className="data-note">
-              Not present in the upload (left untouched):{' '}
+              غير موجود في الملفات المرفوعة (بقي دون تغيير):{' '}
               {result.skipped.map((name) => ENTITY_LABELS[name] || name).join(', ')}.
             </p>
           )}
