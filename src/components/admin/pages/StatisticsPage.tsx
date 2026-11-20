@@ -25,7 +25,6 @@ import LineChart from '../charts/LineChart';
 import ColumnChart from '../charts/ColumnChart';
 import BarChart from '../charts/BarChart';
 import DonutChart from '../charts/DonutChart';
-import Heatmap from '../charts/Heatmap';
 import Sparkline from '../charts/Sparkline';
 import Icon from '../Icons';
 
@@ -60,6 +59,71 @@ function rangeFor(period: PeriodType, customStart: string, customEnd: string) {
   start.setDate(now.getDate() - (period === 'week' ? 7 : 30));
   return { startDate: toDayString(start), endDate: toDayString(now) };
 }
+
+
+const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+/** 7 (days) × 24 (hours) usage grid built from the raw login events. */
+const UsageTimes: React.FC<{ events: VisitEvent[] }> = ({ events }) => {
+  const { grid, max } = React.useMemo(() => {
+    const cells = Array.from({ length: 7 }, () => Array(24).fill(0) as number[]);
+    let peak = 0;
+    events.forEach((event) => {
+      if (!event.timestamp) return;
+      const instant = new Date(event.timestamp);
+      if (Number.isNaN(instant.getTime())) return;
+      const amman = new Date(instant.toLocaleString('en-US', { timeZone: 'Asia/Amman' }));
+      const day = amman.getDay();
+      const hour = amman.getHours();
+      cells[day][hour] += 1;
+      if (cells[day][hour] > peak) peak = cells[day][hour];
+    });
+    return { grid: cells, max: peak };
+  }, [events]);
+
+  if (max === 0) {
+    return <div className="chart-empty">لا توجد بيانات في هذه الفترة</div>;
+  }
+
+  return (
+    <div className="usage">
+      <div className="usage__scroll">
+        <div className="usage__grid">
+          <span />
+          {Array.from({ length: 24 }, (_, hour) => (
+            <span className="usage__hour" key={`h-${hour}`}>
+              {hour % 2 === 0 ? `${hour}`.padStart(2, '0') : ''}
+            </span>
+          ))}
+          {grid.map((row, dayIndex) => (
+            <React.Fragment key={DAY_NAMES[dayIndex]}>
+              <span className="usage__day">{DAY_NAMES[dayIndex]}</span>
+              {row.map((value, hour) => {
+                const alpha = value === 0 ? 0.04 : 0.15 + (value / max) * 0.85;
+                return (
+                  <span
+                    className="usage__cell"
+                    key={`${dayIndex}-${hour}`}
+                    title={`${DAY_NAMES[dayIndex]} ${`${hour}`.padStart(2, '0')}:00 — ${formatNumber(value)} عملية دخول`}
+                    style={{ background: `rgba(132, 51, 60, ${alpha.toFixed(2)})` }}
+                  />
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+      <div className="usage__legend">
+        <span>أقل</span>
+        {[0.08, 0.3, 0.55, 0.8, 0.95].map((alpha) => (
+          <span key={alpha} className="usage__swatch" style={{ background: `rgba(132, 51, 60, ${alpha})` }} />
+        ))}
+        <span>أكثر</span>
+        <span className="usage__max">أعلى قيمة: {formatNumber(max)}</span>
+      </div>
+    </div>
+  );
+};
 
 const StatisticsPage: React.FC = () => {
   const [period, setPeriod] = useState<PeriodType>('all');
@@ -281,8 +345,8 @@ const StatisticsPage: React.FC = () => {
 
         <ChartFrame
           className="a-col-4"
-          title="نسبة المدارس"
-          subtitle="نسبة كل عمليات الدخول في الفترة"
+          title="نسبة عمليات الدخول في الفترة"
+          subtitle="حصة كل مدرسة من إجمالي عمليات الدخول"
         >
           <DonutChart
             data={schools.slice(0, 8).map((school) => ({
@@ -295,17 +359,9 @@ const StatisticsPage: React.FC = () => {
         </ChartFrame>
 
         <ChartFrame
-          className="a-col-5"
-          title="النشاط حسب الساعة"
-          subtitle="أوقات ذروة استخدام المنصة"
-        >
-          <ColumnChart data={fullDay} height={220} valueLabel="عمليات الدخول" />
-        </ChartFrame>
-
-        <ChartFrame
           className="a-col-7"
-          title="ترتيب المدارس"
-          subtitle="عمليات الدخول لكل مدرسة، الأكثر أولًا"
+          title="عمليات الدخول، الأكثر أولًا"
+          subtitle="دخول لكل مدرسة، مرتّبة من الأعلى"
         >
           <BarChart
             data={schools.slice(0, 9).map((school) => ({
@@ -318,19 +374,27 @@ const StatisticsPage: React.FC = () => {
         </ChartFrame>
 
         <ChartFrame
-          className="a-col-7"
-          title="الإيقاع الأسبوعي"
-          subtitle="عرض تقويمي لحجم الدخول اليومي"
+          className="a-col-5"
+          title="المستخدمون حسب النوع"
+          subtitle={`الدليل الكامل · ${formatNumber(directory.length)} حسابًا (الحسابات الضيفية تُسجَّل بمدرسة «زيارة عامة»)`}
         >
-          <Heatmap data={daily} />
+          <BarChart data={roleCounts} valueLabel="حسابات" highlightTop={false} />
         </ChartFrame>
 
         <ChartFrame
-          className="a-col-5"
-          title="المستخدمون حسب النوع"
-          subtitle={`الدليل الكامل · ${formatNumber(directory.length)} حسابات`}
+          className="a-col-12"
+          title="النشاط حسب الساعة"
+          subtitle="عدد عمليات الدخول في كل ساعة من ساعات اليوم (00–23)"
         >
-          <BarChart data={roleCounts} valueLabel="حسابات" highlightTop={false} />
+          <ColumnChart data={fullDay} height={250} valueLabel="عمليات الدخول" />
+        </ChartFrame>
+
+        <ChartFrame
+          className="a-col-12"
+          title="أوقات الاستخدام (أيام × ساعات)"
+          subtitle="عدد عمليات الدخول في كل يوم وكل ساعة"
+        >
+          <UsageTimes events={visits} />
         </ChartFrame>
 
         <ChartFrame

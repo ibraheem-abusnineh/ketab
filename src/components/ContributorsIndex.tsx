@@ -61,7 +61,7 @@ const ContributorCard: React.FC<ContributorCardProps> = ({ contributor, showTile
 const ContributorsIndex: React.FC = () => {
   return (
     <div className="bg-white rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.15)] border-[3px] border-[#84333c] p-[30px] lg:p-[40px_30px_30px_30px] mt-10 mx-auto relative w-full max-w-[1100px] lg:max-w-[98vw]">
-      <div className="hidden lg:flex absolute top-[25px] right-[25px] z-[100] bg-white rounded-md border-2 border-[#84333c] w-[150px] h-[150px] lg:w-[200px] lg:h-[200px] p-[10px] items-center justify-center">
+      <div className="hidden lg:flex absolute top-[25px] right-[25px] z-[100] bg-white rounded-md border-2 border-[#84333c] w-[150px] lg:w-[200px] aspect-[785/539] p-[6px] items-center justify-center">
         <LogoWithImage logoPath="qra-logo.svg" className="w-full h-auto block" />
       </div>
 

@@ -46,25 +46,18 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
   return (
     <div className="admin-login">
       <aside className="admin-login__brand">
-        <div className="admin-login__brand-top">
-          <img className="admin-login__logo" src="/admin-logo.png" alt="أصواتٌ تُرى" />
-          <div>
-            <div className="admin-login__brand-name">أصواتٌ تُرى</div>
-            <div className="admin-login__brand-sub">لوحة الإدارة</div>
-          </div>
-        </div>
-
-        <div className="admin-login__statement">
-          <h1>سجلّ المنصّة الرقمي</h1>
-          <p>
-            كل عملية دخول، وكل مدرسة، وكل تعديل على الملف — في سجل واحد. سجّل الدخول لقراءة
-            السجل ومتابعة المنصّة.
-          </p>
+        <div className="admin-login__hero">
+          <img
+            className="admin-login__logo-lg"
+            src="/qra-logo.svg"
+            alt="جمعية جائزة الملكة رانيا العبدالله للتميز التربوي"
+          />
+          <h1 className="admin-login__brand-title">أصواتٌ تُرى</h1>
+          <p className="admin-login__brand-tag">منصّة تعليمية للصم</p>
         </div>
 
         <div className="admin-login__brand-foot">
-          <span>أصواتٌ تُرى · منصّة تعليمية للصم</span>
-          <span>جمعية جائزة الملكة رانيا العبدالله</span>
+          <span>جمعية جائزة الملكة رانيا العبدالله للتميز التربوي</span>
         </div>
 
         <div className="admin-login__watermark" aria-hidden="true">
@@ -74,13 +67,7 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
 
       <main className="admin-login__panel">
         <div className="admin-login__form-wrap">
-          <div className="admin-login__kicker">للمشرفين فقط</div>
           <h2 className="admin-login__title">الدخول إلى السجل</h2>
-          <p className="admin-login__lede">
-            استخدم بيانات مدير النظام الخاصة بهذه المنصّة. تنتهي الجلسة عند إغلاق المتصفح أو
-            تسجيل الخروج.
-          </p>
-
           <form className="admin-login__form" onSubmit={handleSubmit}>
             <div className="admin-login__field">
               <label htmlFor="admin-username">اسم المستخدم</label>
@@ -149,7 +136,6 @@ const AdminLogin: React.FC<Props> = ({ onLoginSuccess }) => {
             <button type="button" className="admin-login__back" onClick={() => navigate('/')}>
               العودة إلى الموقع ←
             </button>
-            <span className="admin-login__note">جلسة آمنة</span>
           </div>
         </div>
       </main>

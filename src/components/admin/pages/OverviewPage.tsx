@@ -8,9 +8,8 @@ import {
   VisitCountResponse,
 } from '../api';
 import { AdminNotification, AdminTab } from '../types';
-import { Banner, EmptyState, Kpi, Loading, PageHeader, formatDateTime, formatNumber, todayKey } from '../ui';
+import { Banner, EmptyState, Kpi, Loading, PageHeader, formatDate, formatDateTime, formatNumber, todayKey } from '../ui';
 import LineChart from '../charts/LineChart';
-import Sparkline from '../charts/Sparkline';
 import Icon from '../Icons';
 
 interface OverviewPageProps {
@@ -65,6 +64,7 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
     return () => clearInterval(interval);
   }, [fetchOverview]);
 
+  const startDay = daily.length > 0 ? daily[0].day : null;
   const today = todayKey();
   const todayIndex = daily.findIndex((point) => point.day === today);
   const todayCount = todayIndex >= 0 ? daily[todayIndex].count : 0;
@@ -72,7 +72,6 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
   const delta = yesterdayCount > 0 ? Math.round(((todayCount - yesterdayCount) / yesterdayCount) * 100) : null;
 
   const last14 = daily.slice(-14).map((point) => ({ label: point.day, value: point.count }));
-  const sparkValues = daily.slice(-14).map((point) => point.count);
   const peak = daily.reduce(
     (best, point) => (point.count > best.count ? point : best),
     { day: '', count: 0 }
@@ -110,7 +109,6 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
     <div>
       <PageHeader
         title="اليوم في لمحة"
-        description="صفحة واحدة لحالة المنصة: عمليات الدخول والمدارس والمستخدمون وعناصر الإشعارات التي تنتظرك."
         actions={
           <>
             <button type="button" className="btn" onClick={fetchOverview} disabled={loading}>
@@ -141,11 +139,24 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
         <section className="hero-logins">
           <div className="hero-logins__top">
             <div>
-              <div className="hero-logins__label">إجمالي عمليات الدخول المسجّلة</div>
+              <div className="hero-logins__label">إجمالي عمليات الدخول</div>
               <div className="hero-logins__number">{formatNumber(totalVisits)}</div>
-              <div className="hero-logins__meta">
-                {schools.length} مدرسة · {users.length} مستخدمًا نشطًا · منذ{' '}
-                {daily.length > 0 ? daily[0].day : '—'}
+              <div className="hero-logins__caption">
+                {startDay
+                  ? `من ${formatDate(startDay)} إلى ${formatDate(daily[daily.length - 1].day)}`
+                  : 'لا توجد أيام مسجّلة بعد'}
+                {daily.length > 0 ? ` · ${formatNumber(daily.length)} يومًا مسجّلًا` : ''}
+              </div>
+              <div className="hero-stats">
+                <span>
+                  <b>{formatNumber(schools.length)}</b> مدرسة
+                </span>
+                <span>
+                  <b>{formatNumber(users.length)}</b> مستخدمًا نشطًا
+                </span>
+              </div>
+              <div className="hero-logins__hint">
+                كل رقم هنا مقياس مستقل؛ لا تُجمع مع بعضها.
               </div>
             </div>
             <div className="admin-live">
@@ -157,7 +168,13 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
             <div className="hero-logins__label" style={{ padding: '0 18px 4px' }}>
               الدخول اليومي · آخر {last14.length} يومًا
             </div>
-            <LineChart data={last14} height={150} valueLabel="عمليات الدخول" />
+            <LineChart
+              data={last14}
+              height={170}
+              valueLabel="عمليات الدخول"
+              xLabel="التاريخ"
+              yLabel="عمليات الدخول"
+            />
           </div>
         </section>
 
@@ -198,18 +215,17 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
         <Kpi
           label="المستخدمون النشطون"
           value={formatNumber(users.length)}
-          hint={users[0] ? `الأكثر نشاطًا: ${users[0].name}` : 'لا يوجد نشاط للمستخدمين بعد'}
+          hint={users[0] ? `أكثر مستخدم نشاطًا: ${users[0].name}` : 'لا يوجد نشاط للمستخدمين بعد'}
         />
         <Kpi
           label="متوسط الدخول اليومي"
           value={formatNumber(avgPerDay)}
-          hint={`خلال ${daily.length} يومًا مسجّلًا`}
-          spark={<Sparkline values={sparkValues} width={108} height={30} />}
+          hint={`محسوب على ${formatNumber(daily.length)} يومًا مسجّلًا`}
         />
         <Kpi
-          label="بانتظار في الإشعارات"
+          label="إشعارات غير مقروءة"
           value={formatNumber(unreadCount)}
-          hint={`عدد طلبات تعديل الملف: ${pendingCount}`}
+          hint={`منها ${formatNumber(pendingCount)} طلب تعديل بانتظار قرار`}
         />
       </div>
 
@@ -237,7 +253,6 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
                     <div className="activity-item__name">{event.name || 'مستخدم غير معروف'}</div>
                     <span className="activity-item__school">{event.school || 'لا توجد مدرسة'}</span>
                   </div>
-                  <span className="activity-item__mark" />
                 </div>
               ))}
             </div>

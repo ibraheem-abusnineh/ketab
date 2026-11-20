@@ -48,6 +48,16 @@ export function shortDay(day: string): string {
   return date.toLocaleDateString('ar-JO-u-nu-latn', { month: 'short', day: 'numeric' });
 }
 
+/** Axis label: day-of-month for short spans, month name for long ones. */
+export function axisDay(day: string, totalPoints: number): string {
+  const date = new Date(`${day}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return day;
+  if (totalPoints <= 45) {
+    return date.toLocaleDateString('ar-JO-u-nu-latn', { day: 'numeric' });
+  }
+  return date.toLocaleDateString('ar-JO-u-nu-latn', { month: 'short' });
+}
+
 export function shortDayLong(day: string): string {
   const date = new Date(`${day}T12:00:00`);
   if (Number.isNaN(date.getTime())) return day;

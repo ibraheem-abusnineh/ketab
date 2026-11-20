@@ -3,7 +3,7 @@ import '../report.css';
 import { buildQuery, getJson, ReportsSchoolResponse, ReportsUserResponse, TimeResponse, UsersResponse, VisitsResponse } from '../api';
 import { DailyPoint } from '../types';
 import { Loading } from '../ui';
-import { shortDay } from '../charts/chartUtils';
+import { axisDay } from '../charts/chartUtils';
 
 /* ------------------------------------------------------------------ */
 /* types + helpers                                                     */
@@ -34,7 +34,7 @@ interface DirectoryUser {
 }
 
 type Role = 'ex' | 'ad';
-type TabId = 'ov' | 'fd' | 'fb' | 'rd' | 'us' | 'lg' | 'dq' | 'ch' | 'rc';
+type TabId = 'ov' | 'fd' | 'fb' | 'us' | 'lg' | 'dq' | 'ch' | 'rc';
 
 const MAROON = '#8B2F3C';
 const YELLOW = '#d9b800';
@@ -44,7 +44,6 @@ const TAB_LABELS: Record<TabId, string> = {
   ov: 'نظرة عامة',
   fd: 'المدارس',
   fb: 'الملاحظات والاستفسارات',
-  rd: 'جاهزية التقارير',
   us: 'المستخدمون',
   lg: 'سجل الدخول',
   dq: 'جودة البيانات',
@@ -53,7 +52,7 @@ const TAB_LABELS: Record<TabId, string> = {
 };
 
 const TABS: Record<Role, TabId[]> = {
-  ex: ['ov', 'fd', 'fb', 'rd'],
+  ex: ['ov', 'fd', 'fb'],
   ad: ['us', 'lg', 'dq', 'ch', 'rc'],
 };
 
@@ -171,7 +170,7 @@ function renderPrintLine(rows: DailyPoint[], logins: number[]): string {
       (index) =>
         `<text x="${xFor(index)}" y="${height - 6}" text-anchor="${
           index === 0 ? 'start' : index === rows.length - 1 ? 'end' : 'middle'
-        }" font-family="Tahoma" font-size="9" fill="#7a6a6d">${shortDay(rows[index].day)}</text>`
+        }" font-family="Tahoma" font-size="9" fill="#7a6a6d">${axisDay(rows[index].day, rows.length)}</text>`
     )
     .join('');
 
@@ -262,8 +261,9 @@ const DualLine: React.FC<{ a: number[]; b: number[]; labels: string[] }> = ({ a,
   const W = 520;
   const H = 170;
   const max = Math.max(...a, ...b, 1) * 1.1;
-  const points = (series: number[]) =>
-    series.map((v, i) => `${30 + (i * (W - 50)) / Math.max(series.length - 1, 1)},${H - 20 - (v / max) * (H - 40)}`).join(' ');
+  const xFor = (index: number) => 30 + (index * (W - 50)) / Math.max(labels.length - 1, 1);
+  const yFor = (value: number) => H - 20 - (value / max) * (H - 40);
+  const points = (series: number[]) => series.map((v, i) => `${xFor(i)},${yFor(v)}`).join(' ');
   const labelIndexes = [0, Math.floor((labels.length - 1) / 3), Math.floor((2 * (labels.length - 1)) / 3), labels.length - 1].filter(
     (v, i, arr) => v !== undefined && arr.indexOf(v) === i
   );
@@ -272,16 +272,26 @@ const DualLine: React.FC<{ a: number[]; b: number[]; labels: string[] }> = ({ a,
       <svg viewBox={`0 0 ${W} ${H}`} width="100%">
         <polyline fill="none" stroke={MAROON} strokeWidth="3" points={points(b)} />
         <polyline fill="none" stroke="#d9b800" strokeWidth="3" points={points(a)} />
+        {labels.map((label, index) => (
+          <g key={`pt-${label}`}>
+            <circle cx={xFor(index)} cy={yFor(b[index] || 0)} r="2.6" fill={MAROON}>
+              <title>{`${label} — ${b[index] || 0} مستخدمًا نشطًا`}</title>
+            </circle>
+            <circle cx={xFor(index)} cy={yFor(a[index] || 0)} r="2.6" fill="#d9b800">
+              <title>{`${label} — ${a[index] || 0} عملية دخول`}</title>
+            </circle>
+          </g>
+        ))}
         {labelIndexes.map((index) => (
           <text
             key={index}
-            x={30 + (index * (W - 50)) / Math.max(labels.length - 1, 1)}
+            x={xFor(index)}
             y={H - 4}
             fontSize="10"
             textAnchor="middle"
             fill="currentColor"
           >
-            {shortDay(labels[index])}
+            {axisDay(labels[index], labels.length)}
           </text>
         ))}
       </svg>
@@ -528,7 +538,7 @@ const ReportsPage: React.FC = () => {
     );
 
   const printReport = () => {
-    const logoUrl = `${window.location.origin}/admin-logo.png`;
+    const logoUrl = `${window.location.origin}/qra-logo.svg`;
     const generated = new Date().toLocaleString('ar-JO-u-nu-latn', { timeZone: 'Asia/Amman' });
     const maxSchoolValue = schools.length > 0 ? Math.max(...schools.map((row) => row.loginCount)) : 1;
     const schoolRows = schools
@@ -585,7 +595,7 @@ const ReportsPage: React.FC = () => {
   body { margin: 0; font-family: 'Amiri', 'Segoe UI', Tahoma, Arial, sans-serif; color: #2a1d20; background: #fff; direction: rtl; font-size: 10.5px; line-height: 1.6; }
   .masthead { border-top: 8px solid #8B2F3C; padding: 12px 0 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; border-bottom: 1px solid #e6dcd8; }
   .brand { display: flex; align-items: center; gap: 10px; }
-  .brand-logo { width: 46px; height: 46px; object-fit: contain; }
+  .brand-logo { width: 62px; height: 42px; object-fit: contain; }
   .brand-name { font-family: 'Amiri', serif; font-size: 22px; font-weight: 700; }
   .brand-sub { font-family: Tahoma; font-size: 9px; color: #7a6a6d; }
   .meta { text-align: left; font-family: Tahoma; font-size: 9px; color: #7a6a6d; line-height: 1.8; }
@@ -644,7 +654,7 @@ const ReportsPage: React.FC = () => {
     <div class="meta">
       <div>الفترة: ${escapeHtml(formatArabicDate(from))} — ${escapeHtml(formatArabicDate(to))}</div>
       <div>أُنشئ في: ${escapeHtml(generated)}</div>
-      <div>جمعية جائزة الملكة رانيا العبدالله</div>
+      <div>جمعية جائزة الملكة رانيا العبدالله للتميز التربوي</div>
     </div>
   </header>
 
@@ -776,7 +786,7 @@ const ReportsPage: React.FC = () => {
           <Donut data={roleRows.slice(0, 6)} />
         </div>
         <div className="card">
-          <h3>المدارس الأكثر نشاطًا</h3>
+          <h3>الزيارات الأكثر</h3>
           <Bars
             rows={schools.slice(0, 6).map((school) => [school.school || 'غير معروف', school.loginCount] as [string, number])}
             max={maxSchool}
@@ -815,16 +825,20 @@ const ReportsPage: React.FC = () => {
           ])}
         />
       </div>
+      <p className="note">
+        الحصة: طول الشريط مقارنةً بأكبر مدرسة. النسبة: حصة المدرسة من إجمالي عمليات الدخول في
+        الفترة. المستخدمون الفريدون: عدد الحسابات التي سجّلت دخولًا واحدًا على الأقل.
+      </p>
       <div className="grid g2" style={{ marginTop: 12 }}>
         <div className="card">
-          <h3>الأكثر استخدامًا</h3>
+          <h3>أعلى المدارس دخولًا</h3>
           <Bars
             rows={schools.slice(0, 5).map((school) => [school.school || 'غير معروف', school.loginCount] as [string, number])}
             max={maxSchool}
           />
         </div>
         <div className="card">
-          <h3>الأقل استخدامًا</h3>
+          <h3>أدنى المدارس دخولًا</h3>
           <Bars
             rows={[...schools]
               .slice(-5)
@@ -885,40 +899,6 @@ const ReportsPage: React.FC = () => {
             ),
             formatArabicDateTime(item.timestamp),
           ])}
-        />
-      </div>
-    </>
-  );
-
-  const viewReadiness = (
-    <>
-      <div className="card">
-        <h3>جاهزية التقارير حسب البيانات المتوفرة</h3>
-        <Table
-          head={['التقرير', 'الحالة', 'ملاحظة']}
-          rows={[
-            ['المستخدمون والتسجيل', <Badge key="1" tone="ok">متاح</Badge>, 'من دليل المستخدمين الحالي'],
-            ['سجل الدخول (وقت واحد لكل عملية)', <Badge key="2" tone="ok">متاح</Badge>, 'من مجموع الزيارات اليومي'],
-            ['الطلبات والاستفسارات', <Badge key="3" tone="ok">متاح</Badge>, 'من صندوق الإشعارات'],
-            ['تعديلات بيانات المستخدم', <Badge key="4" tone="wn">متاح جزئيًا</Badge>, 'يحتاج سجل قديم/جديد كاملًا'],
-            ['استخدام كل محتوى لكل مستخدم', <Badge key="5" tone="er">يحتاج تطوير</Badge>, 'يحتاج تتبّعًا لكل عنصر محتوى'],
-            ['تقييم الفيديوهات ★', <Badge key="6" tone="er">يحتاج تطوير</Badge>, 'يحتاج تفعيل التقييم'],
-            ['الدخول بإيميل موثّق', <Badge key="7" tone="er">يحتاج تطوير</Badge>, 'لا يؤثر على بقية التقارير'],
-          ]}
-        />
-      </div>
-      <div className="card" style={{ marginTop: 12 }}>
-        <h3>أولويات التطوير</h3>
-        <Table
-          head={['#', 'البند', 'الأولوية', 'الحالة']}
-          rows={[
-            ['1', 'تتبّع الاستخدام لكل محتوى', '1', <Badge key="a" tone="er">لم تتم</Badge>],
-            ['2', 'تقييم نجوم لكل فيديو', '1', <Badge key="b" tone="er">لم تتم</Badge>],
-            ['3', 'شعارات الجهات الشريكة', '2', <Badge key="c" tone="er">لم تتم</Badge>],
-            ['4', 'حسابات الأطفال لولي الأمر', '2', <Badge key="d" tone="wn">قيد الدراسة</Badge>],
-            ['5', 'تعديل الرقم الوطني من الأدمن', '1', <Badge key="e" tone="ok">تمت</Badge>],
-            ['6', 'ترتيب المحتوى بأقسام', '1', <Badge key="f" tone="ok">تمت</Badge>],
-          ]}
         />
       </div>
     </>
@@ -1073,7 +1053,6 @@ const ReportsPage: React.FC = () => {
     ov: viewOverview,
     fd: viewSchools,
     fb: viewFeedback,
-    rd: viewReadiness,
     us: viewUsers,
     lg: viewLogins,
     dq: viewDataQuality,
@@ -1090,7 +1069,7 @@ const ReportsPage: React.FC = () => {
       <header>
         <div>
           <h1>أصواتٌ تُرى — لوحة التقارير</h1>
-          <small>جمعية جائزة الملكة رانيا العبدالله</small>
+          <small>جمعية جائزة الملكة رانيا العبدالله للتميز التربوي</small>
         </div>
         <div className="seg" id="role">
           <button type="button" className={role === 'ex' ? 'on' : ''} onClick={() => setRole('ex')}>

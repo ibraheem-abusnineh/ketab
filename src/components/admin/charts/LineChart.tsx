@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatNumber, labelIndexes, niceScale, SeriesPoint, shortDay } from './chartUtils';
+import { axisDay, formatNumber, labelIndexes, niceScale, SeriesPoint } from './chartUtils';
 
 interface LineChartProps {
   data: SeriesPoint[];
@@ -8,10 +8,12 @@ interface LineChartProps {
   area?: boolean;
   valueLabel?: string;
   emptyLabel?: string;
+  /** Optional axis titles. */
+  xLabel?: string;
+  yLabel?: string;
 }
 
 const WIDTH = 720;
-const PAD = { top: 16, right: 18, bottom: 30, left: 46 };
 
 const LineChart: React.FC<LineChartProps> = ({
   data,
@@ -20,7 +22,16 @@ const LineChart: React.FC<LineChartProps> = ({
   area = true,
   valueLabel = 'logins',
   emptyLabel = 'لا توجد بيانات في هذه الفترة',
+  xLabel,
+  yLabel,
 }) => {
+  const PAD = {
+    top: 16,
+    right: 18,
+    bottom: xLabel ? 46 : 30,
+    left: yLabel ? 66 : 46,
+  };
+
   if (data.length === 0) {
     return <div className="chart-empty">{emptyLabel}</div>;
   }
@@ -38,7 +49,19 @@ const LineChart: React.FC<LineChartProps> = ({
     .split(' ')
     .join(' L ')} L ${xFor(data.length - 1)},${PAD.top + plotHeight} Z`;
 
-  const xLabels = labelIndexes(data.length, 6);
+  // For date series, label at a constant day step (anchored at the last day)
+  // so the gaps between labels are equal instead of arbitrary indexes.
+  const isDateSeries = /^\d{4}-\d{2}-\d{2}$/.test(data[0].label);
+  let xLabels: number[];
+  if (isDateSeries) {
+    const candidates = [1, 2, 3, 5, 7, 10, 14, 21, 30, 60, 90];
+    const step = candidates.find((value) => Math.ceil(data.length / value) <= 6) || 90;
+    const indexes: number[] = [];
+    for (let i = data.length - 1; i >= 0; i -= step) indexes.unshift(i);
+    xLabels = indexes;
+  } else {
+    xLabels = labelIndexes(data.length, 6);
+  }
 
   return (
     <svg
@@ -90,13 +113,36 @@ const LineChart: React.FC<LineChartProps> = ({
         <text
           key={`x-${index}`}
           x={xFor(index)}
-          y={height - 8}
+          y={height - (xLabel ? 24 : 8)}
           textAnchor={index === 0 ? 'start' : index === data.length - 1 ? 'end' : 'middle'}
           className="chart-axis-text"
         >
-          {shortDay(data[index].label)}
+          {axisDay(data[index].label, data.length)}
         </text>
       ))}
+
+      {xLabel && (
+        <text
+          x={PAD.left + plotWidth / 2}
+          y={height - 4}
+          textAnchor="middle"
+          className="chart-axis-title"
+        >
+          {xLabel}
+        </text>
+      )}
+
+      {yLabel && (
+        <text
+          transform={`rotate(-90 14 ${PAD.top + plotHeight / 2})`}
+          x={14}
+          y={PAD.top + plotHeight / 2}
+          textAnchor="middle"
+          className="chart-axis-title"
+        >
+          {yLabel}
+        </text>
+      )}
     </svg>
   );
 };

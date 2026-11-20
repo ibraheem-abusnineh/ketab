@@ -161,13 +161,11 @@ const AdminDashboard: React.FC<Props> = ({ sessionToken }) => {
       <aside className="admin-sidebar">
         <div className="admin-brand">
           <div className="admin-brand__row">
-            <img className="admin-brand__logo" src="/admin-logo.png" alt="أصواتٌ تُرى" />
+            <img className="admin-brand__logo" src="/qra-logo.svg" alt="شعار جمعية جائزة الملكة رانيا العبدالله للتميز التربوي" />
             <div>
               <div className="admin-brand__name">أصواتٌ تُرى</div>
-              <div className="admin-brand__sub">لوحة الإدارة</div>
             </div>
           </div>
-          <p className="admin-brand__note">سجلّ المنصة الرقمي</p>
         </div>
 
         <nav className="admin-nav" aria-label="أقسام الإدارة">

@@ -40,7 +40,7 @@ const LogoWithImage: React.FC<LogoWithImageProps> = ({
       <img 
         src={fullLogoPath} 
         alt="Logo" 
-        className="max-w-full max-h-full object-contain block" 
+        className="w-full h-full object-contain block" 
       />
     </div>
   );

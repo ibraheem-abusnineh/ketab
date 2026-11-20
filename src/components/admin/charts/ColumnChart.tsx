@@ -95,7 +95,7 @@ const ColumnChart: React.FC<ColumnChartProps> = ({
 
       {data.map((point, index) => {
         // Keep x labels from colliding: show every nth label when dense.
-        const stride = Math.ceil(data.length / 10);
+        const stride = Math.max(1, Math.ceil(data.length / 12));
         if (index % stride !== 0 && index !== data.length - 1) return null;
         const x = PAD.left + slot * index + slot / 2;
         return (
