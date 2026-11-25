@@ -4,6 +4,11 @@ import { buildQuery, getJson, ReportsSchoolResponse, ReportsUserResponse, TimeRe
 import { DailyPoint } from '../types';
 import { Loading } from '../ui';
 import { axisDay } from '../charts/chartUtils';
+import {
+  normalizeDirectorate,
+  normalizeSchoolName,
+  schoolDirectory,
+} from '../../../data/schoolDirectory';
 
 /* ------------------------------------------------------------------ */
 /* types + helpers                                                     */
@@ -34,7 +39,7 @@ interface DirectoryUser {
 }
 
 type Role = 'ex' | 'ad';
-type TabId = 'ov' | 'fd' | 'fb' | 'us' | 'lg' | 'dq' | 'ch' | 'rc';
+type TabId = 'ov' | 'fd' | 'dir' | 'fb' | 'us' | 'lg' | 'dq' | 'ch' | 'rc';
 
 const MAROON = '#8B2F3C';
 const YELLOW = '#d9b800';
@@ -43,6 +48,7 @@ const DONUT_COLORS = [MAROON, YELLOW, '#c98a93', '#7a6a6d', '#3f6b55', '#3d617e'
 const TAB_LABELS: Record<TabId, string> = {
   ov: 'نظرة عامة',
   fd: 'المدارس',
+  dir: 'المديريات',
   fb: 'الملاحظات والاستفسارات',
   us: 'المستخدمون',
   lg: 'سجل الدخول',
@@ -52,7 +58,7 @@ const TAB_LABELS: Record<TabId, string> = {
 };
 
 const TABS: Record<Role, TabId[]> = {
-  ex: ['ov', 'fd', 'fb'],
+  ex: ['ov', 'fd', 'dir', 'fb'],
   ad: ['us', 'lg', 'dq', 'ch', 'rc'],
 };
 
@@ -377,17 +383,81 @@ const Donut: React.FC<{ data: Array<[string, number]> }> = ({ data }) => {
 /* page                                                                */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* aggregation helpers (used when the role filter is active)           */
+/* ------------------------------------------------------------------ */
+
+function aggregateSchools(evts: VisitsResponse['visits']): SchoolReport[] {
+  const map = new Map<string, { loginCount: number; users: Set<string> }>();
+  evts.forEach((event) => {
+    const name = (event.school || 'غير معروف').trim() || 'غير معروف';
+    const entry = map.get(name) || { loginCount: 0, users: new Set<string>() };
+    entry.loginCount += 1;
+    entry.users.add(event.nationalNumber);
+    map.set(name, entry);
+  });
+  return Array.from(map.entries())
+    .map(([school, value]) => ({ school, loginCount: value.loginCount, uniqueUsers: value.users.size }))
+    .sort((a, b) => b.loginCount - a.loginCount);
+}
+
+function aggregateUsers(
+  evts: VisitsResponse['visits'],
+  directory: DirectoryUser[]
+): UserReport[] {
+  const byNumber = new Map(directory.map((user) => [user.nationalNumber, user]));
+  const map = new Map<string, { loginCount: number; lastLogin: string | null; name: string; school: string }>();
+  evts.forEach((event) => {
+    const entry =
+      map.get(event.nationalNumber) ||
+      { loginCount: 0, lastLogin: null, name: event.name || '', school: event.school || '' };
+    entry.loginCount += 1;
+    if (event.timestamp && (!entry.lastLogin || event.timestamp > entry.lastLogin)) {
+      entry.lastLogin = event.timestamp;
+    }
+    map.set(event.nationalNumber, entry);
+  });
+  return Array.from(map.entries())
+    .map(([nationalNumber, value]) => ({
+      nationalNumber,
+      name: byNumber.get(nationalNumber)?.name || value.name || nationalNumber,
+      school: byNumber.get(nationalNumber)?.school || value.school || '',
+      role: byNumber.get(nationalNumber)?.role,
+      loginCount: value.loginCount,
+      lastLogin: value.lastLogin,
+    }))
+    .sort((a, b) => b.loginCount - a.loginCount);
+}
+
+function aggregateDaily(evts: VisitsResponse['visits']): DailyPoint[] {
+  const seen = new Set<string>();
+  const counts = new Map<string, number>();
+  evts.forEach((event) => {
+    if (!event.timestamp) return;
+    const day = event.timestamp.slice(0, 10);
+    const key = `${event.nationalNumber}|${day}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    counts.set(day, (counts.get(day) || 0) + 1);
+  });
+  return Array.from(counts.entries())
+    .map(([day, count]) => ({ day, count }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+}
+
 const ReportsPage: React.FC = () => {
   const [role, setRole] = useState<Role>('ex');
   const [tab, setTab] = useState<TabId>('ov');
   const [period, setPeriod] = useState('1');
   const [roleFilter, setRoleFilter] = useState('الكل');
+  const [dirFilter, setDirFilter] = useState('الكل');
+  const [schoolFilter, setSchoolFilter] = useState('الكل');
 
-  const [schools, setSchools] = useState<SchoolReport[]>([]);
-  const [users, setUsers] = useState<UserReport[]>([]);
-  const [directory, setDirectory] = useState<DirectoryUser[]>([]);
-  const [daily, setDaily] = useState<DailyPoint[]>([]);
-  const [events, setEvents] = useState<VisitsResponse['visits']>([]);
+  const [rawSchools, setSchools] = useState<SchoolReport[]>([]);
+  const [rawUsers, setUsers] = useState<UserReport[]>([]);
+  const [rawDirectory, setDirectory] = useState<DirectoryUser[]>([]);
+  const [rawDaily, setDaily] = useState<DailyPoint[]>([]);
+  const [rawEvents, setEvents] = useState<VisitsResponse['visits']>([]);
   const [notifications, setNotifications] = useState<
     Array<{ id: string; type: string; userName: string; timestamp: string; status?: string; read: boolean; changes: Array<{ field: string; oldValue: string; newValue: string }> }>
   >([]);
@@ -449,6 +519,196 @@ const ReportsPage: React.FC = () => {
     setTimeout(() => setToast(''), 2600);
   };
 
+  /* ---- role filter: scope the whole page, not just the users table ---- */
+  /* canonical directorate names (from the official list + the directory) */
+  const DIR_CANON = useMemo(() => {
+    const map = new Map<string, string>();
+    schoolDirectory.forEach((row) => {
+      if (row.directorate) map.set(normalizeDirectorate(row.directorate), row.directorate);
+    });
+    rawDirectory.forEach((user) => {
+      const raw = (user.directorate || '').trim();
+      if (!raw) return;
+      const key = normalizeDirectorate(raw);
+      if (!map.has(key)) map.set(key, raw);
+    });
+    return map;
+  }, [rawDirectory]);
+
+  const canonDir = useCallback(
+    (raw?: string) => {
+      const value = (raw || '').trim();
+      if (!value) return '';
+      return DIR_CANON.get(normalizeDirectorate(value)) || value;
+    },
+    [DIR_CANON]
+  );
+
+  /* school → directorate: the users' own directorate wins (some school names
+     repeat across directorates), then the official school list. */
+  const schoolDirectorate = useMemo(() => {
+    const counts = new Map<string, Map<string, number>>();
+    rawDirectory.forEach((user) => {
+      const school = normalizeSchoolName(user.school || '');
+      const dir = canonDir(user.directorate);
+      if (!school || !dir) return;
+      const inner = counts.get(school) || new Map<string, number>();
+      inner.set(dir, (inner.get(dir) || 0) + 1);
+      counts.set(school, inner);
+    });
+    const out = new Map<string, string>();
+    counts.forEach((inner, school) => {
+      let best = '';
+      let bestCount = -1;
+      inner.forEach((count, dir) => {
+        if (count > bestCount) {
+          best = dir;
+          bestCount = count;
+        }
+      });
+      if (best) out.set(school, best);
+    });
+    schoolDirectory.forEach((row) => {
+      const school = normalizeSchoolName(row.school);
+      if (row.directorate && !out.has(school)) out.set(school, canonDir(row.directorate));
+    });
+    return out;
+  }, [rawDirectory, canonDir]);
+
+  const dirForSchool = useCallback(
+    (name: string) => schoolDirectorate.get(normalizeSchoolName(name)) || '',
+    [schoolDirectorate]
+  );
+
+  const dirOfUser = useCallback(
+    (user: DirectoryUser) => canonDir(user.directorate) || dirForSchool(user.school) || 'غير محدد',
+    [canonDir, dirForSchool]
+  );
+
+  const dirByNumber = useMemo(() => {
+    const map = new Map<string, string>();
+    rawDirectory.forEach((user) => map.set(user.nationalNumber, dirOfUser(user)));
+    return map;
+  }, [rawDirectory, dirOfUser]);
+
+  const dirOptions = useMemo(
+    () => Array.from(new Set(Array.from(DIR_CANON.values()))).sort((a, b) => a.localeCompare(b, 'ar')),
+    [DIR_CANON]
+  );
+
+  const schoolOptions = useMemo(
+    () =>
+      Array.from(new Set(rawDirectory.map((user) => (user.school || '').trim()).filter(Boolean))).sort(
+        (a, b) => a.localeCompare(b, 'ar')
+      ),
+    [rawDirectory]
+  );
+
+  const directoryByNumber = useMemo(() => {
+    const map = new Map<string, DirectoryUser>();
+    rawDirectory.forEach((user) => map.set(user.nationalNumber, user));
+    return map;
+  }, [rawDirectory]);
+
+  const hasFilters = roleFilter !== 'الكل' || dirFilter !== 'الكل' || schoolFilter !== 'الكل';
+
+  const roleNumbers = useMemo(() => {
+    if (!hasFilters) return null;
+    const numbers = rawDirectory
+      .filter((user) => {
+        const roleOk = roleFilter === 'الكل' || (ROLE_LABELS[user.role] || user.role) === roleFilter;
+        const dirOk = dirFilter === 'الكل' || dirOfUser(user) === dirFilter;
+        const schoolOk = schoolFilter === 'الكل' || (user.school || '').trim() === schoolFilter;
+        return roleOk && dirOk && schoolOk;
+      })
+      .map((user) => user.nationalNumber);
+    return new Set(numbers);
+  }, [rawDirectory, roleFilter, dirFilter, schoolFilter, dirOfUser, hasFilters]);
+
+  const events = useMemo(
+    () => (roleNumbers ? rawEvents.filter((event) => roleNumbers.has(event.nationalNumber)) : rawEvents),
+    [rawEvents, roleNumbers]
+  );
+  const schools = useMemo(
+    () => (roleNumbers ? aggregateSchools(events) : rawSchools),
+    [roleNumbers, events, rawSchools]
+  );
+  const users = useMemo(
+    () => (roleNumbers ? aggregateUsers(events, rawDirectory) : rawUsers),
+    [roleNumbers, events, rawDirectory, rawUsers]
+  );
+  const daily = useMemo(
+    () => (roleNumbers ? aggregateDaily(events) : rawDaily),
+    [roleNumbers, events, rawDaily]
+  );
+  const directory = useMemo(
+    () => (roleNumbers ? rawDirectory.filter((user) => roleNumbers.has(user.nationalNumber)) : rawDirectory),
+    [roleNumbers, rawDirectory]
+  );
+
+  /** Every school in the directory — including schools with no logins yet. */
+  const schoolRows = useMemo(() => {
+    const map = new Map<
+      string,
+      { school: string; directorate: string; accounts: number; loginCount: number; uniqueUsers: number }
+    >();
+    directory.forEach((user) => {
+      const name = (user.school || '').trim();
+      if (!name) return;
+      const entry =
+        map.get(name) ||
+        { school: name, directorate: dirForSchool(name), accounts: 0, loginCount: 0, uniqueUsers: 0 };
+      entry.accounts += 1;
+      map.set(name, entry);
+    });
+    schools.forEach((row) => {
+      const entry =
+        map.get(row.school) ||
+        { school: row.school, directorate: dirForSchool(row.school), accounts: 0, loginCount: 0, uniqueUsers: 0 };
+      entry.loginCount = row.loginCount;
+      entry.uniqueUsers = row.uniqueUsers;
+      map.set(row.school, entry);
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => b.loginCount - a.loginCount || a.school.localeCompare(b.school, 'ar')
+    );
+  }, [directory, schools, dirForSchool]);
+
+  /** Per-directorate rollup (includes directorates with no activity). */
+  const directorateRows = useMemo(() => {
+    const map = new Map<
+      string,
+      { directorate: string; schools: Set<string>; accounts: number; active: Set<string>; logins: number }
+    >();
+    const ensure = (name: string) => {
+      const key = name || 'غير محدد';
+      const row = map.get(key) || { directorate: key, schools: new Set<string>(), accounts: 0, active: new Set<string>(), logins: 0 };
+      map.set(key, row);
+      return row;
+    };
+    DIR_CANON.forEach((name) => ensure(name));
+    directory.forEach((user) => {
+      const row = ensure(dirOfUser(user));
+      row.accounts += 1;
+      if (user.school) row.schools.add(user.school.trim());
+    });
+    users.forEach((user) => {
+      const name = dirByNumber.get(user.nationalNumber) || dirForSchool(user.school) || 'غير محدد';
+      const row = ensure(name);
+      row.active.add(user.nationalNumber);
+      row.logins += user.loginCount;
+    });
+    return Array.from(map.values())
+      .map((row) => ({
+        directorate: row.directorate,
+        schoolsCount: row.schools.size,
+        accounts: row.accounts,
+        activeUsers: row.active.size,
+        logins: row.logins,
+      }))
+      .sort((a, b) => b.logins - a.logins || a.directorate.localeCompare(b.directorate, 'ar'));
+  }, [directory, users, DIR_CANON, dirOfUser, dirByNumber, dirForSchool]);
+
   /* ---- derived numbers ---- */
 
   const totalLogins = useMemo(() => schools.reduce((sum, school) => sum + school.loginCount, 0), [schools]);
@@ -506,10 +766,6 @@ const ReportsPage: React.FC = () => {
     [directory, users]
   );
 
-  const filteredUsers = useMemo(
-    () => (roleFilter === 'الكل' ? users : users.filter((user) => (ROLE_LABELS[user.role || ''] || user.role) === roleFilter)),
-    [users, roleFilter]
-  );
 
   /* ---- exports ---- */
 
@@ -533,21 +789,27 @@ const ReportsPage: React.FC = () => {
   const exportMain = () =>
     csvFor(
       'تقرير-أصوات-ترى',
-      ['المدرسة', 'عمليات الدخول', 'المستخدمون الفريدون'],
-      schools.map((school) => [school.school, school.loginCount, school.uniqueUsers])
+      ['المدرسة', 'الحسابات', 'المستخدمون الفريدون', 'عمليات الدخول', 'الحالة'],
+      schoolRows.map((school) => [
+        school.school,
+        school.accounts,
+        school.uniqueUsers,
+        school.loginCount,
+        school.loginCount > 0 ? 'نشطة' : 'بدون دخول',
+      ])
     );
 
   const printReport = () => {
     const logoUrl = `${window.location.origin}/qra-logo.svg`;
     const generated = new Date().toLocaleString('ar-JO-u-nu-latn', { timeZone: 'Asia/Amman' });
     const maxSchoolValue = schools.length > 0 ? Math.max(...schools.map((row) => row.loginCount)) : 1;
-    const schoolRows = schools
+    const schoolTrs = schoolRows
       .map((school) => {
         const width = maxSchoolValue > 0 ? (school.loginCount / maxSchoolValue) * 100 : 0;
         return `<tr>
           <td>${escapeHtml(school.school)}</td>
+          <td class="num">${n(school.accounts)}</td>
           <td class="num">${n(school.loginCount)}</td>
-          <td class="num">${n(school.uniqueUsers)}</td>
           <td class="share"><div class="bar"><span style="width:${width.toFixed(1)}%"></span></div></td>
           <td class="num">${totalLogins > 0 ? Math.round((school.loginCount / totalLogins) * 100) : 0}%</td>
         </tr>`;
@@ -555,7 +817,7 @@ const ReportsPage: React.FC = () => {
       .join('');
     // keep the printed report on a single A4 sheet: top 20 users, fewer when
     // the school table is very long.
-    const userLimit = schools.length > 20 ? 12 : schools.length > 12 ? 15 : 20;
+    const userLimit = schoolRows.length > 20 ? 12 : schoolRows.length > 12 ? 15 : 20;
     const userRows = users
       .slice(0, userLimit)
       .map(
@@ -684,9 +946,9 @@ const ReportsPage: React.FC = () => {
     <h2>عمليات الدخول حسب المدرسة</h2>
     <table id="schools-table">
       <thead>
-        <tr><th>المدرسة</th><th>عمليات الدخول</th><th>المستخدمون الفريدون</th><th>الحصة</th><th>النسبة</th></tr>
+        <tr><th>المدرسة</th><th>الحسابات</th><th>عمليات الدخول</th><th>الحصة</th><th>النسبة</th></tr>
       </thead>
-      <tbody>${schoolRows || '<tr><td colspan="5">لا توجد بيانات في هذه الفترة.</td></tr>'}</tbody>
+      <tbody>${schoolTrs || '<tr><td colspan="5">لا توجد بيانات في هذه الفترة.</td></tr>'}</tbody>
     </table>
   </section>
 
@@ -761,7 +1023,11 @@ const ReportsPage: React.FC = () => {
       <div className="grid">
         <Kpi label="إجمالي عمليات الدخول" value={n(totalLogins)} hint="خلال الفترة المحددة" />
         <Kpi label="المستخدمون النشطون" value={n(activeUsers)} hint={busiest ? `ذروة النشاط: ${n(busiest.count)}` : ''} />
-        <Kpi label="المدارس" value={n(schools.length)} hint={schools[0] ? `الأعلى: ${schools[0].school}` : ''} />
+        <Kpi
+          label="المدارس"
+          value={n(schoolRows.length)}
+          hint={`${n(schools.length)} نشطة · ${n(Math.max(schoolRows.length - schools.length, 0))} بدون دخول`}
+        />
         <Kpi
           label="متوسط الدخول اليومي"
           value={n(daily.length > 0 ? Math.round(totalLogins / daily.length) : 0)}
@@ -808,26 +1074,98 @@ const ReportsPage: React.FC = () => {
     </>
   );
 
+  const viewDirectorates = (
+    <>
+      <div className="grid">
+        <Kpi
+          label="المديريات"
+          value={n(directorateRows.filter((row) => row.accounts > 0).length)}
+          hint={`من ${n(dirOptions.length)} مديرية`}
+        />
+        <Kpi
+          label="المدارس"
+          value={n(directorateRows.reduce((sum, row) => sum + row.schoolsCount, 0))}
+          hint="مدارس مسجّلة في المديريات"
+        />
+        <Kpi label="الحسابات" value={n(directory.length)} hint="حسب الفلاتر الحالية" />
+        <Kpi label="عمليات الدخول" value={n(totalLogins)} hint="حسب الفلاتر الحالية" />
+      </div>
+      <div className="card" style={{ marginTop: 12 }}>
+        <h3>التقرير حسب المديريات</h3>
+        <Table
+          head={['المديرية', 'المدارس', 'الحسابات', 'المستخدمون النشطون', 'عمليات الدخول', 'النسبة']}
+          rows={directorateRows.map((row) => [
+            row.directorate === 'غير محدد' ? 'زوار / بدون مديرية' : row.directorate,
+            n(row.schoolsCount),
+            n(row.accounts),
+            n(row.activeUsers),
+            n(row.logins),
+            <Badge key="b" tone={row.logins > 0 ? 'ok' : 'gr'}>
+              {totalLogins > 0 ? Math.round((row.logins / totalLogins) * 100) : 0}%
+            </Badge>,
+          ])}
+        />
+        <p className="note">
+          المديرية مأخوذة من بيانات المستخدم، وعند غيابها من قائمة المدارس الرسمية. القائمة تشمل
+          المديريات التي لم تسجّل دخولًا (0) لتسهيل المتابعة والتواصل.
+        </p>
+      </div>
+      <div className="grid g2" style={{ marginTop: 12 }}>
+        <div className="card">
+          <h3>عمليات الدخول حسب المديرية</h3>
+          <Bars
+            rows={[...directorateRows]
+              .sort((a, b) => b.logins - a.logins)
+              .slice(0, 10)
+              .map((row) => [row.directorate, row.logins] as [string, number])}
+            max={Math.max(...directorateRows.map((row) => row.logins), 1)}
+          />
+        </div>
+        <div className="card">
+          <h3>الحسابات حسب المديرية</h3>
+          <Bars
+            rows={[...directorateRows]
+              .sort((a, b) => b.accounts - a.accounts)
+              .slice(0, 10)
+              .map((row) => [row.directorate, row.accounts] as [string, number])}
+            max={Math.max(...directorateRows.map((row) => row.accounts), 1)}
+          />
+        </div>
+      </div>
+    </>
+  );
+
   const viewSchools = (
     <>
       <div className="card">
-        <h3>عمليات الدخول حسب المدرسة</h3>
+        <h3>كل المدارس ({n(schoolRows.length)})</h3>
         <Table
-          head={['المدرسة', 'المستخدمون الفريدون', 'عمليات الدخول', 'الحصة', 'النسبة']}
-          rows={schools.map((school) => [
+          head={['المدرسة', 'المديرية', 'الحسابات', 'المستخدمون الفريدون', 'عمليات الدخول', 'النسبة', 'الحالة']}
+          rows={schoolRows.map((school) => [
             school.school,
+            school.directorate || '—',
+            n(school.accounts),
             n(school.uniqueUsers),
             n(school.loginCount),
-            <Badge key="b" tone="ok">
+            <Badge key="b" tone={school.loginCount > 0 ? 'ok' : 'gr'}>
               {totalLogins > 0 ? Math.round((school.loginCount / totalLogins) * 100) : 0}%
             </Badge>,
-            n(school.loginCount) === n(maxSchool) ? <Badge key="t" tone="wn">الأعلى</Badge> : '—',
+            school.loginCount > 0 ? (
+              <Badge key="s" tone={n(school.loginCount) === n(maxSchool) ? 'wn' : 'ok'}>
+                {n(school.loginCount) === n(maxSchool) ? 'الأعلى' : 'نشطة'}
+              </Badge>
+            ) : (
+              <Badge key="s" tone="er">
+                بدون دخول
+              </Badge>
+            ),
           ])}
         />
       </div>
       <p className="note">
-        الحصة: طول الشريط مقارنةً بأكبر مدرسة. النسبة: حصة المدرسة من إجمالي عمليات الدخول في
-        الفترة. المستخدمون الفريدون: عدد الحسابات التي سجّلت دخولًا واحدًا على الأقل.
+        القائمة تشمل <b>كل مدارس الدليل</b> — حتى التي لم تسجّل دخولًا (شارة «بدون دخول») — لتسهيل
+        التواصل معها. الحسابات: عدد حسابات المدرسة في الدليل. المستخدمون الفريدون: من سجّل دخولًا
+        واحدًا على الأقل. النسبة: حصة المدرسة من إجمالي عمليات الدخول في الفترة.
       </p>
       <div className="grid g2" style={{ marginTop: 12 }}>
         <div className="card">
@@ -927,17 +1265,25 @@ const ReportsPage: React.FC = () => {
           ))}
         </div>
         <Table
-          head={['#', 'الاسم', 'النوع', 'المدرسة', 'عدد الدخولات', 'آخر دخول']}
-          rows={filteredUsers.slice(0, 60).map((user, index) => [
-            n(index + 1),
-            user.name,
-            <Badge key="r" tone="gr">
-              {ROLE_LABELS[user.role || ''] || user.role || '—'}
-            </Badge>,
-            user.school || '—',
-            n(user.loginCount),
-            formatArabicDateTime(user.lastLogin),
-          ])}
+          head={['#', 'الاسم', 'النوع', 'المدرسة', 'المديرية', 'الهاتف', 'عدد الدخولات', 'آخر دخول']}
+          rows={users.slice(0, 60).map((user, index) => {
+            const record = directoryByNumber.get(user.nationalNumber);
+            return [
+              n(index + 1),
+              user.name,
+              <Badge key="r" tone="gr">
+                {ROLE_LABELS[record?.role || user.role || ''] ||
+                  record?.role ||
+                  user.role ||
+                  '—'}
+              </Badge>,
+              user.school || '—',
+              record ? dirOfUser(record) : dirForSchool(user.school) || '—',
+              record?.phone || '—',
+              n(user.loginCount),
+              formatArabicDateTime(user.lastLogin),
+            ];
+          })}
         />
         <p className="note">تُعرض أول 60 صفًا · يمكن تصدير القائمة كاملة من مركز التقارير.</p>
       </div>
@@ -1040,7 +1386,45 @@ const ReportsPage: React.FC = () => {
           ['الدخول والمستخدمون النشطون', <button key="2" type="button" className="btn" onClick={() => csvFor('الدخول', ['اليوم', 'عمليات الدخول', 'مستخدمون نشطون'], dayLabels.map((day, i) => [day, loginSeries[i], activeSeries[i]]))}>CSV</button>],
           ['المستخدمون حسب النوع', <button key="3" type="button" className="btn" onClick={() => csvFor('المستخدمون-حسب-النوع', ['النوع', 'العدد'], roleRows)}>CSV</button>],
           ['المدارس وعدد الدخولات', <button key="4" type="button" className="btn" onClick={exportMain}>CSV</button>],
-          ['المستخدمون النشطون', <button key="5" type="button" className="btn" onClick={() => csvFor('المستخدمون-النشطون', ['الاسم', 'المدرسة', 'عدد الدخولات'], users.map((user) => [user.name, user.school, user.loginCount]))}>CSV</button>],
+          [
+            'التقرير حسب المديريات',
+            <button
+              key="4b"
+              type="button"
+              className="btn"
+              onClick={() =>
+                csvFor(
+                  'المديريات',
+                  ['المديرية', 'المدارس', 'الحسابات', 'المستخدمون النشطون', 'عمليات الدخول'],
+                  directorateRows.map((row) => [
+                    row.directorate,
+                    row.schoolsCount,
+                    row.accounts,
+                    row.activeUsers,
+                    row.logins,
+                  ])
+                )
+              }
+            >
+              CSV
+            </button>,
+          ],
+          ['المستخدمون النشطون', <button key="5" type="button" className="btn" onClick={() => csvFor(
+              'المستخدمون-النشطون',
+              ['الاسم', 'الرقم الوطني', 'المدرسة', 'المديرية', 'الهاتف', 'عدد الدخولات', 'آخر دخول'],
+              users.map((user) => {
+                const record = directoryByNumber.get(user.nationalNumber);
+                return [
+                  user.name,
+                  user.nationalNumber,
+                  user.school,
+                  record ? dirOfUser(record) : dirForSchool(user.school),
+                  record?.phone || '',
+                  user.loginCount,
+                  user.lastLogin || '',
+                ];
+              })
+            )}>CSV</button>],
           ['الطلبات والاستفسارات', <button key="6" type="button" className="btn" onClick={() => csvFor('الطلبات', ['المستخدم', 'النوع', 'الحالة', 'التاريخ'], notifications.map((item) => [item.userName, item.type, item.status || '—', item.timestamp]))}>CSV</button>],
           ['جودة البيانات', <button key="7" type="button" className="btn" onClick={() => csvFor('جودة-البيانات', ['المشكلة', 'العدد'], dataIssues.map((issue) => [issue.label, issue.count]))}>CSV</button>],
         ]}
@@ -1052,6 +1436,7 @@ const ReportsPage: React.FC = () => {
   const views: Record<TabId, React.ReactNode> = {
     ov: viewOverview,
     fd: viewSchools,
+    dir: viewDirectorates,
     fb: viewFeedback,
     us: viewUsers,
     lg: viewLogins,
@@ -1109,6 +1494,20 @@ const ReportsPage: React.FC = () => {
             <option>ولي أمر</option>
             <option>طالب</option>
             <option>مشرف</option>
+          </select>
+          <label>المديرية:</label>
+          <select value={dirFilter} onChange={(event) => setDirFilter(event.target.value)}>
+            <option>الكل</option>
+            {dirOptions.map((dir) => (
+              <option key={dir}>{dir}</option>
+            ))}
+          </select>
+          <label>المدرسة:</label>
+          <select value={schoolFilter} onChange={(event) => setSchoolFilter(event.target.value)}>
+            <option>الكل</option>
+            {schoolOptions.map((school) => (
+              <option key={school}>{school}</option>
+            ))}
           </select>
           <span style={{ flex: 1 }} />
           <button type="button" className="btn" onClick={exportMain} disabled={totalLogins === 0}>

@@ -21,6 +21,7 @@ import Icon from '../Icons';
 
 interface HistoryRow {
   nationalNumber: string;
+  phone?: string;
   name: string;
   school: string;
   role: string;
@@ -51,13 +52,16 @@ const LoginHistoryPage: React.FC = () => {
         getJson<TimeResponse>('/api/stats/by-time'),
       ]);
       const roleByNumber = new Map<string, string>();
+      const phoneByNumber = new Map<string, string>();
       (directoryData.users || []).forEach((user) => {
         roleByNumber.set(user.nationalNumber, user.role);
+        if (user.phone) phoneByNumber.set(user.nationalNumber, user.phone);
       });
       setRows(
         (historyData.data || []).map((row) => ({
           ...row,
           role: roleByNumber.get(row.nationalNumber) || '—',
+          phone: phoneByNumber.get(row.nationalNumber) || '',
         }))
       );
       setDaily(timeData.data?.daily || []);
@@ -301,6 +305,10 @@ const LoginHistoryPage: React.FC = () => {
                           <div>
                             <div className="detail-grid__label">الحصة من إجمالي الدخول</div>
                             <div className="detail-grid__value">{share}%</div>
+                          </div>
+                          <div>
+                            <div className="detail-grid__label">الهاتف</div>
+                            <div className="detail-grid__value num">{row.phone || '—'}</div>
                           </div>
                           <div>
                             <div className="detail-grid__label">الرقم الوطني</div>
